@@ -250,22 +250,41 @@ PRINT9 RTS
 * to a color register for example or a sprite location at the specific momemnt in time
 * where he crt scan line is scanning. See https://www.atariarchives.org/mapping/appendix8.php
 *--------------------------------
-LIST2  .HS 70F06400402424242424
+
+*--------------------------------
+* Second Display list instructios for game
+*--------------------------------
+LIST2  .HS 70               ; 8 Blank Lines
+       .HS F0               ; Text Mode 0 40 pixels per line 40 bytes per line 8 scan lines + Horiz Scroll
+                            ; + Vertical Scroll and Enable Display List Interrupt + Load Mem Scan
+       .HS 64               ; Text Mode 40 pixels per line 40 bytes per line * 8 scan lines + Load Mem scan + Horiz Scroll                         
+       .HS 00               ; Low Byte of Memory address of graphic data location 4000h
+       .HS 40               ; Hi Byte
+       .HS 2424242424       ; Text Mode 40 pixels per line 40 bytes per line * 8 scan lines + vertical scroll * 12
        .HS 24242424242424
-       .HS A4242424242404 
-       .HS A045603E05204A 
-       .HS 403F41  
-       .DA #LIST2
-       .DA /LIST2
+       .HS A4               ; Same Text mode plus displa list interrupt + vertical scroll
+       .HS 2424242424       ; Text Mode 40 pixels per line 40 bytes per line * 8 scan lines + vertical scroll * 5
+       .HS 04               ; Same text mode no scroll
+       .HS A0               ; Display list interrupt vertical scroll 1 blank line
+       .HS 45               ; Text Mode 40 pixels per line 40 bytes per line 16 scan lines + Load Memory scan at 3E60 
+       .HS 60               ; Low Byte of Memory address
+       .HS 3E               ; Hi Byte of Memory address
+       .HS 05               ; Text Mode 40 pixels per line 40 bytes per line 16 scan lines
+       .HS 20               ; 1 blank line + Vertical Scroll
+       .HS 4A               ; Graphics mode 80 pixels per line 20 bytes per line 4 scan lines + load mem scan from 413f
+       .HS 41               ; Low Byte of Memory address
+       .HS 3F               ; Hi Byte of Memory address
+       .HS 41               ; Jump and wait for vertical blank Tells ANTIC Processor where to fetch next instruction.
+       .DA #LIST2           ; Low byte of display list address
+       .DA /LIST2           ; Hi byte of display list address 
 
 *--------------------------------
 * First Display list instructios for intro screen 
 *--------------------------------
 LIST1  .HS 70               ; 8 Blank Lines
        .HS 60               ; 7 Blank Lines
-       .HS 09               ; Graphics Mode 4 80 pixels per line 10 bytes per line 4 scan lines
-       .HS 4F               ; Graphic Mode 8 320 pixels per line 40 bytes per line 1 scan line + Horizontal Scroll
-                            ; + Vertical Scroll and Enable Display List Interrupt
+       .HS 90               ; 1 Blank Line + Load Memory Scan + Horiz Scroll
+       .HS 4F               ; Graphic Mode 8 320 pixels per line 40 bytes per line 1 scan line + Horiz Scroll
        .DA #NIGHTDAT        ; Low memory location of screen data
        .DA /NIGHTDAT        ; High memory location of screen data
        .HS 0F0F0F0F0F0F0F0F ; (Graphic Mode 8 320 pixels per line 40 bytes per line 1 scan line ) * 14 lines
