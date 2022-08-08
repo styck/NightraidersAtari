@@ -53,7 +53,7 @@ ACTFLG     .EQ COLLAD+2        ;Plane action flag.
 *--------------------------------
 * ATARI LOCATIONS
 *--------------------------------
-SCREEN     .EQ $4000           ;Our menu sreen
+SCREEN     .EQ $4000           ;Location in Memory of our Menu Screen Data
 PMBASE     .EQ $D407           ;Player missle base address
 DISPLA     .EQ $3F00           ;Another menu scree location
 VDLST      .EQ $200            ;Display list interrupt vector
