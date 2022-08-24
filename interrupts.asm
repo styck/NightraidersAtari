@@ -1,7 +1,8 @@
-*--------------------------------
-* INTERRUPT ROUTINES FOR
-* NIGHTRAIDER
-*--------------------------------
+;--------------------------------
+; INTERRUPT ROUTINES FOR
+; NIGHTRAIDER
+;--------------------------------
+       .LOCAL
 IRQ1   PHA
        TXA
        PHA
@@ -135,8 +136,9 @@ SND2   DEC HOLDER
        CMP #$80
        BNE NOTWI3
        INC SNDFLG2
+       .LOCAL       
 NOTWI3 LDX #$0C
-.1     LDA $3490,X
+?1     LDA $3490,X
        STA $34A0,X
        LDA $3590,X
        STA $35A0,X
@@ -145,13 +147,13 @@ NOTWI3 LDX #$0C
        LDA $3790,X
        STA $37A0,X
        DEX
-       BPL .1
-       LDA #IRQ2   
+       BPL ?1
+       LDA <IRQ2   
        STA VDLST
-       LDA /IRQ2
+       LDA >IRQ2
        STA VDLST+1
        JMP RTEND
-*--------------------------------
+;--------------------------------
 IRQ2   PHA
        TXA
        PHA
@@ -235,9 +237,9 @@ NOTP   LDA $D40B
        CLC
        ADC #$10
        STA $D003
-       LDA #IRQ3
+       LDA <IRQ3
        STA VDLST
-       LDA /IRQ3
+       LDA >IRQ3
        STA VDLST+1
        LDA $D008
        BEQ TT1
@@ -251,6 +253,7 @@ TT2    LDA $D00A
        BEQ TT3 
        ORA HIT3
        STA HIT3
+       .LOCAL       
 TT3    LDA $D00B
        BEQ TT4
        ORA HIT4
@@ -258,11 +261,11 @@ TT3    LDA $D00B
        LDA SPACFLG
        BEQ TT4
        LDX #$03
-.1     LDA $D000,X 
+?1     LDA $D000,X 
        AND #$0E
        BNE NOAH
        DEX
-       BPL .1
+       BPL ?1
 TT4    LDX #$00
        LDA GUNSY,X
        SEC
@@ -287,7 +290,7 @@ GOTH   TXA
 NOAH   JMP (COLLAD)  
 NOH    STA $D01E
        JMP RTEND   
-*--------------------------------
+;--------------------------------
 IRQ3   PHA
        TXA
        PHA
@@ -388,6 +391,7 @@ PUFFS  CLC
        BEQ NOGAS
        DEY
        BNE PUFFS
+       .LOCAL       
 NOGAS  STA IRQVAR1
        PLA
        TAY
@@ -398,25 +402,25 @@ NOGAS  STA IRQVAR1
        BNE LUAN
        LDA FUEL
        CMP #$20
-       BCS .1
+       BCS ?1
        INC SPARE
        LDA SPARE
        CMP #$05
-       BNE .1
+       BNE ?1
        LDA #$00
        STA SPARE
        LDX #$3
-.2     LDA $3E89,X
+?2     LDA $3E89,X
        EOR #$80
        STA $3E89,X
        DEX
-       BPL .2
-.1     LDA #IRQ1  
+       BPL ?2
+?1     LDA <IRQ1  
        STA VDLST
-       LDA /IRQ1
+       LDA >IRQ1
        STA VDLST+1
        JMP RTEND
-*--------------------------------
+;--------------------------------
 VBLANK LDA #$00
        STA $4D
        LDA MOVFLG
@@ -505,26 +509,27 @@ TANFIL LDA (IRQVAR1),Y
        STA $7070,Y
        DEY
        BPL TANFIL
+      .LOCAL       
 NOMOV  DEC DELBAS
        BNE NOMOV2
        LDA #$0A     
        STA DELBAS
        DEC PNTBAS
        LDA PNTBAS
-       BPL .1
+       BPL ?1
        LDA #$06
        STA PNTBAS
-.1     ASL
+?1     ASL
        TAX
        LDA BASLOK,X
        STA IRQVAR1
        LDA BASLOK+1,X
        STA IRQVAR2
        LDY #$0F
-.2     LDA (IRQVAR1),Y
+?2     LDA (IRQVAR1),Y
        STA $71F8,Y
        DEY
-       BPL .2
+       BPL ?2
 NOMOV2 LDX #$10
 RANLOP LDA $D20A
        EOR $D40B
@@ -546,4 +551,3 @@ RANLOP LDA $D20A
        BNE NOSTAR
        JSR STARS
 NOSTAR JMP RTEND  
-                                                                                                                                                                                 

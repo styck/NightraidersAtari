@@ -1,6 +1,6 @@
-*--------------------------------
-* NIGHTRAIDER GAME LOOPS
-*--------------------------------
+;--------------------------------
+; NIGHTRAIDER GAME LOOPS
+;--------------------------------
            LDA #$2C
            STA $2F4
            LDX #$0C
@@ -116,11 +116,11 @@ MYOMY      STX $D200
            STA $2F4
            INC MOVFLG
            INC ACTFLG
-*--------------------------------
-* BEGINING GAME INTRO SHOWN
-* NOW CLEAR THE BULSHIT AND
-* LETS GET ON WITH SOME ACTION!
-*--------------------------------
+;--------------------------------
+; BEGINING GAME INTRO SHOWN
+; NOW CLEAR THE BULSHIT AND
+; LETS GET ON WITH SOME ACTION!
+;--------------------------------
            JMP GM1
 BOOP       LDA #$AF
            STA $D201
@@ -152,26 +152,27 @@ BEEPS2     PHA
            LDX #$5
            JSR DLONG
            RTS
-BMES1      .HS 0D1F1C1C0F181E00
-           .HS 1C0B1815
-BMES2      .HS 17131D1D13191800
-           .HS 190C140F0D1E13200F
-BMES3      .HS 8E8F9D9E9C99A3008F
-           .HS 988F97A3
-BMES4      .HS 1D1E0B1E1F1D
-BMES5      .HS 968B9F988D92
-*--------------------------------
-* MAIN GAME LOOP #1
-*--------------------------------
-GM1        LDA #COLRUT   ;SETUP
+BMES1      .BYTE $0D,$1F,$1C,$1C,$0F,$18,$1E,$00
+           .BYTE $1C,$0B,$18,$15
+BMES2      .BYTE $17,$13,$1D,$1D,$13,$19,$18,$00
+           .BYTE $19,$0C,$14,$0F,$0D,$1E,$13,$20,$0F
+BMES3      .BYTE $8E,$8F,$9D,$9E,$9C,$99,$A3,$00,$8F
+           .BYTE $98,$8F,$97,$A3
+BMES4      .BYTE $1D,$1E,$0B,$1E,$1F,$1D
+BMES5      .BYTE $96,$8B,$9F,$98,$8D,$92
+;--------------------------------
+; MAIN GAME LOOP #1
+;--------------------------------
+           .LOCAL
+GM1        LDA <COLRUT   ;SETUP
            STA COLLAD  ;COLLISION
-           LDA /COLRUT  ;ROUTINE
+           LDA >COLRUT  ;ROUTINE
            STA COLLAD+1 ;VECTOR
 GMLOOP     JSR PAUSER
            LDA BASER  
-           BEQ .99
+           BEQ ?99
            JSR EXPLOB
-.99        JSR TRAINER 
+?99        JSR TRAINER 
            JSR BRIDGER
            JSR MX
            JSR SOUND
@@ -181,16 +182,17 @@ GMLOOP     JSR PAUSER
            JSR ATTACK 
            JSR FIREPOWER
            LDA SPACFLG 
-           BEQ .1
+           BEQ ?1
            JSR KILLER2
            JMP GMLOOP
-.1         JSR KILLER  
+?1         JSR KILLER  
            JMP GMLOOP
-*--------------------------------
-* SUBROUTINE KILLER
-* EXPLODES KILLED OBJECTS
-* AND HANDLES DEATH!
-*--------------------------------
+;--------------------------------
+; SUBROUTINE KILLER
+; EXPLODES KILLED OBJECTS
+; AND HANDLES DEATH!
+;--------------------------------
+           .LOCAL
 KILLER     JSR CONTROL
            INC KILCNT 
            LDA KILCNT
@@ -262,33 +264,33 @@ TK         DEX
            SEC
            SBC #$20
            STA TEMP1
-           BCS .2
+           BCS ?2
            DEC TEMP2
-.2         LDY #$20
-.3         LDA (TEMP1),Y
-           BEQ .4
+?2         LDY #$20
+?3         LDA (TEMP1),Y
+           BEQ ?4
            CMP #$19   
-           BEQ .4
+           BEQ ?4
            CMP #$9E
-           BEQ .4
+           BEQ ?4
            DEY
-           BNE .3
+           BNE ?3
            JMP KIL8
-.4         INY
+?4         INY
            LDA #$9B
            STA (TEMP1),Y
-.5         LDA (TEMP1),Y
+?5         LDA (TEMP1),Y
            CMP #$11
-           BEQ .6
+           BEQ ?6
            CMP #$19
-           BEQ .6
+           BEQ ?6
            CMP #$9A
-           BEQ .6
+           BEQ ?6
            LDA #$00
            STA (TEMP1),Y
            INY
-           BNE .5  
-.6         LDA #$00
+           BNE ?5  
+?6         LDA #$00
            STA TRNFLG
            LDA LEVEL
            ASL
@@ -296,19 +298,20 @@ TK         DEX
            ADC BSCOR1
            STA BSCOR1
            JMP KIL8
+.LOCAL           
 KBRIDGE    LDA TEMP1
            SEC
            SBC #$20
            STA TEMP1
-           BCS .1
+           BCS ?1
            DEC TEMP2
-.1         LDY #$20
-.2         LDA (TEMP1),Y
+?1         LDY #$20
+?2         LDA (TEMP1),Y
            CMP #$11
-           BEQ .3
+           BEQ ?3
            DEY
-           BNE .2
-.3         LDA #$15
+           BNE ?2
+?3         LDA #$15
            STA (TEMP1),Y
            INY
            LDA #$16
@@ -323,9 +326,9 @@ KBRIDGE    LDA TEMP1
            CLC
            ADC #$C8
            STA BSCOR0
-           BCC .4
+           BCC ?4
            INC BSCOR1
-.4         INC BRDFLG
+?4         INC BRDFLG
            JMP KIL8
 KIL11      LDY EXPTBL2,X
            LDX TEMP4  
@@ -335,13 +338,14 @@ KIL11      LDY EXPTBL2,X
            LDA EXPTBL3+1,X
            STA (TEMP1),Y
            JMP KIL8
+.LOCAL           
 KIL12      LDA HITABLE+3,X 
            LDX #$00
-.1         CMP PNTBL,X
-           BEQ .2
+?1         CMP PNTBL,X
+           BEQ ?2
            INX
-           BNE .1
-.2         PHA
+           BNE ?1
+?2         PHA
            LDA PNTBL+1,X
            CLC
            ADC BSCOR0
@@ -351,10 +355,10 @@ KIL12      LDA HITABLE+3,X
            STA BSCOR1
            PLA
            LDX #$00
-.3         CMP EXPTBL,X   
+?3         CMP EXPTBL,X   
            BEQ KIL13
            INX
-           BNE .3
+           BNE ?3
 KIL13      LDY EXPTBL2,X
            LDA TEMP1 
            SEC
@@ -374,15 +378,16 @@ KIL14      LDA #$2C
            LDA #$2F
            STA (TEMP1),Y
            JMP KIL8
-*--------------------------------
-* CONTROL SUBROUTINE
-* SETS FLAGS FOR OTHER ROUTINES
-* DEPENDING ON GAME PLAY
-*--------------------------------
+;--------------------------------
+; CONTROL SUBROUTINE
+; SETS FLAGS FOR OTHER ROUTINES
+; DEPENDING ON GAME PLAY
+;--------------------------------
+           .LOCAL
 CONTROL    LDA BASER
-           BEQ .44 
+           BEQ ?44 
            JMP CON4
-.44        LDA SPACFLG
+?44        LDA SPACFLG
            BNE CONEND
            LDA LIST2+3
            BNE CONEND
@@ -406,33 +411,34 @@ CON3       LDA #$58
            INC MOVFLG
            INC BASFLG
            RTS
+.LOCAL           
 CON2       LDA #$40
            STA TEMP2
            LDA #$00
            STA TEMP1
            LDY #00
-.1         TYA
-.2         STA (TEMP1),Y
+?1         TYA
+?2         STA (TEMP1),Y
            DEY
-           BNE .2
+           BNE ?2
            INC TEMP2
            LDA TEMP2
            CMP #$50
-           BNE .1
+           BNE ?1
            LDX #$00
-.3         LDA $6000,X
+?3         LDA $6000,X
            STA $48C0,X
            LDA $6100,X
            STA $49C0,X
            LDA $6200,X
            STA $4AC0,X
            DEX
-           BNE .3
+           BNE ?3
            LDX #$6F
-.4         LDA $6300,X
+?4         LDA $6300,X
            STA $4BC0,X
            DEX
-           BNE .4
+           BNE ?4
            LDA #$58
            STA LIST2+3    
            LDA #$4C
@@ -440,10 +446,10 @@ CON2       LDA #$40
            LDA #$FF
            STA BASER  
            LDA BASDEAD
-           BEQ .5
+           BEQ ?5
            ASL
            TAX
-.6         LDA BASOLD-2,X 
+?6         LDA BASOLD-2,X 
            STA TEMP1
            LDA BASOLD-1,X
            STA TEMP2
@@ -454,14 +460,15 @@ CON2       LDA #$40
            STA (TEMP1),Y
            DEX
            DEX
-           BNE .6
-.5         RTS
+           BNE ?6
+?5         RTS
+.LOCAL
 CON4       LDA LIST2+3
            CMP #$78
-           BNE .1
+           BNE ?1
            LDA LIST2+4
            CMP #$45
-           BNE .1
+           BNE ?1
            LDA #$58
            STA LIST2+3
            LDA #$4C
@@ -473,22 +480,23 @@ CON4       LDA LIST2+3
            STA BASER
            STA BASFLG
            LDX #$08
-.2         STA MUSCNT,X
+?2         STA MUSCNT,X
            DEX
-           BPL .2
-.1         RTS
-*--------------------------------
-* SUBROUTINE TRAINER
-* CHECKS FOR BRIDGES ON THE SCREN
-* AND ROLLS TRAINS ACROSS THEM
-*--------------------------------
+           BPL ?2
+?1         RTS
+;--------------------------------
+; SUBROUTINE TRAINER
+; CHECKS FOR BRIDGES ON THE SCREN
+; AND ROLLS TRAINS ACROSS THEM
+;--------------------------------
+.LOCAL
 TRAINER    JSR CONTROL
            INC TRNCNT  
            LDA TRNCNT
            CMP #$30 
-           BEQ .1
+           BEQ ?1
            RTS
-.1         LDA #$00
+?1         LDA #$00
            STA TRNCNT
            LDA TRNFLG  
            BNE TRAIN5
@@ -519,6 +527,7 @@ TRAIN4     LDA TEMP2
            LDA #$21
            STA TRNPNT2
            RTS
+          .LOCAL           
 TRAIN5     LDA TRNVAR1
            STA TEMP1
            LDA TRNVAR2
@@ -528,58 +537,61 @@ TRAIN5     LDA TRNVAR1
            BEQ TRAIN6
            LDY TRNPNT1
            LDX TRNPNT2   
-.1         CPX #$FF
-           BEQ .2 
+?1         CPX #$FF
+           BEQ ?2 
            LDA TRNSTR,X
            DEX
-           JMP .3
-.2         LDA #$19
-.3         STA (TEMP1),Y
+           JMP ?3
+?2         LDA #$19
+?3         STA (TEMP1),Y
            DEY
-           BPL .1
+           BPL ?1
            INC TRNPNT1
            RTS
+.LOCAL
 TRAIN6     LDY #$27
            LDX TRNPNT2
            BMI TRAIN7
-.1         CPX #$FF
-           BEQ .2
+?1         CPX #$FF
+           BEQ ?2
            LDA TRNSTR,X
            DEX
-           JMP .3
-.2         LDA #$19
-.3         STA (TEMP1),Y
+           JMP ?3
+?2         LDA #$19
+?3         STA (TEMP1),Y
            DEY
-           BPL .1
+           BPL ?1
            DEC TRNPNT2 
            RTS
+.LOCAL           
 TRAIN7     LDY #$27
            LDA #$19
-.1         STA (TEMP1),Y
+?1         STA (TEMP1),Y
            DEY
-           BPL .1
+           BPL ?1
            DEC TRNFLG
            RTS
-TRNSTR     .HS 199A9B9B9B9B9E9A
-           .HS 9B9B9B9B9E9A9B9B
-           .HS 9B9B9E9A9B9B9B9B
-           .HS 9E9A9B9B9B9B9B9B
-           .HS 9C9D
-*--------------------------------
-* ATTACK ROUTINES ATTACKS 
-* PLAYER DEPENDING ON
-* WHAT FLAGS ARE SET
-*--------------------------------
+TRNSTR     .BYTE $19,$9A,$9B,$9B,$9B,$9B,$9E,$9A
+           .BYTE $9B,$9B,$9B,$9B,$9E,$9A,$9B,$9B
+           .BYTE $9B,$9B,$9E,$9A,$9B,$9B,$9B,$9B
+           .BYTE $9E,$9A,$9B,$9B,$9B,$9B,$9B,$9B
+           .BYTE $9C,$9D
+;--------------------------------
+; ATTACK ROUTINES ATTACKS 
+; PLAYER DEPENDING ON
+; WHAT FLAGS ARE SET
+;--------------------------------
+.LOCAL
 ATTACK     JSR CONTROL
            DEC FLCNT2
-           BNE .3
+           BNE ?3
            LDA #$1C
            STA FLCNT2
            DEC FLCNT 
-           BNE .3
+           BNE ?3
            LDA CRUD
-           BNE .3
-.2         LDA LEVEL
+           BNE ?3
+?2         LDA LEVEL
            ASL
            ASL
            ASL
@@ -589,16 +601,16 @@ ATTACK     JSR CONTROL
            SBC TEMP1
            STA FLCNT
            DEC FUEL 
-           BNE .3
+           BNE ?3
            JSR PLANEGON   
-.3         LDA SPACFLG  
-           BEQ .6
+?3         LDA SPACFLG  
+           BEQ ?6
            LDA WRNCNT
-           BNE .6
+           BNE ?6
            LDA SAUCFLG
-           BNE .5
-.6         LDA SAUCFLG
-           BNE .5
+           BNE ?5
+?6         LDA SAUCFLG
+           BNE ?5
            LDA SPS1  
            INC LEVEL 
            INC LEVEL 
@@ -607,9 +619,9 @@ ATTACK     JSR CONTROL
            DEC LEVEL 
            DEC LEVEL
            STA SPS1
-           BCS .1
+           BCS ?1
            DEC SPS2
-           BNE .1
+           BNE ?1
            LDA #$A0
            STA SPS2
            LDA #$FF
@@ -618,10 +630,10 @@ ATTACK     JSR CONTROL
            LDY #$00
            LDX #$00
            LDA $D20A
-           BMI .4
+           BMI ?4
            INX
            LDY #$FF
-.4         STX SAUCDIR   
+?4         STX SAUCDIR   
            STY HPOS1
            STY HPOS2
            LDA #$35
@@ -630,17 +642,18 @@ ATTACK     JSR CONTROL
            STA WRNCNT  
            LDX #$60
            LDA #$00
-.20        STA $3400,X
+?20        STA $3400,X
            STA $3500,X
            DEX
-           BNE .20
-.1         RTS
-.5         LDA WRNCNT
+           BNE ?20
+?1         RTS
+
+?5         LDA WRNCNT
            BEQ MOVSAUC 
            INC FLYCNT
            LDA FLYCNT
            CMP #$50
-           BNE .1
+           BNE ?1
            LDA #$00
            STA FLYCNT
            LDA WRNCNT
@@ -648,64 +661,68 @@ ATTACK     JSR CONTROL
            BEQ TONE2
            LDA #25
            BNE TONE1
+           .LOCAL           
 TONE2      LDA #100
 TONE1      STA $D206  
            LDA #$AF
            STA $D207
            LDX #$09
-.2         LDA WRNMES-1,X
+?2         LDA WRNMES-1,X
            STA $3E99,X
            DEX
-           BNE .2
+           BNE ?2
            DEC WRNCNT
-           BNE .1
+           BNE ?1
            LDA #$00
            STA $D206
            STA $D207
            LDX #$09
-.3         STA $3E99,X
+?3         STA $3E99,X
            DEX
-           BNE .3
-.1         RTS
+           BNE ?3
+?1         RTS
+;
+          .LOCAL
+;
 MOVSAUC    INC SAUCNT
            LDA SAUCNT
            CMP #$10 
-           BEQ .11
+           BEQ ?11
            RTS
-.11        LDA #$00   
+?11        LDA #$00   
            STA SAUCNT
            LDA SAUCDIR  
-           BEQ .1
+           BEQ ?1
            DEC HPOS1
            DEC HPOS2
-           JMP .2
-.1         INC HPOS1
+           JMP ?2
+?1         INC HPOS1
            INC HPOS2
-.2         LDA SAUCT
-           BEQ .3
-           BMI .4
+?2         LDA SAUCT
+           BEQ ?3
+           BMI ?4
            INC SAUCY 
            LDA SAUCY
            CMP #$60
-           BNE .3
+           BNE ?3
            LDA #$00
            STA SAUCT
-           JMP .3
-.4         DEC SAUCY
+           JMP ?3
+?4         DEC SAUCY
            LDA SAUCY
            CMP #$20
-           BNE .3
+           BNE ?3
            LDA #$00
            STA SAUCT
-.3         LDX SAUCY  
+?3         LDX SAUCY  
            INX
            LDY #$0A
            LDA #$00
-.5         STA $3400,X
+?5         STA $3400,X
            STA $3500,X
            DEX  
            DEY    
-           BPL .5 
+           BPL ?5 
            LDA #$44
            STA $2C0
            LDA #$84
@@ -715,6 +732,7 @@ MOVSAUC    INC SAUCNT
            BNE PLOTSAUC
            LDA #$00
            STA SAUCPNT
+.LOCAL           
 PLOTSAUC   ASL
            TAX
            LDA SAUCTBL,X
@@ -723,7 +741,7 @@ PLOTSAUC   ASL
            STA TEMP2
            LDX SAUCY
            LDY #$00
-.1         LDA (TEMP1),Y
+?1         LDA (TEMP1),Y
            STA $3400,X  
            TYA
            CLC  
@@ -738,24 +756,24 @@ PLOTSAUC   ASL
            DEX
            INY
            CPY #$08
-           BNE .1
+           BNE ?1
            INC SAUCPNT2
            LDA SAUCPNT2
            CMP #$06
-           BNE .66
+           BNE ?66
            LDA #$00
            STA SAUCPNT2
            INC SAUCPNT
-.66        LDA SAUCT 
+?66        LDA SAUCT 
            BNE MISCHK
            LDA $D20A
-           BMI .10
+           BMI ?10
            LDA SAUCY
            CMP #$20
            BEQ MISCHK
            DEC SAUCT 
            JMP MISCHK  
-.10        LDA SAUCY
+?10        LDA SAUCY
            CMP #$60
            BEQ MISCHK
            INC SAUCT
@@ -778,33 +796,36 @@ MISCHK     LDA SMISY
            STA MISDIR
            LDA HPOS1
            SEC
+           .LOCAL           
            SBC CROSSX
-           BCC .1
+           BCC ?1
            CMP #$0D
            BCC NOMISL
            DEC MISDIR  
            BNE NOMISL
-.1         EOR #$FF
+?1         EOR #$FF
            CLC
            ADC #$01
            CMP #$0D
            BCC NOMISL
            INC MISDIR  
+.LOCAL           
 NOMISL     LDA HPOS1
-           BNE .1
+           BNE ?1
            LDA #$00
            STA SAUCFLG
            STA $D207
-.1         RTS 
-WRNMES     .HS 1C0F0E000B160F1C1E
-SAUCTBL    .DA SAUCER1
-           .DA SAUCER2
-           .DA SAUCER3
-           .DA SAUCER4
-*--------------------------------
-* SOUND GENERATOR
-* GENERATES SOUNDS FOR GAME
-*--------------------------------
+?1         RTS 
+WRNMES     .BYTE $0C,$0F,$0E,$00,$0B,$16,$0F,$1C,$1E
+;
+SAUCTBL    .WORD SAUCER1
+           .WORD SAUCER2
+           .WORD SAUCER3
+           .WORD SAUCER4
+;--------------------------------
+; SOUND GENERATOR
+; GENERATES SOUNDS FOR GAME
+;--------------------------------
 SOUND      JSR CONTROL
            INC SNDCNT
            LDA SNDCNT
@@ -826,23 +847,24 @@ SOUND      JSR CONTROL
 SOUND2     LDA #$00
            STA $D205
            INC EXPSND
+           .LOCAL           
 SOUND3     LDA SMISY
-           BNE .1
+           BNE ?1
            LDA WRNCNT
-           BNE .3
+           BNE ?3
            LDA SAUCFLG
-           BNE .2
+           BNE ?2
            LDA #$00
            STA $D206
            STA $D207
-.3         RTS
-.1         LDA #$A8
+?3         RTS
+?1         LDA #$A8
            STA $D207
            LDA SMISY
            STA $D206
            RTS
-.2         LDA VOLFLG    
-           BNE .4 
+?2         LDA VOLFLG    
+           BNE ?4 
            LDA #$1
            STA $D206
            LDA #$60
@@ -851,21 +873,22 @@ SOUND3     LDA SMISY
            INC VOLUM
            LDA VOLUM
            CMP #$0F
-           BNE .3
+           BNE ?3
            INC VOLFLG
-           JMP .3
-.4         LDA #$1
+           JMP ?3
+?4         LDA #$1
            STA $D206
            LDA #$60
            ORA VOLUM
            STA $D207
            DEC VOLUM
-           BNE .3
+           BNE ?3
            DEC VOLFLG
-           JMP .3
-*--------------------------------
-* OBJECT COLLISION HANDLER
-*--------------------------------
+           JMP ?3
+;--------------------------------
+; OBJECT COLLISION HANDLER
+;--------------------------------
+.LOCAL
 COLRUT     LDA LIST2+3
            STA IRQVAR1
            LDA LIST2+4
@@ -907,9 +930,9 @@ NOCAT      CLC
            STA IRQVAR2
            LDY #$00
            LDA SPACFLG
-           BEQ .1
+           BEQ ?1
            JMP SPACKIL
-.1         LDA BASER
+?1         LDA BASER
            BEQ RETRY
            JMP BASKILER
 RETRY      LDA (IRQVAR1),Y 
@@ -933,18 +956,20 @@ COLRU3     LDA CHATBL,X
            BEQ COLRU5
            INX
            BNE COLRU3
+.LOCAL           
 COLRU5     LDX #$00
-.1         LDA CHTBL3,X
+?1         LDA CHTBL3,X
            CMP (IRQVAR1),Y
            BEQ COLRU8
            CMP #$FF
            BEQ COLREND
            INX
-           BNE .1
+           BNE ?1
+.LOCAL
 COLRU4     CMP #$22
-           BCC .2
+           BCC ?2
            CMP #$2A
-           BCS .2
+           BCS ?2
            INC FUEL
            INC FUEL
            INC FUEL
@@ -953,16 +978,16 @@ COLRU4     CMP #$22
            CLC
            ADC FUEL
            CMP #$51
-           BCC .1
+           BCC ?1
            LDA #$50
-.1         STA FUEL
-.2         LDA IRQVAR1   
+?1         STA FUEL
+?2         LDA IRQVAR1   
            SEC
            SBC CHTBL2,X
            STA IRQVAR1
-           BCS .3
+           BCS ?3
            DEC IRQVAR2  
-.3         LDA #$06  
+?3         LDA #$06  
            STA IRQVAR3
            JMP COLRU9
 COLRU8     LDA #$05
@@ -990,42 +1015,44 @@ COLRU7     LDA IRQVAR3
            STA EXPSND
 COLREND    STA $D01E
            JMP RTEND
-*--------------------------------
-* BRIDGE COLLAPSE ROUTINE
-*--------------------------------
+;--------------------------------
+; BRIDGE COLLAPSE ROUTINE
+;--------------------------------
+.LOCAL
 BRIDGER    JSR CONTROL
            LDA BRDFLG 
-           BNE .1
-.2         RTS  
-.1         DEC BRDCNT
-           BNE .2
+           BNE ?1
+?2         RTS  
+?1         DEC BRDCNT
+           BNE ?2
            LDA BRDPNT
            CMP #$03
-           BNE .3
+           BNE ?3
            LDA #$00
            STA BRDFLG
            STA BRDCNT
            STA BRDPNT
            RTS
-.3         ASL
+?3         ASL
            TAX
            LDA BRDTAB,X
            STA TEMP1
            LDA BRDTAB+1,X
            STA TEMP2
            LDY #$1F
-.4         LDA (TEMP1),Y
+?4         LDA (TEMP1),Y
            STA $70A8,Y
            DEY
-           BPL .4
+           BPL ?4
            INC BRDPNT
            RTS
-BRDTAB     .DA BRIDGE1
-           .DA BRIDGE2
-           .DA BRIDGE3
-*--------------------------------
-* EXPLODE PLANE ON SCREEN
-*--------------------------------
+BRDTAB     .WORD BRIDGE1
+           .WORD BRIDGE2
+           .WORD BRIDGE3
+;--------------------------------
+; EXPLODE PLANE ON SCREEN
+;--------------------------------
+.LOCAL
 PLANEGON   JSR CONTROL
            LDA #$00
            STA HPOS3
@@ -1034,8 +1061,8 @@ PLANEGON   JSR CONTROL
            STA TEMP1
            LDA #$50
            STA CRUD
-.1         LDX #$0D
-.2         LDA $D20A  
+?1         LDX #$0D
+?2         LDA $D20A  
            PHA
            EOR $3490,X
            AND P1-1,X
@@ -1046,7 +1073,7 @@ PLANEGON   JSR CONTROL
            AND P2-1,X
            STA $3590,X
            DEX
-           BNE .2
+           BNE ?2
            LDA $D20A
            AND #$3F
            STA $D202
@@ -1055,7 +1082,7 @@ PLANEGON   JSR CONTROL
            LDA TEMP1
            PHA
            LDX #$30
-.66        TXA
+?66        TXA
            PHA
            JSR TRAINER
            JSR KILLER
@@ -1068,41 +1095,41 @@ PLANEGON   JSR CONTROL
            PLA
            TAX
            DEX
-           BNE .66
+           BNE ?66
            PLA
            STA TEMP1
            DEC TEMP1
-           BNE .1
+           BNE ?1
            DEC TEMP1
-.3         LDA TEMP1
+?3         LDA TEMP1
            STA $D202
            LDA TEMP1
            AND #$0F
-           BNE .4
+           BNE ?4
            LDA TEMP1
            CMP #$90
-           BCS .5
+           BCS ?5
            LDX #$10
-.8         LDA $3490,X
+?8         LDA $3490,X
            LSR
            STA $3490,X
            LDA $3590,X
            ASL
            STA $3590,X
            DEX
-           BNE .8
-           BEQ .4
-.5         LDX #$0C
-.6         LDA $3690,X
+           BNE ?8
+           BEQ ?4
+?5         LDX #$0C
+?6         LDA $3690,X
            LSR
            STA $3690,X
            LDA $3790,X
            ASL
            STA $3790,X
            DEX
-           BNE .6
-.4         LDX #$6 
-.10        TXA  
+           BNE ?6
+?4         LDX #$6 
+?10        TXA  
            PHA
            LDA TEMP1
            PHA
@@ -1119,15 +1146,15 @@ PLANEGON   JSR CONTROL
            PLA
            TAX
            DEX
-           BNE .10
+           BNE ?10
            DEC TEMP1      
-           BNE .3
+           BNE ?3
            LDA #$00
            STA $D203
            DEC SHIPS
-           BNE .11
+           BNE ?11
            JMP ENDGAME
-.11        JSR PMAKER
+?11        JSR PMAKER
            LDA #$35
            STA $D202
            LDA #$AF
@@ -1144,9 +1171,10 @@ SUP        DEY
            LDA #$00
            STA CRUD
            RTS
-*--------------------------------
-* MISSLE FIRE ROUTINE
-*--------------------------------
+;--------------------------------
+; MISSLE FIRE ROUTINE
+;--------------------------------
+.LOCAL
 MISSLES    INC MISCNT
            LDA MISCNT
            CMP #$10
@@ -1157,18 +1185,18 @@ MISSLES    INC MISCNT
            BEQ ENDMIS
            LDX SMISY
            LDA #$00
-.1         STA $3600,X
+?1         STA $3600,X
            DEX
-           BNE .1
+           BNE ?1
            LDA MISDIR
-           BEQ .2
-           BMI .3
+           BEQ ?2
+           BMI ?3
            INC HPOS3
            BEQ CKMISKL
-           BNE .2
-.3         DEC HPOS3 
+           BNE ?2
+?3         DEC HPOS3 
            BEQ CKMISKL
-.2         INC SMISY
+?2         INC SMISY
            INC SMISY
            INC SMISY
            INC SMISY
@@ -1178,51 +1206,53 @@ MISSLES    INC MISCNT
            LDX SMISY 
            LDY #$04
            LDA #$08
-.5         STA $3600,X 
+?5         STA $3600,X 
            DEX 
            DEY
-           BNE .5
+           BNE ?5
            LDA #$FF
            STA $2C2
-ENDMIS     RTS  
+ENDMIS     RTS
+.LOCAL
 CKMISKL    LDA HPOS3
            SEC
            SBC CROSSX    
-           BEQ .2
-           BCC .1 
+           BEQ ?2
+           BCC ?1 
            CMP #$0D
-           BCS .3
-           JMP .2
-.1         EOR #$FF
+           BCS ?3
+           JMP ?2
+?1         EOR #$FF
            CMP #$0C
-           BCS .3
-.2         JSR PLANEGON  
-.3         LDA #$00  
+           BCS ?3
+?2         JSR PLANEGON  
+?3         LDA #$00  
            STA HPOS3
            STA SMISY
            RTS
-*--------------------------------
-* SAUCDEATH!!!!
-* CHECK FOR SAUCER HIT
-*--------------------------------
+;--------------------------------
+; SAUCDEATH!!!!
+; CHECK FOR SAUCER HIT
+;--------------------------------
+.LOCAL
 UFODIE     JSR CONTROL
            JSR KILUFO
            LDX #$03  
-.1         LDA HIT1,X
+?1         LDA HIT1,X
            AND #$3
-           BNE .2
+           BNE ?2
            DEX
-           BPL .1 
+           BPL ?1 
            RTS
-.2         INC UFOEXP  
+?2         INC UFOEXP  
            LDA #$00
            STA EXPSND
            LDX #$03
-.3         LDA HIT1,X  
+?3         LDA HIT1,X  
            AND #$8
            STA HIT1,X  
            DEX
-           BPL .3
+           BPL ?3
            LDA LEVEL
            CLC
            ADC #$01
@@ -1238,115 +1268,118 @@ UFODIE     JSR CONTROL
            LDA #$28
            STA UFCNT
            RTS
+.LOCAL           
 KILUFO     LDA UFOEXP
-           BNE .1
-.2         RTS   
-.1         LDA #$00
+           BNE ?1
+?2         RTS   
+?1         LDA #$00
            STA SAUCFLG
            INC UFKFLG
            LDA UFKFLG
            CMP #$60
-           BNE .15
+           BNE ?15
            LDA #$00
            STA UFKFLG
            LDX #$60
-.3         LDA $3400,X  
+?3         LDA $3400,X  
            ASL 
            STA $3400,X  
            LDA $3500,X 
            LSR
            STA $3500,X 
            DEX
-           BNE .3
+           BNE ?3
            DEC UFCNT   
-           BNE .15
+           BNE ?15
            LDA #$00
            STA UFOEXP
            LDX #$60
-.6         STA $3400,X
+?6         STA $3400,X
            STA $3500,X
            DEX
-           BNE .6
+           BNE ?6
            LDX #$03
-.14        LDA HIT1,X
+?14        LDA HIT1,X
            AND #$08
            STA HIT1,X
            DEX
-           BPL .14
-.15        PLA  
+           BPL ?14
+?15        PLA  
            PLA
            RTS
-*--------------------------------
-* STAR ROUTINE
-*--------------------------------
+;--------------------------------
+; STAR ROUTINE
+;--------------------------------
+.LOCAL
 STARS      INC STRCNT
            LDA STRCNT
            CMP #$02
-           BEQ .1
+           BEQ ?1
            RTS
-.1         LDA #$00
+?1         LDA #$00
            STA STRCNT
            LDX STRFAS
            STA $73F8,X
            INC STRFAS
            LDA STRFAS
            CMP #$08
-           BNE .2
+           BNE ?2
            LDA #$00
            STA STRFAS
            JSR STARPLOT
-.2         LDX STRFAS    
+?2         LDX STRFAS    
            LDA #$0C
            STA $73F8,X  
            RTS
-*--------------------------------
-* STARPLOT SUBROUTINES
-*--------------------------------
+;--------------------------------
+; STARPLOT SUBROUTINES
+;--------------------------------
+.LOCAL
 STARPLOT   LDX #$0D
-.1         LDY STARY,X
+?1         LDY STARY,X
            LDA YLOW,Y
            STA IRQVAR1
            LDA YHI,Y
            STA IRQVAR2
            LDY STARX,X
            LDA (IRQVAR1),Y
-           BEQ .2
+           BEQ ?2
            CMP #$7F
-           BEQ .2
+           BEQ ?2
            CMP #$FF
-           BNE .5
-.2         LDA #$00
+           BNE ?5
+?2         LDA #$00
            STA (IRQVAR1),Y
-.5         INC STARY,X
+?5         INC STARY,X
            LDA STARY,X
            CMP #$15
-           BNE .6
+           BNE ?6
            LDA #$00
            STA STARY,X
-.6         TAY
+?6         TAY
            LDA YLOW,Y
            STA IRQVAR1
            LDA YHI,Y
            STA IRQVAR2
            LDY STARX,X
            LDA (IRQVAR1),Y
-           BNE .7
+           BNE ?7
            LDA #$7F
            BIT $D20A
-           BMI .8
+           BMI ?8
            LDA #$FF
-.8         STA (IRQVAR1),Y  
-.7         DEX   
-           BPL .1
+?8         STA (IRQVAR1),Y  
+?7         DEX   
+           BPL ?1
            RTS
-STARX      .HS 0205020A0C0E131519
-           .HS 1D20242628
-STARY      .HS 010A07000311020508
-           .HS 1304001404
-YLOW       .HS 00285078A0C8F018  
-           .HS 406890B8E0083058
-           .HS 80A8D0F820
-YHI        .HS 4040404040404041
-           .HS 4141414141424242
-           .HS 4242424243
-                                                                                                                                                   
+
+STARX      .BYTE $02,$05,$02,$0A,$0C,$0E,$13,$15,$19
+           .BYTE $1D,$20,$24,$26,$28
+STARY      .BYTE $01,$0A,$07,$00,$03,$11,$02,$05,$08
+           .BYTE $13,$04,$00,$14,$04
+YLOW       .BYTE $00,$28,$50,$78,$A0,$C8,$F0,$18  
+           .BYTE $40,$68,$90,$B8,$E0,$08,$30,$58
+           .BYTE $80,$A8,$D0,$F8,$20
+YHI        .BYTE $40,$40,$40,$40,$40,$40,$40,$41
+           .BYTE $41,$41,$41,$41,$41,$42,$42,$42
+           .BYTE $42,$42,$42.$42,$43

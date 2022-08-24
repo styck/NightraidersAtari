@@ -1,141 +1,143 @@
-*--------------------------------
-* NIGHTRAIDERS
-* WRITTEN BY : PETER FILIBERTI
-* COPYRIGHT 1982
-*--------------------------------
-       .OR  $6B0    
-       .TF  OBJ
-*--------------------------------
-* ZERO PAGE VARIABLES
-*--------------------------------
-HISCORE1   .EQ $80             ;These are the three locations where
-HISCORE2   .EQ HISCORE1+1      ;the high score is saved in BCD
-HISCORE3   .EQ HISCORE2+1      ;for later use.
-OLSCORE1   .EQ HISCORE3+1      ;These are the three locations where
-OLSCORE2   .EQ OLSCORE1+1      ;the last score achieved is placed
-OLSCORE3   .EQ OLSCORE2+1      ;for use in menu screen also BCD.
-BSCOR0     .EQ OLSCORE3+1      ;This is a binary score used as a
-BSCOR1     .EQ BSCOR0+1        ;temporary score holder by the game.
-SCORE1     .EQ BSCOR1+1        ;This is the actual game score
-SCORE2     .EQ SCORE1+1        ;stored in BCD it is also the same
-SCORE3     .EQ SCORE2+1        ;score put on game screen while playing.
-TEMP1      .EQ SCORE3+1        ;TEMP1 through TEMP8 are temporary
-TEMP2      .EQ TEMP1+1         ;locations used by main program and
-TEMP3      .EQ TEMP2+1         ;subroutines. The INTERRUPT routines
-TEMP4      .EQ TEMP3+1         ;must not touch these locatons!
-TEMP5      .EQ TEMP4+1         ;""
-TEMP6      .EQ TEMP5+1         ;""
-TEMP7      .EQ TEMP6+1         ;""
-TEMP8      .EQ TEMP7+1         ;""
-CLRVAR     .EQ TEMP8+1
-LEVEL      .EQ CLRVAR+1        ;Games level of play 0-6
-SCRCNT     .EQ LEVEL+1         ;Screen fine scroll counter
-HPOS1      .EQ SCRCNT+1        ;Horizontal position player1
-HPOS2      .EQ HPOS1+1         ;Horizontal position player2
-HPOS3      .EQ HPOS2+1         ;Horizontal position player3
-HPOS4      .EQ HPOS3+1         ;Horizontal position plyer4
-MOVFLG     .EQ HPOS4+1         ;Flag for screen movement
-FUEL       .EQ MOVFLG+1        ;Fuel in planes tank 0-$50
-CROSSX     .EQ FUEL+1          ;Plane horizontal axis position
-MISSLEX    .EQ CROSSX+1        ;Missle horizontal position
-SHIPS      .EQ MISSLEX+1       ;Number of ships left. start=3
-IRQVAR1    .EQ SHIPS+1         ;IRQVAR1 through IRQVAR2 are
-IRQVAR2    .EQ IRQVAR1+1       ;temporary locations to be
-IRQVAR3    .EQ IRQVAR2+2       ;used by interrupt routines only.
-IRQVAR4    .EQ IRQVAR3+3       ;Main program should not use these!
-TPOINT     .EQ IRQVAR4+1       ;Target point positioner.
-HIT1       .EQ TPOINT+1        ;HIT1-HIT4 are copies of the
-HIT2       .EQ HIT1+1          ;colision register updated every
-HIT3       .EQ HIT2+1          ;60 hz. It is used by main program
-HIT4       .EQ HIT3+1          ;interrupts logicaly or data in these.
-COLLAD     .EQ HIT4+1          ;Screen collision address (TWO BYTES)
-ACTFLG     .EQ COLLAD+2        ;Plane action flag.
-*--------------------------------
-* ATARI LOCATIONS
-*--------------------------------
-SCREEN     .EQ $4000           ;Location in Memory of our Menu Screen Data
-PMBASE     .EQ $D407           ;Player missle base address
-DISPLA     .EQ $3F00           ;Another menu scree location
-VDLST      .EQ $200            ;Display list interrupt vector
-VBLK       .EQ $224            ;Vertical blank interrupt vector
-DLISTP     .EQ $230            ;Display list pointer
-CLB        .EQ $2C8            ;Color register background
-CLP0       .EQ $2C4            ;Color register playfield 1
-CLP1       .EQ $2C5            ;Color register playfield 2
-CLP2       .EQ $2C6            ;Color register playfield 3
-CLP3       .EQ $2C7            ;Color register Playfield 4
-CPLAY0     .EQ $2C0            ;Color player 1
-CPLAY1     .EQ $2C1            ;Color player 2
-CPLAY2     .EQ $2C2            ;Color player 3
-CPLAY3     .EQ $2C3            ;Color player 4
-CONSOL     .EQ $D01F           ;Console switch address
-GRACTL     .EQ $D01D           ;Graphic control address
-CHBASE     .EQ $2F4            ;Character set base address
-TRIG0      .EQ $284            ;Joystick trigger
-DMACTL     .EQ $22F            ;Dma control register
-NMIEN      .EQ $D40E           ;NMI control register
-*--------------------------------
-* GAME COLD START
-*--------------------------------
+;--------------------------------
+; NIGHTRAIDERS
+; WRITTEN BY : PETER FILIBERTI
+; COPYRIGHT 1982
+;--------------------------------
+;       ORG $6B0               ; mads assembler
+;       .OR  $6B0              ; original
+        * = $6b0              ; ATasm
+;       .TF  OBJ               ;Stores object file directly to disk
+;--------------------------------
+; ZERO PAGE VARIABLES
+;--------------------------------
+HISCORE1   = $80             ;These are the three locations where
+HISCORE2   = HISCORE1+1      ;the high score is saved in BCD
+HISCORE3   = HISCORE2+1      ;for later use.
+OLSCORE1   = HISCORE3+1      ;These are the three locations where
+OLSCORE2   = OLSCORE1+1      ;the last score achieved is placed
+OLSCORE3   = OLSCORE2+1      ;for use in menu screen also BCD.
+BSCOR0     = OLSCORE3+1      ;This is a binary score used as a
+BSCOR1     = BSCOR0+1        ;temporary score holder by the game.
+SCORE1     = BSCOR1+1        ;This is the actual game score
+SCORE2     = SCORE1+1        ;stored in BCD it is also the same
+SCORE3     = SCORE2+1        ;score put on game screen while playing.
+TEMP1      = SCORE3+1        ;TEMP1 through TEMP8 are temporary
+TEMP2      = TEMP1+1         ;locations used by main program and
+TEMP3      = TEMP2+1         ;subroutines. The INTERRUPT routines
+TEMP4      = TEMP3+1         ;must not touch these locatons!
+TEMP5      = TEMP4+1         ;""
+TEMP6      = TEMP5+1         ;""
+TEMP7      = TEMP6+1         ;""
+TEMP8      = TEMP7+1         ;""
+CLRVAR     = TEMP8+1
+LEVEL      = CLRVAR+1        ;Games level of play 0-6
+SCRCNT     = LEVEL+1         ;Screen fine scroll counter
+HPOS1      = SCRCNT+1        ;Horizontal position player1
+HPOS2      = HPOS1+1         ;Horizontal position player2
+HPOS3      = HPOS2+1         ;Horizontal position player3
+HPOS4      = HPOS3+1         ;Horizontal position plyer4
+MOVFLG     = HPOS4+1         ;Flag for screen movement
+FUEL       = MOVFLG+1        ;Fuel in planes tank 0-$50
+CROSSX     = FUEL+1          ;Plane horizontal axis position
+MISSLEX    = CROSSX+1        ;Missle horizontal position
+SHIPS      = MISSLEX+1       ;Number of ships left. start=3
+IRQVAR1    = SHIPS+1         ;IRQVAR1 through IRQVAR2 are
+IRQVAR2    = IRQVAR1+1       ;temporary locations to be
+IRQVAR3    = IRQVAR2+2       ;used by interrupt routines only.
+IRQVAR4    = IRQVAR3+3       ;Main program should not use these!
+TPOINT     = IRQVAR4+1       ;Target point positioner.
+HIT1       = TPOINT+1        ;HIT1-HIT4 are copies of the
+HIT2       = HIT1+1          ;colision register updated every
+HIT3       = HIT2+1          ;60 hz. It is used by main program
+HIT4       = HIT3+1          ;interrupts logicaly or data in these.
+COLLAD     = HIT4+1          ;Screen collision address (TWO BYTES)
+ACTFLG     = COLLAD+2        ;Plane action flag.
+;--------------------------------
+; ATARI LOCATIONS
+;--------------------------------
+SCREEN     = $4000           ;Location in Memory of our Menu Screen Data
+PMBASE     = $D407           ;Player missle base address
+DISPLA     = $3F00           ;Another menu scree location
+VDLST      = $200            ;Display list interrupt vector
+VBLK       = $224            ;Vertical blank interrupt vector
+DLISTP     = $230            ;Display list pointer
+CLB        = $2C8            ;Color register background
+CLP0       = $2C4            ;Color register playfield 1
+CLP1       = $2C5            ;Color register playfield 2
+CLP2       = $2C6            ;Color register playfield 3
+CLP3       = $2C7            ;Color register Playfield 4
+CPLAY0     = $2C0            ;Color player 1
+CPLAY1     = $2C1            ;Color player 2
+CPLAY2     = $2C2            ;Color player 3
+CPLAY3     = $2C3            ;Color player 4
+CONSOL     = $D01F           ;Console switch address
+GRACTL     = $D01D           ;Graphic control address
+CHBASE     = $2F4            ;Character set base address
+TRIG0      = $284            ;Joystick trigger
+DMACTL     = $22F            ;Dma control register
+NMIEN      = $D40E           ;NMI control register
+;--------------------------------
+; GAME COLD START
+;--------------------------------
 COLDSTART  LDX #HISCORE1       ;Clear all of zero page variables
            JSR INIT            
            JMP INTRO           ;Goto menu routines
 WARMSTART  LDX #BSCOR0         ;Erase all of zero page variables
            JSR INIT            ;except high scores!
            JMP INTRO           ;Goto menu routines
-*--------------------------------
-* WORDS USED BY INTRODUCTION
-*--------------------------------
-WORDS  .HS 00
-       .AS "BY PETER FILIBERTI    DATAMOST INC  8@?:"  
-       .HS 00
-       .AS "HIGH SCORE      YOUR SCORE      "
-       .HS 00
-       .AS "CURRENT RANK" 
-       .HS 00
-LEVNAM .AS "NOVICE"  
-       .HS 00
-       .AS "CADET"
-       .HS 00
-       .AS "ENSIGN"
-       .HS 00
-       .AS "CAPTAIN"
-       .HS 00
-       .AS "COMMANDER"
-       .HS 00
-       .AS "NIGHTRAIDER" 
-       .HS 00
-       .AS "PRESS SELECT TO CHANGE STARTING RANK"
-       .HS 00
-       .AS "PRESS START OR FIRE BUTTON TO PLAY"
-       .HS 00
-       .AS "TODAYS TOP TEN HIGH SCORES"
-       .HS 00
-       .AS " CONGRAULATIONS YOU HAVE THE HIGH SCORE "
-       .HS 00
-       .AS "    YOUR SCORE IS ONE OF THE TOP TEN    "
-       .HS 00
-       .AS "           ENTER YOUR INITIALS          "
-       .HS 00
-*--------------------------------
-TBL1   .HS 1219170B
-COLORT .HS 8D94CA4500 
-P1     .HS 001824247EFFFFFF     ;P1-P4 are plane shapes 
-       .HS FFFF81FF             ;I just felt like putting
-P2     .HS 0000181800004242     ;them here!??
-       .HS 5AFFFFFF
-P3     .HS 000000000001030F
-       .HS 1F7F0000
-P4     .HS 000000000080C0F0    
-       .HS F8FE0000
-*--------------------------------
-* INTRODUCTION ROUTINE
-*--------------------------------
+;--------------------------------
+; WORDS USED BY INTRODUCTION
+;--------------------------------
+ WORDS .BYTE 00
+       .BYTE "BY PETER FILIBERTI    DATAMOST INC  8@?:"
+       .BYTE 00
+       .BYTE "HIGH SCORE      YOUR SCORE      "
+       .BYTE 00
+       .BYTE "CURRENT RANK"
+       .BYTE 00
+LEVNAM .BYTE "NOVICE"
+       .BYTE 00
+       .BYTE "CADET"
+       .BYTE 00
+       .BYTE "ENSIGN"
+       .BYTE 00
+       .BYTE "CAPTAIN"
+       .BYTE 00
+       .BYTE "COMMANDER"
+       .BYTE 00
+       .BYTE "NIGHTRAIDER" 
+       .BYTE 00
+       .BYTE "PRESS SELECT TO CHANGE STARTING RANK"
+       .BYTE 00
+       .BYTE "PRESS START OR FIRE BUTTON TO PLAY"
+       .BYTE 00
+       .BYTE "TODAYS TOP TEN HIGH SCORES"
+       .BYTE 00
+       .BYTE " CONGRAULATIONS YOU HAVE THE HIGH SCORE "
+       .BYTE 00
+       .BYTE "    YOUR SCORE IS ONE OF THE TOP TEN    "
+       .BYTE 00
+       .BYTE "           ENTER YOUR INITIALS          "
+       .BYTE 00
+;--------------------------------
+TBL1   .BYTE $12,$19,$17,$0B
+COLORT .BYTE $8D,$94,$CA,$45,$00 
+P1     .BYTE $00,$18,$24,$24,$7E,$FF,$FF,$FF     ;P1-P4 are plane shapes 
+       .BYTE $FF,$FF,$81,$FF             ;I just felt like putting
+P2     .BYTE $00,$00,$18,$18,$00,$00,$42,$42     ;them here!??
+       .BYTE $5A,$FF,$FF,$FF
+P3     .BYTE $00,$00,$00,$00,$00,$01,$03,$0F
+       .BYTE $1F,$7F,$00,$00
+P4     .BYTE $00,$00,$00,$00,$00,$80,$C0,$F0    
+       .BYTE $F8,$FE,$00,$00
+;--------------------------------
+; INTRODUCTION ROUTINE
+;--------------------------------
 INTRO  LDA #$2C                 ;Setup character base address
        STA CHBASE
-       LDA #LIST1               ;Setup our display list pointers
+       LDA <LIST1               ;Setup our display list pointers
        STA DLISTP               ;to point to our display list
-       LDA /LIST1
+       LDA >LIST1
        STA DLISTP+1
        LDA #$00
        STA $D405                ;Put a zero in horizontal scroll reg
@@ -144,9 +146,9 @@ INTRO  LDA #$2C                 ;Setup character base address
        LDA #$03
        STA GRACTL               ;Enable player graphics
        JSR CLRMEN               ;Clear menu page
-       LDA #MIRQ1               ;Setup the irq vectors to
+       LDA <MIRQ1               ;Setup the irq vectors to
        STA VDLST                ;point to our Irq routines
-       LDA /MIRQ1
+       LDA >MIRQ1
        STA VDLST+1
 VSYNC  LDA $D40B                ;Is scan line at the top of the screen?
        CMP #$80
@@ -163,9 +165,10 @@ VSYNC  LDA $D40B                ;Is scan line at the top of the screen?
        LDX #$02
        LDY #$07     
        JSR PRINT                ;High score    Your score
+       .LOCAL      
 SCORER LDX #$02                 ;Put high score and last score
        LDY #$00                 ;on screen
-.1     LDA HISCORE1,X           ;Get a BCD byte
+?1     LDA HISCORE1,X           ;Get a BCD byte
        LSR                      ; 
        LSR                      ;
        LSR                      ;Only want left digit
@@ -194,7 +197,7 @@ SCORER LDX #$02                 ;Put high score and last score
        STA $4069,Y
        INY
        DEX
-       BPL .1
+       BPL ?1
        LDA #$80
        STA TEMP7
        LDA #$98     
@@ -217,11 +220,12 @@ SCORER LDX #$02                 ;Put high score and last score
        JSR PRINT
        LDA #$00
        STA LEVEL
+       .LOCAL       
 SELECT LDX #$14
        LDA #$00
-.1     STA $41A4,X
+?1     STA $41A4,X
        DEX
-       BNE .1
+       BNE ?1
        LDA #$0A
        STA TEMP1
        LDA #$80
@@ -239,40 +243,43 @@ SELECT LDX #$14
        STA TEMP8
 CKEY   LDA CONSOL
        ROR
-       BCS .1
+      .LOCAL       
+       BCS ?1
        JMP GAME
-.1     ROR
-       BCS .2
-.3     LDA CONSOL
+?1     ROR
+       BCS ?2
+?3     LDA CONSOL
        AND #$02
-       BEQ .3
+       BEQ ?3
        INC LEVEL
        LDA LEVEL
        CMP #$06
-       BNE .4
+       BNE ?4
        LDA #$00
        STA LEVEL
-.4     JMP SELECT
-.2     LDA $D010
+?4     JMP SELECT
+?2     LDA $D010
        BNE CKEY
        JMP GAME
-*--------------------------------
+;--------------------------------
+       .LOCAL
 CLRMEN LDA #$40                 ;Erase our menu screen
        STA TEMP2                ;$4000-$5000
        LDY #$00
        STY TEMP1
-.2     TYA
-.1     STA (TEMP1),Y
+?2     TYA
+?1     STA (TEMP1),Y
        INY
-       BNE .1
+       BNE ?1
        INC TEMP2
        LDA TEMP2
        CMP #$50
-       BNE .2
+       BNE ?2
        RTS
-*--------------------------------
-* MIRQ1 IRQ FOR MENU!
-*--------------------------------
+;--------------------------------
+; MIRQ1 IRQ FOR MENU!
+;--------------------------------
+       .LOCAL
 MIRQ1  PHA
        TXA
        PHA
@@ -281,27 +288,27 @@ MIRQ1  PHA
        BCS MIRQ2
        LDA $2C6
        LDX #$11     
-.1     STA $D40A
+?1     STA $D40A
        STA $D018
        CLC
        ADC #$02     
        DEX
-       BNE .1 
+       BNE ?1 
        INC CCNT
        LDA CCNT
        CMP #$08     
-       BNE .2
+       BNE ?2
        LDA #$00
        STA CCNT
        INC $2C6
-.2     LDA #$28     
+?2     LDA #$28     
        STA $D018
        PLA
        TAX
        PLA
        RTI
-CCNT   .HS 00
-*--------------------------------
+CCNT   .BYTE 00
+;--------------------------------
 MIRQ2  TYA
        PHA
        LDA #$C8     
@@ -314,7 +321,7 @@ MIRQ2  TYA
        TAX
        PLA
        RTI
-*--------------------------------
+;--------------------------------
 GAME   LDA #$00
        STA NMIEN   
        STA DMACTL 
@@ -323,17 +330,17 @@ COLFIL LDA COLORT-1,X
        STA CLP0-1,X
        DEX
        BNE COLFIL
-       LDA #IRQ1
+       LDA <IRQ1
        STA VDLST
-       LDA /IRQ1
+       LDA >IRQ1
        STA VDLST+1
-       LDA #VBLANK
+       LDA <VBLANK
        STA VBLK
-       LDA /VBLANK
+       LDA >VBLANK
        STA VBLK+1
-       LDA #LIST2
+       LDA <LIST2
        STA DLISTP
-       LDA /LIST2
+       LDA >LIST2
        STA DLISTP+1
        LDA #$58
        STA LIST2+3
@@ -373,9 +380,9 @@ CS     STA $D40A
        LDA #$04
        STA SHIPS
 
-*--------------------------------
-* NIGHTRAIDER GAME LOOPS
-*--------------------------------
+;--------------------------------
+; NIGHTRAIDER GAME LOOPS
+;--------------------------------
            LDA #$2C
            STA $2F4
            LDX #$0C
@@ -491,11 +498,11 @@ MYOMY      STX $D200
            STA $2F4
            INC MOVFLG
            INC ACTFLG
-*--------------------------------
-* BEGINING GAME INTRO SHOWN
-* NOW CLEAR THE BULSHIT AND
-* LETS GET ON WITH SOME ACTION!
-*--------------------------------
+;--------------------------------
+; BEGINING GAME INTRO SHOWN
+; NOW CLEAR THE BULSHIT AND
+; LETS GET ON WITH SOME ACTION!
+;--------------------------------
            JMP GM1
 BOOP       LDA #$AF
            STA $D201
@@ -527,26 +534,27 @@ BEEPS2     PHA
            LDX #$5
            JSR DLONG
            RTS
-BMES1      .HS 0D1F1C1C0F181E00
-           .HS 1C0B1815
-BMES2      .HS 17131D1D13191800
-           .HS 190C140F0D1E13200F
-BMES3      .HS 8E8F9D9E9C99A3008F
-           .HS 988F97A3
-BMES4      .HS 1D1E0B1E1F1D
-BMES5      .HS 968B9F988D92
-*--------------------------------
-* MAIN GAME LOOP #1
-*--------------------------------
-GM1        LDA #COLRUT   ;SETUP
+BMES1      .BYTE $0D,$1F,$1C,$1C,$0F,$18,$1E,$00
+           .BYTE $1C,$0B,$18,$15
+BMES2      .BYTE $17,$13,$1D,$1D,$13,$19,$18,$00
+           .BYTE $19,$0C,$14,$0F,$0D,$1E,$13,$20,$0F
+BMES3      .BYTE $8E,$8F,$9D,$9E,$9C,$99,$A3,$00,$8F
+           .BYTE $98,$8F,$97,$A3
+BMES4      .BYTE $1D,$1E,$0B,$1E,$1F,$1D
+BMES5      .BYTE $96,$8B,$9F,$98,$8D,$92
+;--------------------------------
+; MAIN GAME LOOP #1
+;--------------------------------
+           .LOCAL
+GM1        LDA <COLRUT   ;SETUP
            STA COLLAD  ;COLLISION
-           LDA /COLRUT  ;ROUTINE
+           LDA >COLRUT  ;ROUTINE
            STA COLLAD+1 ;VECTOR
 GMLOOP     JSR PAUSER
            LDA BASER  
-           BEQ .99
+           BEQ ?99
            JSR EXPLOB
-.99        JSR TRAINER 
+?99        JSR TRAINER 
            JSR BRIDGER
            JSR MX
            JSR SOUND
@@ -556,16 +564,17 @@ GMLOOP     JSR PAUSER
            JSR ATTACK 
            JSR FIREPOWER
            LDA SPACFLG 
-           BEQ .1
+           BEQ ?1
            JSR KILLER2
            JMP GMLOOP
-.1         JSR KILLER  
+?1         JSR KILLER  
            JMP GMLOOP
-*--------------------------------
-* SUBROUTINE KILLER
-* EXPLODES KILLED OBJECTS
-* AND HANDLES DEATH!
-*--------------------------------
+;--------------------------------
+; SUBROUTINE KILLER
+; EXPLODES KILLED OBJECTS
+; AND HANDLES DEATH!
+;--------------------------------
+           .LOCAL
 KILLER     JSR CONTROL
            INC KILCNT 
            LDA KILCNT
@@ -637,33 +646,33 @@ TK         DEX
            SEC
            SBC #$20
            STA TEMP1
-           BCS .2
+           BCS ?2
            DEC TEMP2
-.2         LDY #$20
-.3         LDA (TEMP1),Y
-           BEQ .4
+?2         LDY #$20
+?3         LDA (TEMP1),Y
+           BEQ ?4
            CMP #$19   
-           BEQ .4
+           BEQ ?4
            CMP #$9E
-           BEQ .4
+           BEQ ?4
            DEY
-           BNE .3
+           BNE ?3
            JMP KIL8
-.4         INY
+?4         INY
            LDA #$9B
            STA (TEMP1),Y
-.5         LDA (TEMP1),Y
+?5         LDA (TEMP1),Y
            CMP #$11
-           BEQ .6
+           BEQ ?6
            CMP #$19
-           BEQ .6
+           BEQ ?6
            CMP #$9A
-           BEQ .6
+           BEQ ?6
            LDA #$00
            STA (TEMP1),Y
            INY
-           BNE .5  
-.6         LDA #$00
+           BNE ?5  
+?6         LDA #$00
            STA TRNFLG
            LDA LEVEL
            ASL
@@ -671,19 +680,20 @@ TK         DEX
            ADC BSCOR1
            STA BSCOR1
            JMP KIL8
+          .LOCAL           
 KBRIDGE    LDA TEMP1
            SEC
            SBC #$20
            STA TEMP1
-           BCS .1
+           BCS ?1
            DEC TEMP2
-.1         LDY #$20
-.2         LDA (TEMP1),Y
+?1         LDY #$20
+?2         LDA (TEMP1),Y
            CMP #$11
-           BEQ .3
+           BEQ ?3
            DEY
-           BNE .2
-.3         LDA #$15
+           BNE ?2
+?3         LDA #$15
            STA (TEMP1),Y
            INY
            LDA #$16
@@ -698,9 +708,9 @@ KBRIDGE    LDA TEMP1
            CLC
            ADC #$C8
            STA BSCOR0
-           BCC .4
+           BCC ?4
            INC BSCOR1
-.4         INC BRDFLG
+?4         INC BRDFLG
            JMP KIL8
 KIL11      LDY EXPTBL2,X
            LDX TEMP4  
@@ -710,13 +720,14 @@ KIL11      LDY EXPTBL2,X
            LDA EXPTBL3+1,X
            STA (TEMP1),Y
            JMP KIL8
+          .LOCAL           
 KIL12      LDA HITABLE+3,X 
            LDX #$00
-.1         CMP PNTBL,X
-           BEQ .2
+?1         CMP PNTBL,X
+           BEQ ?2
            INX
-           BNE .1
-.2         PHA
+           BNE ?1
+?2         PHA
            LDA PNTBL+1,X
            CLC
            ADC BSCOR0
@@ -726,10 +737,10 @@ KIL12      LDA HITABLE+3,X
            STA BSCOR1
            PLA
            LDX #$00
-.3         CMP EXPTBL,X   
+?3         CMP EXPTBL,X   
            BEQ KIL13
            INX
-           BNE .3
+           BNE ?3
 KIL13      LDY EXPTBL2,X
            LDA TEMP1 
            SEC
@@ -749,15 +760,16 @@ KIL14      LDA #$2C
            LDA #$2F
            STA (TEMP1),Y
            JMP KIL8
-*--------------------------------
-* CONTROL SUBROUTINE
-* SETS FLAGS FOR OTHER ROUTINES
-* DEPENDING ON GAME PLAY
-*--------------------------------
+;--------------------------------
+; CONTROL SUBROUTINE
+; SETS FLAGS FOR OTHER ROUTINES
+; DEPENDING ON GAME PLAY
+;--------------------------------
+           .LOCAL
 CONTROL    LDA BASER
-           BEQ .44 
+           BEQ ?44 
            JMP CON4
-.44        LDA SPACFLG
+?44        LDA SPACFLG
            BNE CONEND
            LDA LIST2+3
            BNE CONEND
@@ -781,33 +793,34 @@ CON3       LDA #$58
            INC MOVFLG
            INC BASFLG
            RTS
+          .LOCAL           
 CON2       LDA #$40
            STA TEMP2
            LDA #$00
            STA TEMP1
            LDY #00
-.1         TYA
-.2         STA (TEMP1),Y
+?1         TYA
+?2         STA (TEMP1),Y
            DEY
-           BNE .2
+           BNE ?2
            INC TEMP2
            LDA TEMP2
            CMP #$50
-           BNE .1
+           BNE ?1
            LDX #$00
-.3         LDA $6000,X
+?3         LDA $6000,X
            STA $48C0,X
            LDA $6100,X
            STA $49C0,X
            LDA $6200,X
            STA $4AC0,X
            DEX
-           BNE .3
+           BNE ?3
            LDX #$6F
-.4         LDA $6300,X
+?4         LDA $6300,X
            STA $4BC0,X
            DEX
-           BNE .4
+           BNE ?4
            LDA #$58
            STA LIST2+3    
            LDA #$4C
@@ -815,10 +828,10 @@ CON2       LDA #$40
            LDA #$FF
            STA BASER  
            LDA BASDEAD
-           BEQ .5
+           BEQ ?5
            ASL
            TAX
-.6         LDA BASOLD-2,X 
+?6         LDA BASOLD-2,X 
            STA TEMP1
            LDA BASOLD-1,X
            STA TEMP2
@@ -829,14 +842,15 @@ CON2       LDA #$40
            STA (TEMP1),Y
            DEX
            DEX
-           BNE .6
-.5         RTS
+           BNE ?6
+?5         RTS
+          .LOCAL
 CON4       LDA LIST2+3
            CMP #$78
-           BNE .1
+           BNE ?1
            LDA LIST2+4
            CMP #$45
-           BNE .1
+           BNE ?1
            LDA #$58
            STA LIST2+3
            LDA #$4C
@@ -848,22 +862,23 @@ CON4       LDA LIST2+3
            STA BASER
            STA BASFLG
            LDX #$08
-.2         STA MUSCNT,X
+?2         STA MUSCNT,X
            DEX
-           BPL .2
-.1         RTS
-*--------------------------------
-* SUBROUTINE TRAINER
-* CHECKS FOR BRIDGES ON THE SCREN
-* AND ROLLS TRAINS ACROSS THEM
-*--------------------------------
+           BPL ?2
+?1         RTS
+;
+; SUBROUTINE TRAINER
+; CHECKS FOR BRIDGES ON THE SCREN
+; AND ROLLS TRAINS ACROSS THEM
+;--------------------------------
+          .LOCAL
 TRAINER    JSR CONTROL
            INC TRNCNT  
            LDA TRNCNT
            CMP #$30 
-           BEQ .1
+           BEQ ?1
            RTS
-.1         LDA #$00
+?1         LDA #$00
            STA TRNCNT
            LDA TRNFLG  
            BNE TRAIN5
@@ -894,6 +909,7 @@ TRAIN4     LDA TEMP2
            LDA #$21
            STA TRNPNT2
            RTS
+          .LOCAL           
 TRAIN5     LDA TRNVAR1
            STA TEMP1
            LDA TRNVAR2
@@ -903,58 +919,61 @@ TRAIN5     LDA TRNVAR1
            BEQ TRAIN6
            LDY TRNPNT1
            LDX TRNPNT2   
-.1         CPX #$FF
-           BEQ .2 
+?1         CPX #$FF
+           BEQ ?2 
            LDA TRNSTR,X
            DEX
-           JMP .3
-.2         LDA #$19
-.3         STA (TEMP1),Y
+           JMP ?3
+?2         LDA #$19
+?3         STA (TEMP1),Y
            DEY
-           BPL .1
+           BPL ?1
            INC TRNPNT1
            RTS
+           .LOCAL           
 TRAIN6     LDY #$27
            LDX TRNPNT2
            BMI TRAIN7
-.1         CPX #$FF
-           BEQ .2
+?1         CPX #$FF
+           BEQ ?2
            LDA TRNSTR,X
            DEX
-           JMP .3
-.2         LDA #$19
-.3         STA (TEMP1),Y
+           JMP ?3
+?2         LDA #$19
+?3         STA (TEMP1),Y
            DEY
-           BPL .1
+           BPL ?1
            DEC TRNPNT2 
            RTS
+           .LOCAL           
 TRAIN7     LDY #$27
            LDA #$19
-.1         STA (TEMP1),Y
+?1         STA (TEMP1),Y
            DEY
-           BPL .1
+           BPL ?1
            DEC TRNFLG
            RTS
-TRNSTR     .HS 199A9B9B9B9B9E9A
-           .HS 9B9B9B9B9E9A9B9B
-           .HS 9B9B9E9A9B9B9B9B
-           .HS 9E9A9B9B9B9B9B9B
-           .HS 9C9D
-*--------------------------------
-* ATTACK ROUTINES ATTACKS 
-* PLAYER DEPENDING ON
-* WHAT FLAGS ARE SET
-*--------------------------------
+TRNSTR     .BYTE $19,$9A,$9B,$9B,$9B,$9B,$9E,$9A
+           .BYTE $9B,$9B,$9B,$9B,$9E,$9A,$9B,$9B
+           .BYTE $9B,$9B,$9E,$9A,$9B,$9B,$9B,$9B
+           .BYTE $9E,$9A,$9B,$9B,$9B,$9B,$9B,$9B
+           .BYTE $9C,$9D
+;--------------------------------
+; ATTACK ROUTINES ATTACKS 
+; PLAYER DEPENDING ON
+; WHAT FLAGS ARE SET
+;--------------------------------
+           .LOCAL
 ATTACK     JSR CONTROL
            DEC FLCNT2
-           BNE .3
+           BNE ?3
            LDA #$1C
            STA FLCNT2
            DEC FLCNT 
-           BNE .3
+           BNE ?3
            LDA CRUD
-           BNE .3
-.2         LDA LEVEL
+           BNE ?3
+?2         LDA LEVEL
            ASL
            ASL
            ASL
@@ -964,16 +983,16 @@ ATTACK     JSR CONTROL
            SBC TEMP1
            STA FLCNT
            DEC FUEL 
-           BNE .3
+           BNE ?3
            JSR PLANEGON   
-.3         LDA SPACFLG  
-           BEQ .6
+?3         LDA SPACFLG  
+           BEQ ?6
            LDA WRNCNT
-           BNE .6
+           BNE ?6
            LDA SAUCFLG
-           BNE .5
-.6         LDA SAUCFLG
-           BNE .5
+           BNE ?5
+?6         LDA SAUCFLG
+           BNE ?5
            LDA SPS1  
            INC LEVEL 
            INC LEVEL 
@@ -982,9 +1001,9 @@ ATTACK     JSR CONTROL
            DEC LEVEL 
            DEC LEVEL
            STA SPS1
-           BCS .1
+           BCS ?1
            DEC SPS2
-           BNE .1
+           BNE ?1
            LDA #$A0
            STA SPS2
            LDA #$FF
@@ -993,10 +1012,10 @@ ATTACK     JSR CONTROL
            LDY #$00
            LDX #$00
            LDA $D20A
-           BMI .4
+           BMI ?4
            INX
            LDY #$FF
-.4         STX SAUCDIR   
+?4         STX SAUCDIR   
            STY HPOS1
            STY HPOS2
            LDA #$35
@@ -1005,17 +1024,18 @@ ATTACK     JSR CONTROL
            STA WRNCNT  
            LDX #$60
            LDA #$00
-.20        STA $3400,X
+?20        STA $3400,X
            STA $3500,X
            DEX
-           BNE .20
-.1         RTS
-.5         LDA WRNCNT
+           BNE ?20
+?1         RTS
+
+?5         LDA WRNCNT
            BEQ MOVSAUC 
            INC FLYCNT
            LDA FLYCNT
            CMP #$50
-           BNE .1
+           BNE ?1
            LDA #$00
            STA FLYCNT
            LDA WRNCNT
@@ -1023,64 +1043,68 @@ ATTACK     JSR CONTROL
            BEQ TONE2
            LDA #25
            BNE TONE1
+           .LOCAL           
 TONE2      LDA #100
 TONE1      STA $D206  
            LDA #$AF
            STA $D207
            LDX #$09
-.2         LDA WRNMES-1,X
+?2         LDA WRNMES-1,X
            STA $3E99,X
            DEX
-           BNE .2
+           BNE ?2
            DEC WRNCNT
-           BNE .1
+           BNE ?1
            LDA #$00
            STA $D206
            STA $D207
            LDX #$09
-.3         STA $3E99,X
+?3         STA $3E99,X
            DEX
-           BNE .3
-.1         RTS
+           BNE ?3
+?1         RTS
+;
+          .LOCAL
+;
 MOVSAUC    INC SAUCNT
            LDA SAUCNT
            CMP #$10 
-           BEQ .11
+           BEQ ?11
            RTS
-.11        LDA #$00   
+?11        LDA #$00   
            STA SAUCNT
            LDA SAUCDIR  
-           BEQ .1
+           BEQ ?1
            DEC HPOS1
            DEC HPOS2
-           JMP .2
-.1         INC HPOS1
+           JMP ?2
+?1         INC HPOS1
            INC HPOS2
-.2         LDA SAUCT
-           BEQ .3
-           BMI .4
+?2         LDA SAUCT
+           BEQ ?3
+           BMI ?4
            INC SAUCY 
            LDA SAUCY
            CMP #$60
-           BNE .3
+           BNE ?3
            LDA #$00
            STA SAUCT
-           JMP .3
-.4         DEC SAUCY
+           JMP ?3
+?4         DEC SAUCY
            LDA SAUCY
            CMP #$20
-           BNE .3
+           BNE ?3
            LDA #$00
            STA SAUCT
-.3         LDX SAUCY  
+?3         LDX SAUCY  
            INX
            LDY #$0A
            LDA #$00
-.5         STA $3400,X
+?5         STA $3400,X
            STA $3500,X
            DEX  
            DEY    
-           BPL .5 
+           BPL ?5 
            LDA #$44
            STA $2C0
            LDA #$84
@@ -1090,6 +1114,7 @@ MOVSAUC    INC SAUCNT
            BNE PLOTSAUC
            LDA #$00
            STA SAUCPNT
+          .LOCAL           
 PLOTSAUC   ASL
            TAX
            LDA SAUCTBL,X
@@ -1098,7 +1123,7 @@ PLOTSAUC   ASL
            STA TEMP2
            LDX SAUCY
            LDY #$00
-.1         LDA (TEMP1),Y
+?1         LDA (TEMP1),Y
            STA $3400,X  
            TYA
            CLC  
@@ -1113,24 +1138,24 @@ PLOTSAUC   ASL
            DEX
            INY
            CPY #$08
-           BNE .1
+           BNE ?1
            INC SAUCPNT2
            LDA SAUCPNT2
            CMP #$06
-           BNE .66
+           BNE ?66
            LDA #$00
            STA SAUCPNT2
            INC SAUCPNT
-.66        LDA SAUCT 
+?66        LDA SAUCT 
            BNE MISCHK
            LDA $D20A
-           BMI .10
+           BMI ?10
            LDA SAUCY
            CMP #$20
            BEQ MISCHK
            DEC SAUCT 
            JMP MISCHK  
-.10        LDA SAUCY
+?10        LDA SAUCY
            CMP #$60
            BEQ MISCHK
            INC SAUCT
@@ -1153,33 +1178,36 @@ MISCHK     LDA SMISY
            STA MISDIR
            LDA HPOS1
            SEC
+           .LOCAL           
            SBC CROSSX
-           BCC .1
+           BCC ?1
            CMP #$0D
            BCC NOMISL
            DEC MISDIR  
            BNE NOMISL
-.1         EOR #$FF
+?1         EOR #$FF
            CLC
            ADC #$01
            CMP #$0D
            BCC NOMISL
-           INC MISDIR  
+           INC MISDIR
+          .LOCAL           
 NOMISL     LDA HPOS1
-           BNE .1
+           BNE ?1
            LDA #$00
            STA SAUCFLG
            STA $D207
-.1         RTS 
-WRNMES     .HS 1C0F0E000B160F1C1E
-SAUCTBL    .DA SAUCER1
-           .DA SAUCER2
-           .DA SAUCER3
-           .DA SAUCER4
-*--------------------------------
-* SOUND GENERATOR
-* GENERATES SOUNDS FOR GAME
-*--------------------------------
+?1         RTS 
+WRNMES     .BYTE $0C,$0F,$0E,$00,$0B,$16,$0F,$1C,$1E
+;
+SAUCTBL    .WORD SAUCER1
+           .WORD SAUCER2
+           .WORD SAUCER3
+           .WORD SAUCER4
+;--------------------------------
+; SOUND GENERATOR
+; GENERATES SOUNDS FOR GAME
+;--------------------------------
 SOUND      JSR CONTROL
            INC SNDCNT
            LDA SNDCNT
@@ -1201,23 +1229,24 @@ SOUND      JSR CONTROL
 SOUND2     LDA #$00
            STA $D205
            INC EXPSND
+           .LOCAL           
 SOUND3     LDA SMISY
-           BNE .1
+           BNE ?1
            LDA WRNCNT
-           BNE .3
+           BNE ?3
            LDA SAUCFLG
-           BNE .2
+           BNE ?2
            LDA #$00
            STA $D206
            STA $D207
-.3         RTS
-.1         LDA #$A8
+?3         RTS
+?1         LDA #$A8
            STA $D207
            LDA SMISY
            STA $D206
            RTS
-.2         LDA VOLFLG    
-           BNE .4 
+?2         LDA VOLFLG    
+           BNE ?4 
            LDA #$1
            STA $D206
            LDA #$60
@@ -1226,21 +1255,22 @@ SOUND3     LDA SMISY
            INC VOLUM
            LDA VOLUM
            CMP #$0F
-           BNE .3
+           BNE ?3
            INC VOLFLG
-           JMP .3
-.4         LDA #$1
+           JMP ?3
+?4         LDA #$1
            STA $D206
            LDA #$60
            ORA VOLUM
            STA $D207
            DEC VOLUM
-           BNE .3
+           BNE ?3
            DEC VOLFLG
-           JMP .3
-*--------------------------------
-* OBJECT COLLISION HANDLER
-*--------------------------------
+           JMP ?3
+;--------------------------------
+; OBJECT COLLISION HANDLER
+;--------------------------------
+.LOCAL
 COLRUT     LDA LIST2+3
            STA IRQVAR1
            LDA LIST2+4
@@ -1282,9 +1312,9 @@ NOCAT      CLC
            STA IRQVAR2
            LDY #$00
            LDA SPACFLG
-           BEQ .1
+           BEQ ?1
            JMP SPACKIL
-.1         LDA BASER
+?1         LDA BASER
            BEQ RETRY
            JMP BASKILER
 RETRY      LDA (IRQVAR1),Y 
@@ -1308,18 +1338,20 @@ COLRU3     LDA CHATBL,X
            BEQ COLRU5
            INX
            BNE COLRU3
+           .LOCAL           
 COLRU5     LDX #$00
-.1         LDA CHTBL3,X
+?1         LDA CHTBL3,X
            CMP (IRQVAR1),Y
            BEQ COLRU8
            CMP #$FF
            BEQ COLREND
            INX
-           BNE .1
+           BNE ?1
+           .LOCAL           
 COLRU4     CMP #$22
-           BCC .2
+           BCC ?2
            CMP #$2A
-           BCS .2
+           BCS ?2
            INC FUEL
            INC FUEL
            INC FUEL
@@ -1328,16 +1360,16 @@ COLRU4     CMP #$22
            CLC
            ADC FUEL
            CMP #$51
-           BCC .1
+           BCC ?1
            LDA #$50
-.1         STA FUEL
-.2         LDA IRQVAR1   
+?1         STA FUEL
+?2         LDA IRQVAR1   
            SEC
            SBC CHTBL2,X
            STA IRQVAR1
-           BCS .3
+           BCS ?3
            DEC IRQVAR2  
-.3         LDA #$06  
+?3         LDA #$06  
            STA IRQVAR3
            JMP COLRU9
 COLRU8     LDA #$05
@@ -1365,42 +1397,44 @@ COLRU7     LDA IRQVAR3
            STA EXPSND
 COLREND    STA $D01E
            JMP RTEND
-*--------------------------------
-* BRIDGE COLLAPSE ROUTINE
-*--------------------------------
+;--------------------------------
+; BRIDGE COLLAPSE ROUTINE
+;--------------------------------
+.LOCAL
 BRIDGER    JSR CONTROL
            LDA BRDFLG 
-           BNE .1
-.2         RTS  
-.1         DEC BRDCNT
-           BNE .2
+           BNE ?1
+?2         RTS  
+?1         DEC BRDCNT
+           BNE ?2
            LDA BRDPNT
            CMP #$03
-           BNE .3
+           BNE ?3
            LDA #$00
            STA BRDFLG
            STA BRDCNT
            STA BRDPNT
            RTS
-.3         ASL
+?3         ASL
            TAX
            LDA BRDTAB,X
            STA TEMP1
            LDA BRDTAB+1,X
            STA TEMP2
            LDY #$1F
-.4         LDA (TEMP1),Y
+?4         LDA (TEMP1),Y
            STA $70A8,Y
            DEY
-           BPL .4
+           BPL ?4
            INC BRDPNT
            RTS
-BRDTAB     .DA BRIDGE1
-           .DA BRIDGE2
-           .DA BRIDGE3
-*--------------------------------
-* EXPLODE PLANE ON SCREEN
-*--------------------------------
+BRDTAB     .WORD BRIDGE1
+           .WORD BRIDGE2
+           .WORD BRIDGE3
+;--------------------------------
+; EXPLODE PLANE ON SCREEN
+;--------------------------------
+.LOCAL
 PLANEGON   JSR CONTROL
            LDA #$00
            STA HPOS3
@@ -1409,8 +1443,8 @@ PLANEGON   JSR CONTROL
            STA TEMP1
            LDA #$50
            STA CRUD
-.1         LDX #$0D
-.2         LDA $D20A  
+?1         LDX #$0D
+?2         LDA $D20A  
            PHA
            EOR $3490,X
            AND P1-1,X
@@ -1421,7 +1455,7 @@ PLANEGON   JSR CONTROL
            AND P2-1,X
            STA $3590,X
            DEX
-           BNE .2
+           BNE ?2
            LDA $D20A
            AND #$3F
            STA $D202
@@ -1430,7 +1464,7 @@ PLANEGON   JSR CONTROL
            LDA TEMP1
            PHA
            LDX #$30
-.66        TXA
+?66        TXA
            PHA
            JSR TRAINER
            JSR KILLER
@@ -1443,41 +1477,41 @@ PLANEGON   JSR CONTROL
            PLA
            TAX
            DEX
-           BNE .66
+           BNE ?66
            PLA
            STA TEMP1
            DEC TEMP1
-           BNE .1
+           BNE ?1
            DEC TEMP1
-.3         LDA TEMP1
+?3         LDA TEMP1
            STA $D202
            LDA TEMP1
            AND #$0F
-           BNE .4
+           BNE ?4
            LDA TEMP1
            CMP #$90
-           BCS .5
+           BCS ?5
            LDX #$10
-.8         LDA $3490,X
+?8         LDA $3490,X
            LSR
            STA $3490,X
            LDA $3590,X
            ASL
            STA $3590,X
            DEX
-           BNE .8
-           BEQ .4
-.5         LDX #$0C
-.6         LDA $3690,X
+           BNE ?8
+           BEQ ?4
+?5         LDX #$0C
+?6         LDA $3690,X
            LSR
            STA $3690,X
            LDA $3790,X
            ASL
            STA $3790,X
            DEX
-           BNE .6
-.4         LDX #$6 
-.10        TXA  
+           BNE ?6
+?4         LDX #$6 
+?10        TXA  
            PHA
            LDA TEMP1
            PHA
@@ -1494,15 +1528,15 @@ PLANEGON   JSR CONTROL
            PLA
            TAX
            DEX
-           BNE .10
+           BNE ?10
            DEC TEMP1      
-           BNE .3
+           BNE ?3
            LDA #$00
            STA $D203
            DEC SHIPS
-           BNE .11
+           BNE ?11
            JMP ENDGAME
-.11        JSR PMAKER
+?11        JSR PMAKER
            LDA #$35
            STA $D202
            LDA #$AF
@@ -1519,9 +1553,10 @@ SUP        DEY
            LDA #$00
            STA CRUD
            RTS
-*--------------------------------
-* MISSLE FIRE ROUTINE
-*--------------------------------
+;--------------------------------
+; MISSLE FIRE ROUTINE
+;--------------------------------
+.LOCAL
 MISSLES    INC MISCNT
            LDA MISCNT
            CMP #$10
@@ -1532,18 +1567,18 @@ MISSLES    INC MISCNT
            BEQ ENDMIS
            LDX SMISY
            LDA #$00
-.1         STA $3600,X
+?1         STA $3600,X
            DEX
-           BNE .1
+           BNE ?1
            LDA MISDIR
-           BEQ .2
-           BMI .3
+           BEQ ?2
+           BMI ?3
            INC HPOS3
            BEQ CKMISKL
-           BNE .2
-.3         DEC HPOS3 
+           BNE ?2
+?3         DEC HPOS3 
            BEQ CKMISKL
-.2         INC SMISY
+?2         INC SMISY
            INC SMISY
            INC SMISY
            INC SMISY
@@ -1553,51 +1588,53 @@ MISSLES    INC MISCNT
            LDX SMISY 
            LDY #$04
            LDA #$08
-.5         STA $3600,X 
+?5         STA $3600,X 
            DEX 
            DEY
-           BNE .5
+           BNE ?5
            LDA #$FF
            STA $2C2
 ENDMIS     RTS  
+          .LOCAL
 CKMISKL    LDA HPOS3
            SEC
            SBC CROSSX    
-           BEQ .2
-           BCC .1 
+           BEQ ?2
+           BCC ?1 
            CMP #$0D
-           BCS .3
-           JMP .2
-.1         EOR #$FF
+           BCS ?3
+           JMP ?2
+?1         EOR #$FF
            CMP #$0C
-           BCS .3
-.2         JSR PLANEGON  
-.3         LDA #$00  
+           BCS ?3
+?2         JSR PLANEGON  
+?3         LDA #$00  
            STA HPOS3
            STA SMISY
            RTS
-*--------------------------------
-* SAUCDEATH!!!!
-* CHECK FOR SAUCER HIT
-*--------------------------------
+;--------------------------------
+; SAUCDEATH!!!!
+; CHECK FOR SAUCER HIT
+;--------------------------------
+           .LOCAL
 UFODIE     JSR CONTROL
            JSR KILUFO
            LDX #$03  
-.1         LDA HIT1,X
+?1         LDA HIT1,X
            AND #$3
-           BNE .2
+           BNE ?2
            DEX
-           BPL .1 
+           BPL ?1 
            RTS
-.2         INC UFOEXP  
+?2         INC UFOEXP  
            LDA #$00
            STA EXPSND
            LDX #$03
-.3         LDA HIT1,X  
+?3         LDA HIT1,X  
            AND #$8
            STA HIT1,X  
            DEX
-           BPL .3
+           BPL ?3
            LDA LEVEL
            CLC
            ADC #$01
@@ -1613,194 +1650,199 @@ UFODIE     JSR CONTROL
            LDA #$28
            STA UFCNT
            RTS
+          .LOCAL           
 KILUFO     LDA UFOEXP
-           BNE .1
-.2         RTS   
-.1         LDA #$00
+           BNE ?1
+?2         RTS   
+?1         LDA #$00
            STA SAUCFLG
            INC UFKFLG
            LDA UFKFLG
            CMP #$60
-           BNE .15
+           BNE ?15
            LDA #$00
            STA UFKFLG
            LDX #$60
-.3         LDA $3400,X  
+?3         LDA $3400,X  
            ASL 
            STA $3400,X  
            LDA $3500,X 
            LSR
            STA $3500,X 
            DEX
-           BNE .3
+           BNE ?3
            DEC UFCNT   
-           BNE .15
+           BNE ?15
            LDA #$00
            STA UFOEXP
            LDX #$60
-.6         STA $3400,X
+?6         STA $3400,X
            STA $3500,X
            DEX
-           BNE .6
+           BNE ?6
            LDX #$03
-.14        LDA HIT1,X
+?14        LDA HIT1,X
            AND #$08
            STA HIT1,X
            DEX
-           BPL .14
-.15        PLA  
+           BPL ?14
+?15        PLA  
            PLA
            RTS
-*--------------------------------
-* STAR ROUTINE
-*--------------------------------
+;--------------------------------
+; STAR ROUTINE
+;--------------------------------
+.LOCAL
 STARS      INC STRCNT
            LDA STRCNT
            CMP #$02
-           BEQ .1
+           BEQ ?1
            RTS
-.1         LDA #$00
+?1         LDA #$00
            STA STRCNT
            LDX STRFAS
            STA $73F8,X
            INC STRFAS
            LDA STRFAS
            CMP #$08
-           BNE .2
+           BNE ?2
            LDA #$00
            STA STRFAS
            JSR STARPLOT
-.2         LDX STRFAS    
+?2         LDX STRFAS    
            LDA #$0C
            STA $73F8,X  
            RTS
-*--------------------------------
-* STARPLOT SUBROUTINES
-*--------------------------------
+;--------------------------------
+; STARPLOT SUBROUTINES
+;--------------------------------
+.LOCAL
 STARPLOT   LDX #$0D
-.1         LDY STARY,X
+?1         LDY STARY,X
            LDA YLOW,Y
            STA IRQVAR1
            LDA YHI,Y
            STA IRQVAR2
            LDY STARX,X
            LDA (IRQVAR1),Y
-           BEQ .2
+           BEQ ?2
            CMP #$7F
-           BEQ .2
+           BEQ ?2
            CMP #$FF
-           BNE .5
-.2         LDA #$00
+           BNE ?5
+?2         LDA #$00
            STA (IRQVAR1),Y
-.5         INC STARY,X
+?5         INC STARY,X
            LDA STARY,X
            CMP #$15
-           BNE .6
+           BNE ?6
            LDA #$00
            STA STARY,X
-.6         TAY
+?6         TAY
            LDA YLOW,Y
            STA IRQVAR1
            LDA YHI,Y
            STA IRQVAR2
            LDY STARX,X
            LDA (IRQVAR1),Y
-           BNE .7
+           BNE ?7
            LDA #$7F
            BIT $D20A
-           BMI .8
+           BMI ?8
            LDA #$FF
-.8         STA (IRQVAR1),Y  
-.7         DEX   
-           BPL .1
+?8         STA (IRQVAR1),Y  
+?7         DEX   
+           BPL ?1
            RTS
-STARX      .HS 0205020A0C0E131519
-           .HS 1D20242628
-STARY      .HS 010A07000311020508
-           .HS 1304001404
-YLOW       .HS 00285078A0C8F018  
-           .HS 406890B8E0083058
-           .HS 80A8D0F820
-YHI        .HS 4040404040404041
-           .HS 4141414141424242
-           .HS 4242424243
 
-*--------------------------------
-* NIGHT 3
-* SPACE ROUTINES
-*--------------------------------
-* SPACE ATTACKER ROUTINES
-* ATTACKS PLAYER WITH ANDROID
-* SHIPS
-*--------------------------------
+STARX      .BYTE $02,$05,$02,$0A,$0C,$0E,$13,$15,$19
+           .BYTE $1D,$20,$24,$26,$28
+STARY      .BYTE $01,$0A,$07,$00,$03,$11,$02,$05,$08
+           .BYTE $13,$04,$00,$14,$04
+YLOW       .BYTE $00,$28,$50,$78,$A0,$C8,$F0,$18  
+           .BYTE $40,$68,$90,$B8,$E0,$08,$30,$58
+           .BYTE $80,$A8,$D0,$F8,$20
+YHI        .BYTE $40,$40,$40,$40,$40,$40,$40,$41
+           .BYTE $41,$41,$41,$41,$41,$42,$42,$42
+           .BYTE $42,$42,$42.$42,$43
+;--------------------------------
+; NIGHT 3
+; SPACE ROUTINES
+;--------------------------------
+; SPACE ATTACKER ROUTINES
+; ATTACKS PLAYER WITH ANDROID
+; SHIPS
+;--------------------------------
+           .LOCAL
 SPCATK     LDA SPACFLG
-           BNE .2
-.1         RTS
-.2         LDA MUSCNT
+           BNE ?2
+?1         RTS
+?2         LDA MUSCNT
            CMP #$1A
-           BEQ .3
+           BEQ ?3
            CMP #$19
-           BNE .5
+           BNE ?5
            LDA LEVEL
            CLC
            ADC #$01
            STA WAVES
-.5         LDA #$00   
+?5         LDA #$00   
            STA MUSDEL
            INC MUSCNT
            RTS
-.3         LDA #$2
+?3         LDA #$2
            ADC MUSDEL
            STA MUSDEL
            CMP #$F0
-           BCS .4
+           BCS ?4
            RTS
-.4         LDA #$00
+?4         LDA #$00
            STA MUSDEL
            LDA WAVES
-           BNE .9
+           BNE ?9
            INC MIKEY2
            LDA MIKEY2
            CMP #$30
-           BNE .7
+           BNE ?7
            DEC SPACFLG
-.7         RTS
-.9         LDA FLYFLG  
+?7         RTS
+?9         LDA FLYFLG  
            BNE ALLDEAD
-*--------------------------------
-* IF FLYFLAG NOT SET THEN WE
-* INITIALIZE STRING PICK A
-* RANDOM PATH AND INITIALIZE
-* NUMBER OF PLANES TO KILL
-*--------------------------------
+;--------------------------------
+; IF FLYFLAG NOT SET THEN WE
+; INITIALIZE STRING PICK A
+; RANDOM PATH AND INITIALIZE
+; NUMBER OF PLANES TO KILL
+;--------------------------------
            INC FLYFLG
            LDA $D20A
            AND #$07
            CMP #$05
-           BCC .6
+           BCC ?6
            LSR
-.6         ASL
+?6         ASL
            STA PATHPNT
            LDA #$00
            STA PSTRING
            STA PSTATUS
            LDX #$5F
-.8         LDA SPACL1,X
+?8         LDA SPACL1,X
            STA $7380,X
            DEX
-           BPL .8
-*--------------------------------
-* PLOT SHIPS
-*--------------------------------
+           BPL ?8
+;--------------------------------
+; PLOT SHIPS
+;--------------------------------
+           .LOCAL
 ALLDEAD    LDA PSTATUS
            CMP #$FF
-           BNE .1
+           BNE ?1
            DEC WAVES
-           BNE .2
+           BNE ?2
            RTS
-.2         DEC FLYFLG
+?2         DEC FLYFLG
            RTS
-.1         LDX PATHPNT
+?1         LDX PATHPNT
            LDA PATHX,X
            STA TEMP1
            LDA PATHX+1,X
@@ -1817,7 +1859,7 @@ PUTPLN     JSR ERASEPLN
            LDY PSTRING
            LDA (TEMP1),Y
            CMP #$FF
-           BEQ .4
+           BEQ ?4
            LDA (TEMP3),Y
            TAX
            LDA (TEMP5),Y
@@ -1831,11 +1873,11 @@ PUTPLN     JSR ERASEPLN
            PLA
            PHA
            CMP #$74
-           BNE .3
+           BNE ?3
            LDA SMISY
            ORA WRNCNT 
            ORA SAUCFLG
-           BNE .3
+           BNE ?3
            TXA
            ASL
            ASL
@@ -1851,7 +1893,7 @@ PUTPLN     JSR ERASEPLN
            STA HPOS3
            LDA #$00
            STA MISDIR
-.3         PLA
+?3         PLA
            STA (TEMP7),Y
            INY
            CLC
@@ -1871,17 +1913,18 @@ PUTPLN     JSR ERASEPLN
            STA (TEMP7),Y
            INC PSTRING
            RTS  
-.4         DEC FLYFLG
+?4         DEC FLYFLG
            RTS
-*--------------------------------
-* ERASE PLANES
-*--------------------------------
+;--------------------------------
+; ERASE PLANES
+;--------------------------------
+           .LOCAL
 ERASEPLN   LDY PSTRING
-           BEQ .1
+           BEQ ?1
            DEY
            LDA (TEMP1),Y
            CMP #$FF
-           BEQ .1
+           BEQ ?1
            LDA (TEMP3),Y
            TAX
            LDA (TEMP1),Y
@@ -1902,36 +1945,37 @@ ERASEPLN   LDY PSTRING
            STA (TEMP7),Y
            INY
            STA (TEMP7),Y
-.1         RTS
-*--------------------------------
-* SPACE COLLISION HANDLER
-*--------------------------------
+?1         RTS
+;--------------------------------
+; SPACE COLLISION HANDLER
+;--------------------------------
+.LOCAL
 SPACKIL    LDA #$00  
            TAY
            TAX
-.1         LDA PLANCHR,X
+?1         LDA PLANCHR,X
            CMP #$FF
-           BEQ .6
+           BEQ ?6
            CMP (IRQVAR1),Y
-           BEQ .2
+           BEQ ?2
            INX
-.6         CMP #$FF 
-           BNE .1
+?6         CMP #$FF 
+           BNE ?1
            JMP COLREND
-.2         LDA IRQVAR1
+?2         LDA IRQVAR1
            SEC
            SBC PLANDIF,X 
            STA IRQVAR1
-           BCS .3
+           BCS ?3
            DEC IRQVAR2
-.3         LDX #$00
-.4         LDA PLANFIND,X 
-           BEQ .5
+?3         LDX #$00
+?4         LDA PLANFIND,X 
+           BEQ ?5
            INX
            CMP #$FF
-           BNE .4
+           BNE ?4
            JMP COLREND
-.5         LDA #$5 
+?5         LDA #$5 
            STA PLANFIND,X
            TXA
            ASL
@@ -1946,7 +1990,7 @@ SPACKIL    LDA #$00
            STA PSTATUS
            LDX LEVEL
            INX
-.99        LDA BSCOR0
+?99        LDA BSCOR0
            CLC 
            ADC #$64 
            STA BSCOR0
@@ -1954,39 +1998,40 @@ SPACKIL    LDA #$00
            ADC #$00
            STA BSCOR1
            DEX
-           BNE .99
+           BNE ?99
            JMP COLREND
-PLANCHR    .HS 7071727374757677
-           .HS 78797A7BFF
-PLANDIF    .HS 0001282900012829
-           .HS 00012829FF
-PLANFIND   .HS 0000000000000000
-           .HS FF
-PLANTIME   .HS 0000000000000000
-           .HS 0000000000000000
-*--------------------------------
-* KILLER2 KILLS SPACE CHARACTERS
-*--------------------------------
+PLANCHR    .BYTE $70,$71,$72,$73,$74,$75,$76,$77
+           .BYTE $78,$79,$7A,$7B,$FF
+PLANDIF    .BYTE $00,$01,$28,$29,$00,$01,$28,$29
+           .BYTE $00,$01,$28,$29,$FF
+PLANFIND   .BYTE $00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $FF
+PLANTIME   .BYTE $00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00
+;--------------------------------
+; KILLER2 KILLS SPACE CHARACTERS
+;--------------------------------
+.LOCAL
 KILLER2    LDA SPACFLG
            BNE STYX
            RTS
 STYX       INC MIKEY
            LDA MIKEY
            CMP #$20
-           BEQ .1
+           BEQ ?1
            RTS
-.1         LDA #$00
+?1         LDA #$00
            STA MIKEY
            TAX
-.2         LDA PLANFIND,X
+?2         LDA PLANFIND,X
            CMP #$FF
-           BNE .3
+           BNE ?3
            RTS
-.3         CMP #$00
-           BNE .4
+?3         CMP #$00
+           BNE ?4
            INX
-           BNE .2
-.4         STX TEMP3
+           BNE ?2
+?4         STX TEMP3
            DEC PLANFIND,X
            TXA
            ASL
@@ -1997,10 +2042,10 @@ STYX       INC MIKEY
            STA TEMP2
            LDX TEMP3
            LDA PLANFIND,X  
-           BNE .5
-           BEQ .6
-.5         LDA #$30
-.6         LDY #$00
+           BNE ?5
+           BEQ ?6
+?5         LDA #$30
+?6         LDY #$00
            STA (TEMP1),Y
            INY
            STA (TEMP1),Y
@@ -2009,16 +2054,17 @@ STYX       INC MIKEY
            INY
            STA (TEMP1),Y
            INX
-           JMP .2
-*--------------------------------
-* MX SHOOTS MISSLES
-*--------------------------------
+           JMP ?2
+;--------------------------------
+; MX SHOOTS MISSLES
+;--------------------------------
+.LOCAL
 MX         INC MXDELAY
            LDA MXDELAY
            CMP #$10
-           BEQ .4
+           BEQ ?4
            RTS
-.4         LDA #$00
+?4         LDA #$00
            STA MXDELAY
            JSR MXKILL 
            LDA MXFLAG
@@ -2029,17 +2075,17 @@ MX         INC MXDELAY
            STA TEMP1
            LDA LIST2+4
            STA TEMP2
-           BCC .1
+           BCC ?1
            INC TEMP2
-.1         INC TEMP2
+?1         INC TEMP2
            LDY #$27
-.2         LDA (TEMP1),Y
+?2         LDA (TEMP1),Y
            CMP #$E6
-           BEQ .3
+           BEQ ?3
            DEY
-           BPL .2
+           BPL ?2
            RTS
-.3         TYA
+?3         TYA
            ASL
            ASL
            ADC #$2E
@@ -2048,6 +2094,7 @@ MX         INC MXDELAY
            LDA #$00
            STA MXSCRL
            RTS
+          .LOCAL
 MX2        LDA MXSCRL 
            CMP #$0F
            BCS MX3 
@@ -2056,53 +2103,55 @@ MX2        LDA MXSCRL
            SBC MXSCRL
            TAY 
            LDX #$FF
-.2         INX
+?2         INX
            LDA MXDAT,X  
            STA $374B,Y
            INY
            CPX MXSCRL
-           BNE .2
+           BNE ?2
            INC MXSCRL
            RTS
+          .LOCAL
 MX3        INC $2C3
            LDX #$00
-.1         LDA $3700,X  
+?1         LDA $3700,X  
            STA $36FF,X  
            INX
            CPX #$60
-           BNE .1
+           BNE ?1
            INC MXSCRL
            LDA MXSCRL
            CMP #$FF
-           BEQ .2
+           BEQ ?2
            STA $D202
            LDA #$8F
            STA $D203
            RTS
-.2         DEC MXFLAG
+?2         DEC MXFLAG
            LDA #$50
            STA $D202
            LDA #$88
            STA $D203
            RTS
-*--------------------------------
-* MXKILL CHECK FOR MX DEATH!
-*--------------------------------
+;--------------------------------
+; MXKILL CHECK FOR MX DEATH!
+;--------------------------------
+.LOCAL
 MXKILL     LDA MXDEATH
-           BNE .4 
+           BNE ?4 
            LDX #$03
-.1         LDA HIT1,X
+?1         LDA HIT1,X
            AND #$08
-           BNE .2
+           BNE ?2
            DEX
-           BPL .1
+           BPL ?1
            RTS
-.2         LDX #$03
-.3         LDA HIT1,X
+?2         LDX #$03
+?3         LDA HIT1,X
            AND #$07
            STA HIT1,X
            DEX
-           BPL .3
+           BPL ?3
            INC MXDEATH
            LDA #$00
            STA EXPSND 
@@ -2115,46 +2164,47 @@ MXKILL     LDA MXDEATH
            ADC BSCOR1
            STA BSCOR1
            RTS
-*--------------------------------
-* KILL MISSLE!
-*--------------------------------
-.4         LDA #$50
+;--------------------------------
+; KILL MISSLE!
+;--------------------------------
+?4         LDA #$50
            STA $D202
            LDA #$88
            STA $D203
            LDX #$60  
-.5         LDA $3700,X
-           BNE .55
+?5         LDA $3700,X
+           BNE ?55
            DEX
-           BNE .5
-.55        LDY #$0E
-.56        DEX
+           BNE ?5
+?55        LDY #$0E
+?56        DEX
            LDA $D20A
            AND MXDAT,Y
            STA $3700,X  
            DEY
-           BPL .56 
+           BPL ?56 
            DEC MCNT
-           BNE .15
+           BNE ?15
            LDA #$00
            STA MXDEATH
            LDX #$60
-.8         STA $3700,X
+?8         STA $3700,X
            DEX
-           BPL .8
-.15        PLA
+           BPL ?8
+?15        PLA
            PLA
            RTS
-MXDAT      .HS 1010103838383838 
-           .HS 3838387C7C4444
-*--------------------------------
-* KIL BASER
-*--------------------------------
+MXDAT      .BYTE $10,$10,$10,$38,$38,$38,$38,$38 
+           .BYTE $38,$38,$38,$7C,$7C,$44,$44
+;--------------------------------
+; KIL BASER
+;--------------------------------
+           .LOCAL
 EXPLOB     LDA BASDEAD
            CMP #$03
-           BEQ .1
+           BEQ ?1
            RTS
-.1         LDA #$00
+?1         LDA #$00
            STA MOVFLG
            STA ACTFLG
            LDA #$54
@@ -2172,46 +2222,46 @@ EXPLOB     LDA BASDEAD
            STA $D203
            LDX #$00
            TXA
-.2         STA $48C0,X
+?2         STA $48C0,X
            STA $49C0,X
            STA $4AC0,X
            INX
            INX
-           BNE .2   
+           BNE ?2   
            LDA #$CF 
            STA $D201
            LDA #$8F
            STA $D203
            LDX #$FF
-.3         STX $D200
+?3         STX $D200
            TXA
            PHA
            EOR #$FF
            STA $D202
            TXA
            AND #$0F
-           BNE .7
+           BNE ?7
            LDX #$15
            LDA #$C0
            STA TEMP1
            LDA #$48
            STA TEMP2
-.4         LDY #$00
-.6         LDA (TEMP1),Y
+?4         LDY #$00
+?6         LDA (TEMP1),Y
            DEY
            STA (TEMP1),Y
            INY
            INY
            CPY #$15
-           BCC .6
+           BCC ?6
            LDY #$28 
-.5         LDA (TEMP1),Y
+?5         LDA (TEMP1),Y
            INY
            STA (TEMP1),Y
            DEY
            DEY
            CPY #$14
-           BCS .5
+           BCS ?5
            LDA TEMP1
            CLC
            ADC #$28
@@ -2220,10 +2270,10 @@ EXPLOB     LDA BASDEAD
            ADC #$00
            STA TEMP2
            DEX
-           BNE .4
+           BNE ?4
            LDX #$28
            LDY #$00
-.10        LDA $49C0,Y
+?10        LDA $49C0,Y
            STA $48C0,Y
            LDA $4AC0,Y
            STA $49C0,Y
@@ -2232,30 +2282,31 @@ EXPLOB     LDA BASDEAD
            LDA #$00
            STA $4BC0,Y
            INY
-           BNE .10
-.7         LDY #$00
+           BNE ?10
+?7         LDY #$00
            LDX #$05
-.20        DEY
-           BNE .20
+?20        DEY
+           BNE ?20
            DEX
-           BNE .20 
+           BNE ?20 
            PLA
            TAX
            DEX
-           BNE .3
+           BNE ?3
            LDA #$00
            STA $D201
            STA $D203
            STA $2C8
            LDA #$2C
            STA $2F4
+          .LOCAL
 BONUS      LDX #$0E
-.1         LDA BONSTR,X
+?1         LDA BONSTR,X
            STA $4995,X
            DEX
-           BPL .1
+           BPL ?1
            LDX #$0F 
-.2         LDY MUSDATA,X
+?2         LDY MUSDATA,X
            STY $D200
            DEY
            STY $D202
@@ -2264,18 +2315,18 @@ BONUS      LDX #$0E
            STA $D203
            INY
            CPY #$00
-           BNE .55
+           BNE ?55
            STY $D201
            STY $D203
-.55        LDA MUSDLY,X
+?55        LDA MUSDLY,X
            LDY #$00
-.3         DEY
-           BNE .3
+?3         DEY
+           BNE ?3
            SEC
            SBC #$01
-           BNE .3
+           BNE ?3
            DEX
-           BPL .2
+           BPL ?2
            LDX #$10
            JSR DELAY
            LDA #$01
@@ -2285,14 +2336,14 @@ BONUS      LDX #$0E
            LDY LEVEL
            INY
            LDX #$02 
-.21        STX $49EB
+?21        STX $49EB
            LDA BSCOR0
            CLC
            ADC #$E8
            STA BSCOR0
-           BCC .22
+           BCC ?22
            INC BSCOR1
-.22        INC BSCOR1
+?22        INC BSCOR1
            INC BSCOR1
            INC BSCOR1
            TXA
@@ -2306,17 +2357,17 @@ BONUS      LDX #$0E
            TAX
            INX
            DEY
-           BNE .21
+           BNE ?21
            LDX #$50
            JSR DLONG
            LDA LEVEL
            CMP #$04
-           BNE .87
+           BNE ?87
            INC SHIPS
-.87        CMP #$05
-           BEQ .9
+?87        CMP #$05
+           BEQ ?9
            INC LEVEL
-.9         LDA #$58
+?9         LDA #$58
            STA LIST2+3
            LDA #$4C
            STA LIST2+4
@@ -2326,25 +2377,26 @@ BONUS      LDX #$0E
            JSR INITVAR
            LDX #$0C
            JMP CURRAN
-BONSTR     .HS 0F180F1723000E0F1D1E1C19230F0E
-MUSDATA    .HS 00580068005800460068007300750080
-MUSDLY     .HS 0A640A7D0A7D0A7D0A7D0A640AAF0A64
-*--------------------------------
-* BASKILER BAS CHARACTER KILL ROUTINES!
-*--------------------------------
+BONSTR     .BYTE $0F,$18,$0F,$17,$23,$00,$0E,$0F,$1D,$1E,$1C,$19,$23,$0F,$0E
+MUSDATA    .BYTE $00,$58,$00,$68,$00,$58,$00,$46,$00,$68,$00,$73,$00,$75,$00,$80
+MUSDLY     .BYTE $0A,$64,$0A,$7D,$0A,$7D,$0A,$7D,$0A,$7D,$0A,$64,$0A,$AF,$0A,$64
+;--------------------------------
+; BASKILER BAS CHARACTER KILL ROUTINES!
+;--------------------------------
+           .LOCAL
 BASKILER   LDA (IRQVAR1),Y
            CMP #$3F
-           BEQ .2
+           BEQ ?2
            CMP #$40
-           BEQ .1
+           BEQ ?1
            JMP RETRY
-.1         LDA IRQVAR1
+?1         LDA IRQVAR1
            SEC
            SBC #$01
            STA IRQVAR1
-           BCS .2
+           BCS ?2
            DEC IRQVAR2
-.2         LDA #$B0
+?2         LDA #$B0
            STA (IRQVAR1),Y
            INY
            STA (IRQVAR1),Y
@@ -2361,12 +2413,13 @@ BASKILER   LDA (IRQVAR1),Y
            LDA IRQVAR2
            STA BASOLD+1,X
            JMP COLREND
-BASOLD     .HS 0000
-           .HS 0000
-           .HS 0000
-*--------------------------------
-* ENDGAME
-*--------------------------------
+BASOLD     .BYTE $00,$00
+           .BYTE $00,$00
+           .BYTE $00,$00
+;--------------------------------
+; ENDGAME
+;--------------------------------
+           .LOCAL
 ENDGAME    LDA #$00
            LDA #$00
            STA $D201
@@ -2383,14 +2436,14 @@ ENDGAME    LDA #$00
            STA HPOS4
            LDX #$00
            TXA
-.3         STA $3400,X
+?3         STA $3400,X
            STA $3500,X
            STA $3600,X
            STA $3700,X
            DEX
-           BNE .3
+           BNE ?3
            LDX #$5F
-.1         LDA GDAT,X
+?1         LDA GDAT,X
            STA $3420,X
            LDA ADAT,X
            STA $3520,X 
@@ -2399,7 +2452,7 @@ ENDGAME    LDA #$00
            LDA EDAT,X
            STA $3720,X
            DEX
-           BPL .1
+           BPL ?1
            LDA #$03
            STA $D008
            STA $D009
@@ -2437,73 +2490,74 @@ NOHI       LDX #$30
            JSR DLONG
            LDY TEMP5
            JMP WARMSTART
-*--------------------------------
-* GAME OVER DATA
-*--------------------------------
-GDAT       .HS FCFCFCFCFC808080
-           .HS 8080808080808080
-           .HS 8080808080808080
-           .HS 9C9C9C9C9C848484
-           .HS 848484848484FCFC
-           .HS FCFCFC0000000000
-           .HS 0000000000FCFCFC
-           .HS FC84848484848484
-           .HS 8484848484848484 
-           .HS 8484848484848484 
-           .HS 8484848484848484
-           .HS 84848484FCFCFCFC
-ADAT       .HS 1818181824242424
-           .HS 4242424242424242
-           .HS 424242424242427E
-           .HS 7E7E7E4242424242
-           .HS 4242424242424242
-           .HS 4242420000000000
-           .HS 0000000000818181
-           .HS 8181818181818181
-           .HS 8181818181424242
-           .HS 4242424242422424
-           .HS 2424242424242424
-           .HS 1818181818181800
-MDAT       .HS C3C3C3C3A5A5A5A5
-           .HS 9999999999999999
-           .HS 9999999999999999
-           .HS 9999999999998181
-           .HS 8181818181818181
-           .HS 8181810000000000
-           .HS 0000000000FCFCFC
-           .HS FC80808080808080
-           .HS 80808080808080F0
-           .HS F0F0F08080808080
-           .HS 8080808080808080
-           .HS 80808080FCFCFCFC
-EDAT       .HS FCFCFCFC80808080
-           .HS 8080808080808080
-           .HS 8080F0F0F0F08080
-           .HS 8080808080808080
-           .HS 80808080808080FC
-           .HS FCFCFC0000000000
-           .HS 0000000000F8F8F8
-           .HS F8F8888888888888
-           .HS 8888888888F8F8F8
-           .HS F8F8F8A0A0A0A0A0
-           .HS A0A0909090909090
-           .HS 8888888888848484
-           .HS 8400000000000000
-*--------------------------------
-* PAUSER ROUTINE CHECK FOR
-* PAUSE AND GAME RESTART!
-*--------------------------------
+;--------------------------------
+; GAME OVER DATA
+;--------------------------------
+GDAT      .BYTE $FC,$FC,$FC,$FC,$FC,$80,$80,$80
+          .BYTE $80,$80,$80,$80,$80,$80,$80,$80
+          .BYTE $80,$80,$80,$80,$80,$80,$80,$80
+          .BYTE $9C,$9C,$9C,$9C,$9C,$84,$84,$84
+          .BYTE $84,$84,$84,$84,$84,$84,$FC,$FC
+          .BYTE $FC,$FC,$FC,$00,$00,$00,$00,$00
+          .BYTE $00,$00,$00,$00,$00,$FC,$FC,$FC
+          .BYTE $FC,$84,$84,$84,$84,$84,$84,$84
+          .BYTE $84,$84,$84,$84,$84,$84,$84,$84
+          .BYTE $84,$84,$84,$84,$84,$84,$84,$84
+          .BYTE $84,$84,$84,$84,$84,$84,$84,$84
+          .BYTE $84,$84,$84,$84,$FC,$FC,$FC,$FC
+ADAT      .BYTE $18,$18,$18,$18,$24,$24,$24,$24
+          .BYTE $42,$42,$42,$42,$42,$42,$42,$42
+          .BYTE $42,$42,$42,$42,$42,$42,$42,$7E
+          .BYTE 47E,$7E,$7E,$42,$42,$42,$42,$42
+          .BYTE $42,$42,$42,$42,$42,$42,$42,$42
+          .BYTE $42,$42,$42,$00,$00,$00,$00,$00
+          .BYTE $00,$00,$00,$00,$00,$81,$81,$81
+          .BYTE $81,$81,$81,$81,$81,$81,$81,$81
+          .BYTE $81,$81,$81,$81,$81,$42,$42,$42
+          .BYTE $42,$42,$42,$42,$42,$42,$24,$24
+          .BYTE $24,$24,$24,$24,$24,$24,$24,$24
+          .BYTE $18,$18,$18,$18,$18,$18,$18,$00
+MDAT      .BYTE $C3,$C3,$C3,$C3,$A5,$A5,$A5,$A5
+          .BYTE $99,$99,$99,$99,$99,$99,$99,$99
+          .BYTE $99,$99,$99,$99,$99,$99,$99,$99
+          .BYTE $99,$99,$99,$99,$99,$99,$81,$81
+          .BYTE $81,$81,$81,$81,$81,$81,$81,$81
+          .BYTE $81,$81,$81,$00,$00,$00,$00,$00
+          .BYTE $00,$00,$00,$00,$00,$FC,$FC,$FC
+          .BYTE $FC,$80,$80,$80,$80,$80,$80,$80
+          .BYTE $80,$80,$80,$80,$80,$80,$80,$F0
+          .BYTE $F0,$F0,$F0,$80,$80,$80,$80,$80
+          .BYTE $80,$80,$80,$80,$80,$80,$80,$80
+          .BYTE $80,$80,$80,$80,$FC,$FC,$FC,$FC
+EDAT      .BYTE $FC,$FC,$FC,$FC,$80,$80,$80,$80
+          .BYTE $80,$80,$80,$80,$80,$80,$80,$80
+          .BYTE $80,$80,$F0,$F0,$F0,$F0,$80,$80
+          .BYTE $80,$80,$80,$80,$80,$80,$80,$80
+          .BYTE $80,$80,$80,$80,$80,$80,$80,$FC
+          .BYTE $FC,$FC,$FC,$00,$00,$00,$00,$00
+          .BYTE $00,$00,$00,$00,$00,$F8,$F8,$F8
+          .BYTE $F8,$F8,$88,$88,$88,$88,$88,$88
+          .BYTE $88,$88,$88,$88,$88,$F8,$F8,$F8
+          .BYTE $F8,$F8,$F8,$A0,$A0,$A0,$A0,$A0
+          .BYTE $A0,$A0,$90,$90,$90,$90,$90,$90
+          .BYTE $88,$88,$88,$88,$88,$84,$84,$84
+          .BYTE $84,$00,$00,$00,$00,$00,$00,$00
+;--------------------------------
+; PAUSER ROUTINE CHECK FOR
+; PAUSE AND GAME RESTART!
+;--------------------------------
+           .LOCAL
 PAUSER     LDA CONSOL
            ROR
-           BCS .1
+           BCS ?1
            JMP WARMSTART
-.1         ROR
+?1         ROR
            ROR
-           BCC .2
+           BCC ?2
            RTS
-.2         LDA CONSOL
+?2         LDA CONSOL
            AND #$04
-           BEQ .2 
+           BEQ ?2 
            LDA MOVFLG
            PHA
            LDA ACTFLG
@@ -2517,9 +2571,9 @@ PAUSER     LDA CONSOL
            STA $D207
            LDA #$FF
            STA $2FC
-.3         LDA $2FC
+?3         LDA $2FC
            CMP #$FF
-           BEQ .3
+           BEQ ?3
            PLA
            STA ACTFLG
            PLA
@@ -2529,20 +2583,21 @@ PAUSER     LDA CONSOL
            LDA #$83
            STA $D203
            RTS
-*--------------------------------
-* FIREPOWER! FIRE FROM BASE AND
-* FIRE FROM TANKS!
-*--------------------------------
+;--------------------------------
+; FIREPOWER! FIRE FROM BASE AND
+; FIRE FROM TANKS!
+;--------------------------------
+           .LOCAL
 FIREPOWER  INC CNTFIRE
-           BPL .9 
+           BPL ?9 
            LDA #$00
            STA CNTFIRE
            LDA SMISY
            ORA WRNCNT
            ORA SAUCFLG
-           BEQ .1
-.9         RTS 
-.1         LDA LIST2+3
+           BEQ ?1
+?9         RTS 
+?1         LDA LIST2+3
            CLC
            ADC #$C8
            STA TEMP1
@@ -2550,14 +2605,14 @@ FIREPOWER  INC CNTFIRE
            ADC #$00
            STA TEMP2
            LDX #$08 
-.2         LDY #$27
-.3         LDA (TEMP1),Y
+?2         LDY #$27
+?3         LDA (TEMP1),Y
            CMP #$10
-           BEQ .4
+           BEQ ?4
            CMP #$40
-           BEQ .4
+           BEQ ?4
            DEY
-           BPL .3
+           BPL ?3
            LDA TEMP1
            CLC
            ADC #$28
@@ -2566,9 +2621,9 @@ FIREPOWER  INC CNTFIRE
            ADC #$00
            STA TEMP2
            DEX
-           BNE .3
+           BNE ?3
            RTS
-.4         DEY
+?4         DEY
            TYA
            ASL
            ASL
@@ -2588,9 +2643,9 @@ FIREPOWER  INC CNTFIRE
            LDA #$00
            STA MISDIR
            RTS
-*--------------------------------
-* SUBROUTINES FOR NIGHTRAIDERS
-*--------------------------------
+;--------------------------------
+; SUBROUTINES FOR NIGHTRAIDERS
+;--------------------------------
 MAPFIL     STA TEMP2
            CMP #$60
            BEQ MAPCOL2
@@ -2629,38 +2684,39 @@ MAPFIL2    LDA (TEMP1),Y
            BNE MAPFIL2
            LDX #$00
            TXA
-.1         STA $4000,X
+          .LOCAL           
+?1         STA $4000,X
            STA $4100,X
            STA $4200,X
            DEX
-           BNE .1
+           BNE ?1
            LDX #$6F
-.2         STA $4300,X
+?2         STA $4300,X
            DEX
-           BNE .2
+           BNE ?2
            RTS
-*--------------------------------
-* SETUP GUAGE SCREEN
-*--------------------------------
+;--------------------------------
+; SETUP GUAGE SCREEN
+;--------------------------------
 SETSCREEN  LDX #$4F 
 SETS2      LDA BSCR-1,X
            STA $3E5F,X
            DEX
            BNE SETS2
            RTS
-BSCR       .HS 001D0D191C0F0000
-           .HS 0000000000000000
-           .HS 00001D12131A1D00
-           .HS 0000000000000000
-           .HS 0000000000000000
-           .HS 00909F8F96000000
-           .HS 0000000000000000
-           .HS 0000000000000000
-           .HS 0000000000000000
-           .HS 0000000000000000
-*--------------------------------
-* INITIALIZE GAME VARIABLES
-*--------------------------------
+BSCR       .BYTE $00,$1D,$0D,$19,$1C,$0F,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$1D,$12,$13,$1A,$1D,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$90,$9F,$8F,$96,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00
+;--------------------------------
+; INITIALIZE GAME VARIABLES
+;--------------------------------
 INIT   LDA #$00
 ILOOP  STA $0,X
        INX
@@ -2670,10 +2726,10 @@ ILOOP  STA $0,X
        STA $D009
        STA $D00A
        STA $D00B
-       LDA #RTEND
+       LDA <RTEND
        STA VBLK  
        STA COLLAD
-       LDA /RTEND
+       LDA >RTEND
        STA VBLK+1   
        STA COLLAD+1
        LDA #$40
@@ -2714,9 +2770,9 @@ CLRGUN STA GUNSX,X
        STA $D01E
        JSR INITVAR
        RTS
-*--------------------------------
-* MAKE PLANE
-*--------------------------------
+;--------------------------------
+; MAKE PLANE
+;--------------------------------
 PMAKER LDX #$0C
 PM1    LDA P1-1,X  
        STA $3490,X
@@ -2731,19 +2787,19 @@ PM1    LDA P1-1,X
        LDA #$82
        STA CROSSX
        RTS
-*--------------------------------
-* RTEND RESTORE REGISTERS
-* AFTER INTERRUPT
-*--------------------------------
+;--------------------------------
+; RTEND RESTORE REGISTERS
+; AFTER INTERRUPT
+;--------------------------------
 RTEND  PLA
        TAY
        PLA
        TAX
        PLA
 NOINT  RTI
-*--------------------------------
-* CLEAR PLAYER MISSLE AREA
-*--------------------------------
+;--------------------------------
+; CLEAR PLAYER MISSLE AREA
+;--------------------------------
 CLRMIS LDA #$00
        STA TEMP1
        LDA #$30
@@ -2758,18 +2814,18 @@ CLROP2 STA (TEMP1),Y
        CMP #$38
        BNE CLROP
        RTS
-*--------------------------------
-* LONG DELAY ROUTINE
-*--------------------------------
+;--------------------------------
+; LONG DELAY ROUTINE
+;--------------------------------
 DLONG  STX TEMP2
        JSR DELAY
        LDX TEMP2
        DEX
        BNE DLONG
        RTS
-*--------------------------------
-* DELAY ROUTINE
-*--------------------------------
+;--------------------------------
+; DELAY ROUTINE
+;--------------------------------
 DELAY  LDX #$10
 DELAY1 LDY #$FF
 DELAY2 DEY
@@ -2777,13 +2833,13 @@ DELAY2 DEY
        DEX
        BNE DELAY1
        RTS
-*--------------------------------
-* PRINT ROUTINE
-*--------------------------------
+;--------------------------------
+; PRINT ROUTINE
+;--------------------------------
 PRINT  STY TEMP2
-       LDA #WORDS
+       LDA <WORDS
        STA TEMP3
-       LDA /WORDS
+       LDA >WORDS
        STA TEMP4
        LDY #$00
 PRINT1 LDA (TEMP3),Y
@@ -2799,9 +2855,9 @@ PRINT3 DEX
        STA TEMP3
        BCC PRINT4
        INC TEMP4
-PRINT4 LDA #SCREEN
+PRINT4 LDA <SCREEN
        STA TEMP5
-       LDA /SCREEN 
+       LDA >SCREEN 
        STA TEMP6
        LDX TEMP1
        BEQ LOOSE
@@ -2834,74 +2890,117 @@ PRINT8 SEC
        INY
        JMP PRINT7
 PRINT9 RTS
-*--------------------------------
-* DISPLAY LISTS
-*--------------------------------
-LIST2  .HS 70F06400402424242424
-       .HS 24242424242424
-       .HS A4242424242404 
-       .HS A045603E05204A 
-       .HS 403F41  
-       .DA #LIST2
-       .DA /LIST2
-LIST1  .HS 7060904F
-       .DA #NIGHTDAT
-       .DA /NIGHTDAT
-       .HS 0F0F0F0F0F0F0F0F
-       .HS 0F0F0F0F0F0F30440040D0
-       .HS 05050404040404048404
-       .HS 040404040404040441
-       .DA #LIST1   
-       .DA /LIST1   
-*--------------------------------
-* DATA TABLE FOR HI-RES NIGHTRAIDER!
-*--------------------------------
-NIGHTDAT   .HS 0000000000000000                
-           .HS 00000000000000000000000000000000
-           .HS 00000000000000000000000000000000
-           .HS 0000000000000000000060607E03FC18
-           .HS 187FE1FF00F007E07FC1FF87FC0FF000
-           .HS 00000000000000000000000000000000
-           .HS 0000C0C0300E1C3030CCC30703F00300
-           .HS 31C0C30C1C3870000000000000000000
-           .HS 00000000000000000001C18060181860
-           .HS 619986060E7006006181861818606000
-           .HS 00000000000000000000000000000000
-           .HS 0003C300C03000C0C0300C0C38700C00
-           .HS C303003030C000000000000000000000
-           .HS 00000000000000000007C60180600181
-           .HS 806018386060180186060060E1C00000
-           .HS 00000000000000000000000000000000
-           .HS 000DCC0300C003FF00C03FE0C0C03003
-           .HS 0C0F00FF81FC00000000000000000000
-           .HS 00000000000000000019D806018F87FE
-           .HS 01807F8181806006181E01FE01FC0000
-           .HS 00000000000000000000000000000000
-           .HS 0031F00C031F0C0C0300DC03FF00C00C
-           .HS 30300370001C00000000000000000000
-           .HS 00000000000000000061E01806061818
-           .HS 06019C07FE0180186060067000180000
-           .HS 00000000000000000000000000000000
-           .HS 00C1C0300C0C30300C031C0C0C030030
-           .HS C0C30C70303000000000000000000000
-           .HS 0000000000000000018180601C186060
-           .HS 18061C18180600638186187070E00000
-           .HS 00000000000000000000000000000000
-           .HS 030303F01FF0C0C0FC0C1C30303F03FE
-           .HS 0FFC30707F8000000000000000000000
-           .HS 0000000000000000060607E01FE18181
-           .HS F8181860607E07F81FF860607E000000
-           .HS 00000000000000000000000000000000
-           .HS 00000000000000000000000000000000
-           .HS 00000000000000000000000000000000
-           .HS 00000000000000000000000000000000
-           .HS 00000000000000000000000000000000
-           .HS 0000000000000000
 
-*--------------------------------
-* INTERRUPT ROUTINES FOR
-* NIGHTRAIDER
-*--------------------------------
+;--------------------------------
+; DISPLAY LISTS
+; Note: Display list interrupts interrupt the main processor so it can make a change
+; to a color register for example or a sprite location at the specific momemnt in time
+; where he crt scan line is scanning. See https://www.atariarchives.org/mapping/appendix8.php
+;--------------------------------
+;--------------------------------
+; Second Display list instructios for game
+;--------------------------------
+LIST2  .BYTE $70               ; 8 Blank Lines
+       .BYTE $F0               ; Text Mode 0 40 pixels per line 40 bytes per line 8 scan lines + Horiz Scroll
+                               ; + Vertical Scroll and Enable Display List Interrupt + Load Mem Scan
+       .BYTE $64               ; Text Mode 40 pixels per line 40 bytes per line * 8 scan lines + Load Mem scan + Horiz Scroll                         
+       .BYTE $00               ; Low address of SCREEN
+       .BYTE $40               ; High address of SCREEN
+       .BYTE $24,$24,$24,$24,$24       ; Text Mode 40 pixels per line 40 bytes per line * 8 scan lines + vertical scroll * 12
+       .BYTE $24,$24,$24,$24,$24,$24,$24
+       .BYTE $A4                       ; Same Text mode plus displa list interrupt + vertical scroll
+       .BYTE $24,$24,$24,$24,$24       ; Text Mode 40 pixels per line 40 bytes per line * 8 scan lines + vertical scroll * 5
+       .BYTE $04 
+       .BYTE $A0
+       .BYTE $45
+       .BYTE $60
+       .BYTE $3E
+       .BYTE $05
+       .BYTE $20
+       .BYTE $4A 
+       .BYTE $40
+       .BYTE $3F
+       .BYTE $41  
+;       .DA #LIST2    ; .DA #expression (one byte, LSB of expression)
+;       .DA /LIST2    ; .DA /expression (one byte, MSB of expression)
+       .WORD LIST2    ; Stores words in memory at the current memory address in native format (LSB/MSB).
+
+;--------------------------------
+; First Display list instructios for intro screen 
+;--------------------------------       
+LIST1  .BYTE $70               ; 8 Blank Lines
+       .BYTE $60               ; 7 Blank Lines
+       .BYTE $90               ; 1 Blank Line + Load Memory Scan + Horiz Scroll
+       .BYTE $4F               ; Graphic Mode 8 320 pixels per line 40 bytes per line 1 scan line + Horiz Scroll
+;       .DA #NIGHTDAT
+;       .DA /NIGHTDAT
+        .WORD NIGHTDAT    ; Stores words in memory at the current memory address in native format (LSB/MSB).
+       .BYTE $0F,$0F,$0F,$0F,$0F,$0F,$0F,$0F ; (Graphic Mode 8 320 pixels per line 40 bytes per line 1 scan line ) * 14 lines
+       .BYTE $0F,$0F,$0F,$0F,$0F,$0F
+       .BYTE $30
+       .BYTE $44
+       .BYTE $00               ; Low address of SCREEN
+       .BYTE $40               ; High address of SCREEN
+       .BYTE $D0
+       .BYTE $05,$05
+       .BYTE $04,$04,$04,$04,$04,$04
+       .BYTE $84
+       .BYTE $04
+       .BYTE $04,$04,$04,$04,$04,$04,$04,$04
+       .BYTE $41
+;       .DA #LIST1   ; .DA #expression (one byte, LSB of expression) 
+;       .DA /LIST1   ; .DA /expression (one byte, MSB of expression)
+       .WORD LIST1   ; Stores words in memory at the current memory address in native format (LSB/MSB).
+
+;--------------------------------
+; DATA TABLE FOR HI-RES NIGHTRAIDER!
+;--------------------------------
+NIGHTDAT   .BYTE $00,$00,$00,$00,$00,$00,$00,$00                
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$60,$60,$7E,$03,$FC,$18
+           .BYTE $18,$7F,$E1,$FF,$00,$F0,$07,$E0,$7F,$C1,$FF,$87,$FC,$0F,$F0,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$C0,$C0,$30,$0E,$1C,$30,$30,$CC,$C3,$07,$03,$F0,$03,$00
+           .BYTE $31,$C0,$C3,$0C,$1C,$38,$70,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$01,$C1,$80,$60,$18,$18,$60
+           .BYTE $61,$99,$86,$06,$0E,$70,$06,$00,$61,$81,$86,$18,$18,$60,$60,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$03,$C3,$00,$C0,$30,$00,$C0,$C0,$30,$0C,$0C,$38,$70,$0C,$00
+           .BYTE $C3,$03,$00,$30,$30,$C0,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$07,$C6,$01,$80,$60,$01,$81
+           .BYTE $80,$60,$18,$38,$60,$60,$18,$01,$86,$06,$00,$60,$E1,$C0,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$0D,$CC,$03,$00,$C0,$03,$FF,$00,$C0,$3F,$E0,$C0,$C0,$30,$03
+           .BYTE $0C,$0F,$00,$FF,$81,$FC,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$19,$D8,$06,$01,$8F,$87,$FE
+           .BYTE $01,$80,$7F,$81,$81,$80,$60,$06,$18,$1E,$01,$FE,$01,$FC,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$31,$F0,$0C,$03,$1F,$0C,$0C,$03,$00,$DC,$03,$FF,$00,$C0,$0C
+           .BYTE $30,$30,$03,$70,$00,$1C,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$61,$E0,$18,$06,$06,$18,$18
+           .BYTE $06,$01,$9C,$07,$FE,$01,$80,$18,$60,$60,$06,$70,$00,$18,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$C1,$C0,$30,$0C,$0C,$30,$30,$0C,$03,$1C,$0C,$0C,$03,$00,$30
+           .BYTE $C0,$C3,$0C,$70,$30,$30,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$01,$81,$80,$60,$1C,$18,$60,$60
+           .BYTE $18,$06,$1C,$18,$18,$06,$00,$63,$81,$86,$18,$70,$70,$E0,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $03,$03,$03,$F0,$1F,$F0,$C0,$C0,$FC,$0C,$1C,$30,$30,$3F,$03,$FE
+           .BYTE $0F,$FC,$30,$70,$7F,$80,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$06,$06,$07,$E0,$1F,$E1,$81,$81
+           .BYTE $F8,$18,$18,$60,$60,$7E,$07,$F8,$1F,$F8,$60,$60,$7E,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00
+
+;-------------------------------
+; INTERRUPT ROUTINES FOR
+; NIGHTRAIDER
+;--------------------------------
 IRQ1   PHA
        TXA
        PHA
@@ -3035,8 +3134,9 @@ SND2   DEC HOLDER
        CMP #$80
        BNE NOTWI3
        INC SNDFLG2
+       .LOCAL       
 NOTWI3 LDX #$0C
-.1     LDA $3490,X
+?1     LDA $3490,X
        STA $34A0,X
        LDA $3590,X
        STA $35A0,X
@@ -3045,13 +3145,13 @@ NOTWI3 LDX #$0C
        LDA $3790,X
        STA $37A0,X
        DEX
-       BPL .1
-       LDA #IRQ2   
+       BPL ?1
+       LDA <IRQ2   
        STA VDLST
-       LDA /IRQ2
+       LDA >IRQ2
        STA VDLST+1
        JMP RTEND
-*--------------------------------
+;--------------------------------
 IRQ2   PHA
        TXA
        PHA
@@ -3135,9 +3235,9 @@ NOTP   LDA $D40B
        CLC
        ADC #$10
        STA $D003
-       LDA #IRQ3
+       LDA <IRQ3
        STA VDLST
-       LDA /IRQ3
+       LDA >IRQ3
        STA VDLST+1
        LDA $D008
        BEQ TT1
@@ -3151,6 +3251,7 @@ TT2    LDA $D00A
        BEQ TT3 
        ORA HIT3
        STA HIT3
+       .LOCAL       
 TT3    LDA $D00B
        BEQ TT4
        ORA HIT4
@@ -3158,11 +3259,11 @@ TT3    LDA $D00B
        LDA SPACFLG
        BEQ TT4
        LDX #$03
-.1     LDA $D000,X 
+?1     LDA $D000,X 
        AND #$0E
        BNE NOAH
        DEX
-       BPL .1
+       BPL ?1
 TT4    LDX #$00
        LDA GUNSY,X
        SEC
@@ -3187,7 +3288,7 @@ GOTH   TXA
 NOAH   JMP (COLLAD)  
 NOH    STA $D01E
        JMP RTEND   
-*--------------------------------
+;--------------------------------
 IRQ3   PHA
        TXA
        PHA
@@ -3288,6 +3389,7 @@ PUFFS  CLC
        BEQ NOGAS
        DEY
        BNE PUFFS
+       .LOCAL       
 NOGAS  STA IRQVAR1
        PLA
        TAY
@@ -3298,25 +3400,25 @@ NOGAS  STA IRQVAR1
        BNE LUAN
        LDA FUEL
        CMP #$20
-       BCS .1
+       BCS ?1
        INC SPARE
        LDA SPARE
        CMP #$05
-       BNE .1
+       BNE ?1
        LDA #$00
        STA SPARE
        LDX #$3
-.2     LDA $3E89,X
+?2     LDA $3E89,X
        EOR #$80
        STA $3E89,X
        DEX
-       BPL .2
-.1     LDA #IRQ1  
+       BPL ?2
+?1     LDA <IRQ1  
        STA VDLST
-       LDA /IRQ1
+       LDA >IRQ1
        STA VDLST+1
        JMP RTEND
-*--------------------------------
+;--------------------------------
 VBLANK LDA #$00
        STA $4D
        LDA MOVFLG
@@ -3405,26 +3507,27 @@ TANFIL LDA (IRQVAR1),Y
        STA $7070,Y
        DEY
        BPL TANFIL
+      .LOCAL       
 NOMOV  DEC DELBAS
        BNE NOMOV2
        LDA #$0A     
        STA DELBAS
        DEC PNTBAS
        LDA PNTBAS
-       BPL .1
+       BPL ?1
        LDA #$06
        STA PNTBAS
-.1     ASL
+?1     ASL
        TAX
        LDA BASLOK,X
        STA IRQVAR1
        LDA BASLOK+1,X
        STA IRQVAR2
        LDY #$0F
-.2     LDA (IRQVAR1),Y
+?2     LDA (IRQVAR1),Y
        STA $71F8,Y
        DEY
-       BPL .2
+       BPL ?2
 NOMOV2 LDX #$10
 RANLOP LDA $D20A
        EOR $D40B
@@ -3447,356 +3550,360 @@ RANLOP LDA $D20A
        JSR STARS
 NOSTAR JMP RTEND  
 
-*--------------------------------
-* DATA STORAGE AND VARIABLES
-*--------------------------------
+;--------------------------------
+; DATA STORAGE AND VARIABLES
+;--------------------------------
 DATA
-*--------------------------------
-VDCNT      .HS 00
-SPARE      .HS 00
-WINDOWVAR  .HS 00
-RADARVAR   .HS 00
-DELAYER    .HS 00
-TANKFLAG   .HS 00
-TANKVAR    .HS 00
-DELBAS     .HS 00
-GUNSX      .HS 0000
-GUNSX2     .HS 0000
-GUNSY      .HS 0000
-PRESS      .HS 00
-HOLDER     .HS 00
-SNDFLG     .HS 00
-KILCNT     .HS 00
-SPACFLG    .HS 00
-BASFLG     .HS 00
-BASER      .HS 00
-TRNCNT     .HS 00
-TRNFLG     .HS 00
-TRNPNT1    .HS 00
-TRNPNT2    .HS 00
-TRNVAR1    .HS 00
-TRNVAR2    .HS 00
-SMISY      .HS 00
-SAUCT      .HS 00
-SAUCPNT    .HS 00
-SAUCPNT2   .HS 00
-SAUCFLG    .HS 00
-SAUCDIR    .HS 00
-SAUCY      .HS 00
-SAUCNT     .HS 00
-WRNCNT     .HS 00
-VOLUM      .HS 00
-VOLFLG     .HS 00
-SNDCNT     .HS 00
-BRDFLG     .HS 00
-BRDPNT     .HS 00
-CRUD       .HS 00
-MISDIR     .HS 00
-MISCNT     .HS 00
-UFOEXP     .HS 00
-UFKFLG     .HS 00
-UFCNT      .HS 00
-STRCNT     .HS 00
-STRFAS     .HS 00
-MUSCNT     .HS 00
-MUSDEL     .HS 00
-PSTRING    .HS 00
-PSTATUS    .HS 00
-FLYFLG     .HS 00
-PATHPNT    .HS 00
-WAVES      .HS 00
-MIKEY      .HS 00
-MIKEY2     .HS 00
-MXDELAY    .HS 00
-MXFLAG     .HS 00
-MXSCRL     .HS 00
-MXDEATH    .HS 00
-MCNT       .HS 00
-BASDEAD    .HS 00
-CNTFIRE    .HS 00
-*--------------------------------
-* CHARACTER HIT TABLES
-* USED BY THE CHARATER DESTROY
-* ROUTINES
-* EACH OBJECT IT IS RESERVED
-* FIVE BYTES IN MEMORY
-* BYTE 0 = EXPLOSION STATUS
-* BYTE 1 & 2 = ADRESS HIT AT
-* BYTE 3 = CHARACTER HIT   
-* THERE IS ENOUGH ROOM FOR 
-* TWENTY EXPLOSIONS AT ONCE
-* THAT SHOULD BE ENOUGH!
-*--------------------------------
-HITABLE    .HS 0000000000
-           .HS 0000000000
-           .HS 0000000000
-           .HS 0000000000
-           .HS 0000000000
-           .HS 0000000000
-           .HS 0000000000
-ENDAT      .HS FF
-*--------------------------------
-* NONZERO VARIABLES TO BE
-* FILLED
-*--------------------------------
+;--------------------------------
+VDCNT      .BYTE $00
+SPARE      .BYTE $00
+WINDOWVAR  .BYTE $00
+RADARVAR   .BYTE $00
+DELAYER    .BYTE $00
+TANKFLAG   .BYTE $00
+TANKVAR    .BYTE $00
+DELBAS     .BYTE $00
+GUNSX      .BYTE $00,$00
+GUNSX2     .BYTE $00,$00
+GUNSY      .BYTE $00,$00
+PRESS      .BYTE $00
+HOLDER     .BYTE $00
+SNDFLG     .BYTE $00
+KILCNT     .BYTE $00
+SPACFLG    .BYTE $00
+BASFLG     .BYTE $00
+BASER      .BYTE $00
+TRNCNT     .BYTE $00
+TRNFLG     .BYTE $00
+TRNPNT1    .BYTE $00
+TRNPNT2    .BYTE $00
+TRNVAR1    .BYTE $00
+TRNVAR2    .BYTE $00
+SMISY      .BYTE $00
+SAUCT      .BYTE $00
+SAUCPNT    .BYTE $00
+SAUCPNT2   .BYTE $00
+SAUCFLG    .BYTE $00
+SAUCDIR    .BYTE $00
+SAUCY      .BYTE $00
+SAUCNT     .BYTE $00
+WRNCNT     .BYTE $00
+VOLUM      .BYTE $00
+VOLFLG     .BYTE $00
+SNDCNT     .BYTE $00
+BRDFLG     .BYTE $00
+BRDPNT     .BYTE $00
+CRUD       .BYTE $00
+MISDIR     .BYTE $00
+MISCNT     .BYTE $00
+UFOEXP     .BYTE $00
+UFKFLG     .BYTE $00
+UFCNT      .BYTE $00
+STRCNT     .BYTE $00
+STRFAS     .BYTE $00
+MUSCNT     .BYTE $00
+MUSDEL     .BYTE $00
+PSTRING    .BYTE $00
+PSTATUS    .BYTE $00
+FLYFLG     .BYTE $00
+PATHPNT    .BYTE $00
+WAVES      .BYTE $00
+MIKEY      .BYTE $00
+MIKEY2     .BYTE $00
+MXDELAY    .BYTE $00
+MXFLAG     .BYTE $00
+MXSCRL     .BYTE $00
+MXDEATH    .BYTE $00
+MCNT       .BYTE $00
+BASDEAD    .BYTE $00
+CNTFIRE    .BYTE $00
+;--------------------------------
+; CHARACTER HIT TABLES
+; USED BY THE CHARATER DESTROY
+; ROUTINES
+; EACH OBJECT IT IS RESERVED
+; FIVE BYTES IN MEMORY
+; BYTE 0 = EXPLOSION STATUS
+; BYTE 1 & 2 = ADRESS HIT AT
+; BYTE 3 = CHARACTER HIT   
+; THERE IS ENOUGH ROOM FOR 
+; TWENTY EXPLOSIONS AT ONCE
+; THAT SHOULD BE ENOUGH!
+;--------------------------------
+HITABLE    .BYTE $00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00
+ENDAT      .BYTE $FF
+;--------------------------------
+; NONZERO VARIABLES TO BE
+; FILLED
+;--------------------------------
 NONDAT
-*--------------------------------
-TPL        .HS 4040
-SNDFLG2    .HS 01
-PNTBAS     .HS 07
-FLYCNT     .HS 01
-FLCNT      .HS 01
-FLCNT2     .HS 1C
-SPS1       .HS FF
-SPS2       .HS A0
-MISAUC     .HS 50
-EXPSND     .HS FF
-BRDCNT     .HS FF
-MUSCOM     .HS FF
-NONEND     .HS 00
-*--------------------------------
-STRGFIL    .HS 4040010701011CFFA050FFFFFF
-*--------------------------------
+;--------------------------------
+TPL        .BYTE $40,$40
+SNDFLG2    .BYTE $01
+PNTBAS     .BYTE $07
+FLYCNT     .BYTE $01
+FLCNT      .BYTE $01
+FLCNT2     .BYTE $1C
+SPS1       .BYTE $FF
+SPS2       .BYTE $A0
+MISAUC     .BYTE $50
+EXPSND     .BYTE $FF
+BRDCNT     .BYTE $FF
+MUSCOM     .BYTE $FF
+NONEND     .BYTE $00
+;--------------------------------
+STRGFIL    .BYTE $40,$40,$01,$07,$01,$01,$1C,$FF,$A0,$50,$FF,$FF,$FF
+;--------------------------------
+           .LOCAL
 INITVAR    LDX #ENDAT-DATA-1
            LDA #$00
-.1         STA DATA,X
+?1         STA DATA,X
            DEX
-           BPL .1
+           BPL ?1
            LDX #$0C 
-.2         LDA STRGFIL,X 
+?2         LDA STRGFIL,X 
            STA NONDAT,X
            DEX
-           BPL .2
+           BPL ?2
            RTS
 
-*--------------------------------
-* SHAPETABLES
-*--------------------------------
-WINFIRE    .HS AAB6AE92AABAB2A6
-WINFIRE2   .HS AAA6B2BAAAB6AE92
-*--------------------------------
-* UPDATES CHARACER $0D FOR
-* WINDOW FIRES!
-*--------------------------------
-TANK1      .HS 0005000001070606
-           .HS 0A550A6AA8A29541
-           .HS A0A0669A69904040
-TANK2      .HS 0000000001070606  
-           .HS 0A550A6AA8A29541 
-           .HS A0A0669A69904040
-TANK3      .HS 0000000001070606
-           .HS 0A050A6AA8A29541 
-           .HS A0A0669A69904040
-TANK4      .HS 0000000001070606 
-           .HS 0A0A0A6AA8A29541 
-           .HS A055669A69904040
-*--------------------------------
-* TANKS FOR SHOW!
-*--------------------------------
-*--------------------------------
-*--------------------------------
-BRIDGE1    .HS FFFFFFFFFFFFFFFF
-           .HS 00FFFAAAAAAAAAAA
-           .HS 0000F30000000000
-           .HS 00FF0F0000000000
-BRIDGE2    .HS FFFFFFFFFFFFFFFF
-           .HS 0000F0AFAAAAAAAA
-           .HS 00000000F0000F00
-           .HS 000F0F00F0000000
-BRIDGE3    .HS FFFFFFFFFFFFFFFF
-           .HS 00000000000045A9
-           .HS 0000000000483600
-           .HS 000F0F00F0000000
-*--------------------------------
-RADAR1     .HS 0A1556150A3F0F03
-           .HS A0549554A0A8A080
-RADAR2     .HS 00010615163F0F03
-           .HS 505868A0A0A8A080
-RADAR3     .HS 00020A2A0E3F0F03
-           .HS 80A0A080A0A8A080
-RADAR4     .HS 022AAA2A0F3F0F03
-           .HS A0A8A0A0A0A8A080
-RADAR5     .HS 2AAA2A0A0F3F0F03
-           .HS A8AAA8A0A0A8A080
-RADAR6     .HS 0A2A0A0A0F3F0F03
-           .HS 80A8AAA8A0A8A080
-RADAR7     .HS 020A0A020F3F0F03
-           .HS 0080A0A8A0A8A080
-RADAR8     .HS 0525290A0A3F0F03
-           .HS 0040905454A8A080
-*--------------------------------
-* SHAPE VECTOR LOOKUP TABLES
-*--------------------------------
-WINDOWS    .DA WINFIRE
-           .DA WINFIRE2
-*--------------------------------
-TANKS      .DA TANK1
-           .DA TANK2
-           .DA TANK3
-           .DA TANK4
-*--------------------------------
-BRIDGES    .DA BRIDGE1
-           .DA BRIDGE2
-           .DA BRIDGE3
-*--------------------------------
-RADARS     .DA RADAR1
-           .DA RADAR2
-           .DA RADAR3
-           .DA RADAR4
-           .DA RADAR5
-           .DA RADAR6
-           .DA RADAR7
-           .DA RADAR8
-*--------------------------------
-* ATTACK CHARACTERS FOR 
-* NONSPACE ATTACK!
-*--------------------------------
-SAUCER1    .HS 1800FFFF7E3C2442
-           .HS 003C000300002442
-SAUCER2    .HS 1800FFFF7E3C2442
-           .HS 183C000C00002442
-SAUCER3    .HS 1800FFFF7E3C2442
-           .HS 003C003000002442
-SAUCER4    .HS 1800FFFF7E3C2442
-           .HS 183C00C000002442
-SAUCER5    .HS 544CB3B33270680E
-           .HS 54704C404C4C680E
-SAUCERC    .HS 4484 ;COLORS
-*--------------------------------
-* CHARACTER LOOKUP TABLE
-* TELLS HOW TO DRAW SAPE ETC.
-*--------------------------------
-CHATBL     .HS 2A2B2223242526
-           .HS 2728290E0F1065
-           .HS E667FF  
-CHTBL2     .HS 00010001020328
-           .HS 292A2B00010200
-           .HS 010200
-CHTBL3     .HS 111213149A9B
-           .HS 9C9D9EFF
-EXPTBL     .HS 2A220E65
-EXPTBL2    .HS 00290000
-EXPTBL3    .HS E8E9EAEBECEDEEEF 
-*--------------------------------
-* POINT VALUE TABLE
-*--------------------------------
-PNTBL      .HS 2AC800
-           .HS 226400  
-           .HS 0E2C01
-           .HS 659001 
-           .HS FF
-*--------------------------------
-* SPACE ATTACK SHAPES
-*--------------------------------
-SPACL1     .HS 00000000000828A8
-           .HS 0000000000000030
-           .HS 2AFE3E0F00000000
-           .HS F0B0A0A4A5250A00
-*--------------------------------
-SPACL2     .HS 000000020202FA35
-           .HS 000000808080AF5C
-           .HS 0A02000000000000
-           .HS A080000000000000
-*--------------------------------
-SPACL3     .HS 000000000000000C
-           .HS 000000000020282A
-           .HS 0F0E0A1A5A58A000
-           .HS A8BFBCF000000000
-*--------------------------------
-* SPACE PATH TABLES 
-* THERE ARE 14
-* THERE IS AN XPATH A YPATH AND
-* A SHPTABLES FOR EVERYONE
-*--------------------------------
-XPATH1     .HS 11100F0E0D0D0D0E
-           .HS 0F10111213141414
-           .HS 15161718191A1B1C
-           .HS 1D1E1F20212223FF
-YPATH1     .HS 0001020304040404
-           .HS 0404040404040404
-           .HS 05060708090A0B0C
-           .HS 0D0E0F10111213FF
-SHPTAB1    .HS 7878787874747474
-           .HS 7474747474747474
-           .HS 7070707070707070
-           .HS 70707070707070FF
-*--------------------------------
-XPATH2     .HS 0708090A0B0B0B0B
-           .HS 0A09080706050505
-           .HS 0403020100FF
-YPATH2     .HS 0001020304040404
-           .HS 0404040404040404
-           .HS 0506070809FF
-SHPTAB2    .HS 7070707070747474
-           .HS 7474747474747474
-           .HS 7878787878FF
-*--------------------------------
-XPATH3     .HS 0304050607070707
-           .HS 08090A0B0C0D0E0F
-           .HS 10111213FF
-YPATH3     .HS 0001020305050505
-           .HS 060708090A0B0C0D
-           .HS 0E0F1011FF
-SHPTAB3    .HS 7070707070747474
-           .HS 7070707070707070
-           .HS 70707070FF
-*--------------------------------
-XPATH4     .HS 2626252423222120
-           .HS 1F1E1D1C1B1A1918
-           .HS 171615141312FF
-YPATH4     .HS 0405050505050505
-           .HS 060708090A0B0C0D
-           .HS 0E0F10111213FF
-SHPTAB4    .HS 7878747474747478
-           .HS 7878787878787878
-           .HS 787878787878FF
-*--------------------------------
-XPATH5     .HS 0B0C0D0E0F0F0F0F
-           .HS 0E0D0C0B0B0B0B0C
-           .HS 0D0E0F1011121314
-           .HS 1516FF
-YPATH5     .HS 0001020304040404
-           .HS 0506070808080809
-           .HS 0A0B0C0D0E0F1011
-           .HS 1213FF
-SHPTAB5    .HS 7070707070747474
-           .HS 7878787874747470
-           .HS 7070707070707070
-           .HS 7070FF
-*--------------------------------
-* PATHPOINTERS
-*--------------------------------
-PATHX      .DA XPATH1
-           .DA XPATH2
-           .DA XPATH3
-           .DA XPATH4
-           .DA XPATH5
-*--------------------------------
-PATHY      .DA YPATH1
-           .DA YPATH2
-           .DA YPATH3
-           .DA YPATH4
-           .DA YPATH5
-*--------------------------------
-PSHIP      .DA SHPTAB1
-           .DA SHPTAB2   
-           .DA SHPTAB3
-           .DA SHPTAB4
-           .DA SHPTAB5
-*--------------------------------
-* BASE STATION CANNON SHAPES
-*--------------------------------
-BASCAN1    .HS 000F0F0F0F01010100F0F0E0F8424040
-BASCAN2    .HS 000F0F0E0F01010100F0F0B0B0704040
-BASCAN3    .HS 000F0F0E0E09010100F0F0B0F0404040
-BASCAN4    .HS 000F0F0B2F81010100F0F0F0F0404040
-*--------------------------------
-* SHAPE MOVEMENT LOOKUP TABLES
-*--------------------------------
-BASLOK     .DA BASCAN1
-           .DA BASCAN2
-           .DA BASCAN3
-           .DA BASCAN4
-           .DA BASCAN3
-           .DA BASCAN2
-           .DA BASCAN1
+;--------------------------------
+; SHAPETABLES
+;--------------------------------
+WINFIRE    .BYTE $AA,$B6,$AE,$92,$AA,$BA,$B2,$A6
+WINFIRE2   .BYTE $AA,$A6,$B2,$BA,$AA,$B6,$AE,$92
+;--------------------------------
+; UPDATES CHARACER $0D FOR
+; WINDOW FIRES!
+;--------------------------------
+TANK1      .BYTE $00,$05,$00,$00,$01,$07,$06,$06
+           .BYTE $0A,$55,$0A,$6A,$A8,$A2,$95,$41
+           .BYTE $A0,$A0,$66,$9A,$69,$90,$40,$40
+TANK2      .BYTE $00,$00,$00,$00,$01,$07,$06,$06  
+           .BYTE $0A,$55,$0A,$6A,$A8,$A2,$95,$41 
+           .BYTE $A0,$A0,$66,$9A,$69,$90,$40,$40
+TANK3      .BYTE $00,$00,$00,$00,$01,$07,$06,$06
+           .BYTE $0A,$05,$0A,$6A,$A8,$A2,$95,$41 
+           .BYTE $A0,$A0,$66,$9A,$69,$90,$40,$40
+TANK4      .BYTE $00,$00,$00,$00,$01,$07,$06,$06 
+           .BYTE $0A,$0A,$0A,$6A,$A8,$A2,$95,$41 
+           .BYTE $A0,$55,$66,$9A,$69,$90,$40,$40
+
+;--------------------------------
+; TANKS FOR SHOW!
+;--------------------------------
+;--------------------------------
+;--------------------------------
+BRIDGE1    .BYTE $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+           .BYTE $00,$FF,$FA,$AA,$AA,$AA,$AA,$AA
+           .BYTE $00,$00,$F3,$00,$00,$00,$00,$00
+           .BYTE $00,$FF,$0F,$00,$00,$00,$00,$00
+BRIDGE2    .BYTE $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+           .BYTE $00,$00,$F0,$AF,$AA,$AA,$AA,$AA
+           .BYTE $00,$00,$00,$00,$F0,$00,$0F,$00
+           .BYTE $00,$0F,$0F,$00,$F0,$00,$00,$00
+BRIDGE3    .BYTE $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+           .BYTE $00,$00,$00,$00,$00,$00,$45,$A9
+           .BYTE $00,$00,$00,$00,$00,$48,$36,$00
+           .BYTE $00,$0F,$0F,$00,$F0,$00,$00,$00
+;-----------------------------------------------
+RADAR1     .BYTE $0A,$15,$56,$15,$0A,$3F,$0F,$03
+           .BYTE $A0,$54,$95,$54,$A0,$A8,$A0,$80
+RADAR2     .BYTE $00,$01,$06,$15,$16,$3F,$0F,$03
+           .BYTE $50,$58,$68,$A0,$A0,$A8,$A0,$80
+RADAR3     .BYTE $00,$02,$0A,$2A,$0E,$3F,$0F,$03
+           .BYTE $80,$A0,$A0,$80,$A0,$A8,$A0,$80
+RADAR4     .BYTE $02,$2A,$AA,$2A,$0F,$3F,$0F,$03
+           .BYTE $A0,$A8,$A0,$A0,$A0,$A8,$A0,$80
+RADAR5     .BYTE $2A,$AA,$2A,$0A,$0F,$3F,$0F,$03
+           .BYTE $A8,$AA,$A8,$A0,$A0,$A8,$A0,$80
+RADAR6     .BYTE $0A,$2A,$0A,$0A,$0F,$3F,$0F,$03
+           .BYTE $80,$A8,$AA,$A8,$A0,$A8,$A0,$80
+RADAR7     .BYTE $02,$0A,$0A,$02,$0F,$3F,$0F,$03
+           .BYTE $00,$80,$A0,$A8,$A0,$A8,$A0,$80
+RADAR8     .BYTE $05,$25,$29,$0A,$0A,$3F,$0F,$03
+           .BYTE $00,$40,$90,$54,$54,$A8,$A0,$80
+;--------------------------------
+; SHAPE VECTOR LOOKUP TABLES
+;--------------------------------
+WINDOWS    .WORD WINFIRE
+           .WORD WINFIRE2
+;--------------------------------
+TANKS      .WORD TANK1
+           .WORD TANK2
+           .WORD TANK3
+           .WORD TANK4
+;--------------------------------
+BRIDGES    .WORD BRIDGE1
+           .WORD BRIDGE2
+           .WORD BRIDGE3
+;--------------------------------
+RADARS     .WORD RADAR1
+           .WORD RADAR2
+           .WORD RADAR3
+           .WORD RADAR4
+           .WORD RADAR5
+           .WORD RADAR6
+           .WORD RADAR7
+           .WORD RADAR8
+;--------------------------------
+; ATTACK CHARACTERS FOR 
+; NONSPACE ATTACK!
+;--------------------------------
+SAUCER1    .BYTE $18,$00,$FF,$FF,$7E,$3C,$24,$42
+           .BYTE $00,$3C,$00,$03,$00,$00,$24,$42
+SAUCER2    .BYTE $18,$00,$FF,$FF,$7E,$3C,$24,$42
+           .BYTE $18,$3C,$00,$0C,$00,$00,$24,$42
+SAUCER3    .BYTE $18,$00,$FF,$FF,$7E,$3C,$24,$42
+           .BYTE $00,$3C,$00,$30,$00,$00,$24,$42
+SAUCER4    .BYTE $18,$00,$FF,$FF,$7E,$3C,$24,$42
+           .BYTE $18,$3C,$00,$C0,$00,$00,$24,$42
+SAUCER5    .BYTE $54,$4C,$B3,$B3,$32,$70,$68,$0E
+           .BYTE $54,$70,$4C,$40,$4C,$4C,$68,$0E
+SAUCERC    .BYTE $44,$84 ;COLORS
+;--------------------------------
+; CHARACTER LOOKUP TABLE
+; TELLS HOW TO DRAW SAPE ETC.
+;--------------------------------
+CHATBL     .BYTE $2A,$2B,$22,$23,$24,$25,$26
+           .BYTE $27,$28,$29,$0E,$0F,$10,$65
+           .BYTE $E6,$67,$FF  
+CHTBL2     .BYTE $00,$01,$00,$01,$02,$03,$28
+           .BYTE $29,$2A,$2B,$00,$01,$02,$00
+           .BYTE $01,$02,$00
+CHTBL3     .BYTE $11,$12,$13,$14,$9A,$9B
+           .BYTE $9C,$9D,$9E,$FF
+EXPTBL     .BYTE $2A,$22,$0E,$65
+EXPTBL2    .BYTE $00,$29,$00,$00
+EXPTBL3    .BYTE $E8,$E9,$EA,$EB,$EC,$ED,$EE,$EF 
+;--------------------------------
+; POINT VALUE TABLE
+;--------------------------------
+PNTBL      .BYTE $2A,$C8,$00
+           .BYTE $22,$64,$00  
+           .BYTE $0E,$2C,$01
+           .BYTE $65,$90,$01 
+           .BYTE $FF
+;--------------------------------
+; SPACE ATTACK SHAPES
+;--------------------------------
+SPACL1     .BYTE $00,$00,$00,$00,$00,$08,$28,$A8
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$30
+           .BYTE $2A,$FE,$3E,$0F,$00,$00,$00,$00
+           .BYTE $F0,$B0,$A0,$A4,$A5,$25,$0A,$00
+;-----------------------------------------------
+SPACL2     .BYTE $00,$00,$00,$02,$02,$02,$FA,$35
+           .BYTE $00,$00,$00,$80,$80,$80,$AF,$5C
+           .BYTE $0A,$02,$00,$00,$00,$00,$00,$00
+           .BYTE $A0,$80,$00,$00,$00,$00,$00,$00
+;-----------------------------------------------
+SPACL3     .BYTE $00,$00,$00,$00,$00,$00,$00,$0C
+           .BYTE $00,$00,$00,$00,$00,$20,$28,$2A
+           .BYTE $0F,$0E,$0A,$1A,$5A,$58,$A0,$00
+           .BYTE $A8,$BF,$BC,$F0,$00,$00,$00,$00
+;--------------------------------
+; SPACE PATH TABLES 
+; THERE ARE 14
+; THERE IS AN XPATH A YPATH AND
+; A SHPTABLES FOR EVERYONE
+;--------------------------------
+XPATH1     .BYTE $11,$10,$0F,$0E,$0D,$0D,$0D,$0E
+           .BYTE $0F,$10,$11,$12,$13,$14,$14,$14
+           .BYTE $15,$16,$17,$18,$19,$1A,$1B,$1C
+           .BYTE $1D,$1E,$1F,$20,$21,$22,$23,$FF
+YPATH1     .BYTE $00,$01,$02,$03,$04,$04,$04,$04
+           .BYTE $04,$04,$04,$04,$04,$04,$04,$04
+           .BYTE $05,$06,$07,$08,$09,$0A,$0B,$0C
+           .BYTE $0D,$0E,$0F,$10,$11,$12,$13,$FF
+SHPTAB1    .BYTE $78,$78,$78,$78,$74,$74,$74,$74
+           .BYTE $74,$74,$74,$74,$74,$74,$74,$74
+           .BYTE $70,$70,$70,$70,$70,$70,$70,$70
+           .BYTE $70,$70,$70,$70,$70,$70,$70,$FF
+;------------------------------------------------
+XPATH2     .BYTE $07,$08,$09,$0A,$0B,$0B,$0B,$0B
+           .BYTE $0A,$09,$08,$07,$06,$05,$05,$05
+           .BYTE $04,$03,$02,$01,$00,$FF
+YPATH2     .BYTE $00,$01,$02,$03,$04,$04,$04,$04
+           .BYTE $04,$04,$04,$04,$04,$04,$04,$04
+           .BYTE $05,$06,$07,$08,$09,$FF
+SHPTAB2    .BYTE $70,$70,$70,$70,$70,$74,$74,$74
+           .BYTE $74,$74,$74,$74,$74,$74,$74,$74
+           .BYTE $78,$78,$78,$78,$78,$FF
+;------------------------------------------------
+XPATH3     .BYTE $03,$04,$05,$06,$07,$07,$07,$07
+           .BYTE $08,$09,$0A,$0B,$0C,$0D,$0E,$0F
+           .BYTE $10,$11,$12,$13,$FF
+YPATH3     .BYTE $00,$01,$02,$03,$05,$05,$05,$05
+           .BYTE $06,$07,$08,$09,$0A,$0B,$0C,$0D
+           .BYTE $0E,$0F,$10,$11,$FF
+SHPTAB3    .BYTE $70,$70,$70,$70,$70,$74,$74,$74
+           .BYTE $70,$70,$70,$70,$70,$70,$70,$70
+           .BYTE $70,$70,$70,$70,$FF
+;------------------------------------------------
+XPATH4     .BYTE $26,$26,$25,$24,$23,$22,$21,$20
+           .BYTE $1F,$1E,$1D,$1C,$1B,$1A,$19,$18
+           .BYTE $17,$16,$15,$14,$13,$12,$FF
+YPATH4     .BYTE $04,$05,$05,$05,$05,$05,$05,$05
+           .BYTE $06,$07,$08,$09,$0A,$0B,$0C,$0D
+           .BYTE $0E,$0F,$10,$11,$12,$13,$FF
+SHPTAB4    .BYTE $78,$78,$74,$74,$74,$74,$74,$78
+           .BYTE $78,$78,$78,$78,$78,$78,$78,$78
+           .BYTE $78,$78,$78,$78,$78,$78,$FF
+;----------------------------------------------
+XPATH5     .BYTE $0B,$0C,$0D,$0E,$0F,$0F,$0F,$0F
+           .BYTE $0E,$0D,$0C,$0B,$0B,$0B,$0B,$0C
+           .BYTE $0D,$0E,$0F,$10,$11,$12,$13,$14
+           .BYTE $15,$16,$FF
+YPATH5     .BYTE $00,$01,$02,$03,$04,$04,$04,$04
+           .BYTE $05,$06,$07,$08,$08,$08,$08,$09
+           .BYTE $0A,$0B,$0C,$0D,$0E,$0F,$10,$11
+           .BYTE $12,$13,$FF
+SHPTAB5    .BYTE $70,$70,$70,$70,$70,$74,$74,$74
+           .BYTE $78,$78,$78,$78,$74,$74,$74,$70
+           .BYTE $70,$70,$70,$70,$70,$70,$70,$70
+           .BYTE $70,$70,$FF
+;--------------------------------
+; PATHPOINTERS
+;--------------------------------
+PATHX      .WORD XPATH1
+           .WORD XPATH2
+           .WORD XPATH3
+           .WORD XPATH4
+           .WORD XPATH5
+;--------------------------------
+PATHY      .WORD YPATH1
+           .WORD YPATH2
+           .WORD YPATH3
+           .WORD YPATH4
+           .WORD YPATH5
+;--------------------------------
+PSHIP      .WORD SHPTAB1
+           .WORD SHPTAB2   
+           .WORD SHPTAB3
+           .WORD SHPTAB4
+           .WORD SHPTAB5
+;--------------------------------
+; BASE STATION CANNON SHAPES
+;--------------------------------
+BASCAN1    .BYTE $00,$0F,$0F,$0F,$0F,$01,$01,$01,$00,$F0,$F0,$E0,$F8,$42,$40,$40
+BASCAN2    .BYTE $00,$0F,$0F,$0E,$0F,$01,$01,$01,$00,$F0,$F0,$B0,$B0,$70,$40,$40
+BASCAN3    .BYTE $00,$0F,$0F,$0E,$0E,$09,$01,$01,$00,$F0,$F0,$B0,$F0,$40,$40,$40
+BASCAN4    .BYTE $00,$0F,$0F,$0B,$2F,$81,$01,$01,$00,$F0,$F0,$F0,$F0,$40,$40,$40
+
+;--------------------------------
+; SHAPE MOVEMENT LOOKUP TABLES
+;--------------------------------
+BASLOK     .WORD BASCAN1
+           .WORD BASCAN2
+           .WORD BASCAN3
+           .WORD BASCAN4
+           .WORD BASCAN3
+           .WORD BASCAN2
+           .WORD BASCAN1
+

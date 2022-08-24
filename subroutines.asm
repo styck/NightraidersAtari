@@ -1,6 +1,7 @@
-*--------------------------------
-* SUBROUTINES FOR NIGHTRAIDERS
-*--------------------------------
+;--------------------------------
+; SUBROUTINES FOR NIGHTRAIDERS
+;--------------------------------
+           .LOCAL
 MAPFIL     STA TEMP2
            CMP #$60
            BEQ MAPCOL2
@@ -39,38 +40,39 @@ MAPFIL2    LDA (TEMP1),Y
            BNE MAPFIL2
            LDX #$00
            TXA
-.1         STA $4000,X
+          .LOCAL           
+?1         STA $4000,X
            STA $4100,X
            STA $4200,X
            DEX
-           BNE .1
+           BNE ?1
            LDX #$6F
-.2         STA $4300,X
+?2         STA $4300,X
            DEX
-           BNE .2
+           BNE ?2
            RTS
-*--------------------------------
-* SETUP GUAGE SCREEN
-*--------------------------------
+;--------------------------------
+; SETUP GUAGE SCREEN
+;--------------------------------
 SETSCREEN  LDX #$4F 
 SETS2      LDA BSCR-1,X
            STA $3E5F,X
            DEX
            BNE SETS2
            RTS
-BSCR       .HS 001D0D191C0F0000
-           .HS 0000000000000000
-           .HS 00001D12131A1D00
-           .HS 0000000000000000
-           .HS 0000000000000000
-           .HS 00909F8F96000000
-           .HS 0000000000000000
-           .HS 0000000000000000
-           .HS 0000000000000000
-           .HS 0000000000000000
-*--------------------------------
-* INITIALIZE GAME VARIABLES
-*--------------------------------
+BSCR       .BYTE $00,$1D,$0D,$19,$1C,$0F,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$1D,$12,$13,$1A,$1D,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$90,$9F,$8F,$96,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00
+;--------------------------------
+; INITIALIZE GAME VARIABLES
+;--------------------------------
 INIT   LDA #$00
 ILOOP  STA $0,X
        INX
@@ -80,10 +82,10 @@ ILOOP  STA $0,X
        STA $D009
        STA $D00A
        STA $D00B
-       LDA #RTEND
+       LDA <RTEND
        STA VBLK  
        STA COLLAD
-       LDA /RTEND
+       LDA >RTEND
        STA VBLK+1   
        STA COLLAD+1
        LDA #$40
@@ -124,9 +126,9 @@ CLRGUN STA GUNSX,X
        STA $D01E
        JSR INITVAR
        RTS
-*--------------------------------
-* MAKE PLANE
-*--------------------------------
+;--------------------------------
+; MAKE PLANE
+;--------------------------------
 PMAKER LDX #$0C
 PM1    LDA P1-1,X  
        STA $3490,X
@@ -141,19 +143,19 @@ PM1    LDA P1-1,X
        LDA #$82
        STA CROSSX
        RTS
-*--------------------------------
-* RTEND RESTORE REGISTERS
-* AFTER INTERRUPT
-*--------------------------------
+;--------------------------------
+; RTEND RESTORE REGISTERS
+; AFTER INTERRUPT
+;--------------------------------
 RTEND  PLA
        TAY
        PLA
        TAX
        PLA
 NOINT  RTI
-*--------------------------------
-* CLEAR PLAYER MISSLE AREA
-*--------------------------------
+;--------------------------------
+; CLEAR PLAYER MISSLE AREA
+;--------------------------------
 CLRMIS LDA #$00
        STA TEMP1
        LDA #$30
@@ -168,18 +170,18 @@ CLROP2 STA (TEMP1),Y
        CMP #$38
        BNE CLROP
        RTS
-*--------------------------------
-* LONG DELAY ROUTINE
-*--------------------------------
+;--------------------------------
+; LONG DELAY ROUTINE
+;--------------------------------
 DLONG  STX TEMP2
        JSR DELAY
        LDX TEMP2
        DEX
        BNE DLONG
        RTS
-*--------------------------------
-* DELAY ROUTINE
-*--------------------------------
+;--------------------------------
+; DELAY ROUTINE
+;--------------------------------
 DELAY  LDX #$10
 DELAY1 LDY #$FF
 DELAY2 DEY
@@ -187,13 +189,13 @@ DELAY2 DEY
        DEX
        BNE DELAY1
        RTS
-*--------------------------------
-* PRINT ROUTINE
-*--------------------------------
+;--------------------------------
+; PRINT ROUTINE
+;--------------------------------
 PRINT  STY TEMP2
-       LDA #WORDS
+       LDA <WORDS
        STA TEMP3
-       LDA /WORDS
+       LDA >WORDS
        STA TEMP4
        LDY #$00
 PRINT1 LDA (TEMP3),Y
@@ -209,9 +211,9 @@ PRINT3 DEX
        STA TEMP3
        BCC PRINT4
        INC TEMP4
-PRINT4 LDA #SCREEN
+PRINT4 LDA <SCREEN
        STA TEMP5
-       LDA /SCREEN 
+       LDA >SCREEN 
        STA TEMP6
        LDX TEMP1
        BEQ LOOSE
@@ -244,108 +246,108 @@ PRINT8 SEC
        INY
        JMP PRINT7
 PRINT9 RTS
-*--------------------------------
-* DISPLAY LISTS
-* Note: Display list interrupts interrupt the main processor so it can make a change
-* to a color register for example or a sprite location at the specific momemnt in time
-* where he crt scan line is scanning. See https://www.atariarchives.org/mapping/appendix8.php
-*--------------------------------
+;--------------------------------
+; DISPLAY LISTS
+; Note: Display list interrupts interrupt the main processor so it can make a change
+; to a color register for example or a sprite location at the specific momemnt in time
+; where he crt scan line is scanning. See https://www.atariarchives.org/mapping/appendix8.php
+;--------------------------------
 
-*--------------------------------
-* Second Display list instructios for game
-*--------------------------------
-LIST2  .HS 70               ; 8 Blank Lines
-       .HS F0               ; Text Mode 0 40 pixels per line 40 bytes per line 8 scan lines + Horiz Scroll
-                            ; + Vertical Scroll and Enable Display List Interrupt + Load Mem Scan
-       .HS 64               ; Text Mode 40 pixels per line 40 bytes per line * 8 scan lines + Load Mem scan + Horiz Scroll                         
-       .HS #SCREEN          ; Low Address of Memory
-       .HS /SCREEN          ; High Address of Memory
-       .HS 2424242424       ; Text Mode 40 pixels per line 40 bytes per line * 8 scan lines + vertical scroll * 12
-       .HS 24242424242424
-       .HS A4               ; Same Text mode plus displa list interrupt + vertical scroll
-       .HS 2424242424       ; Text Mode 40 pixels per line 40 bytes per line * 8 scan lines + vertical scroll * 5
-       .HS 04               ; Same text mode no scroll
-       .HS A0               ; Display list interrupt vertical scroll 1 blank line
-       .HS 45               ; Text Mode 40 pixels per line 40 bytes per line 16 scan lines + Load Memory scan at 3E60 
-       .HS 60               ; Low Byte of Memory address (3E60 is where he score line data is )
-       .HS 3E               ; Hi Byte of Memory address
-       .HS 05               ; Text Mode 40 pixels per line 40 bytes per line 16 scan lines
-       .HS 20               ; 1 blank line + Vertical Scroll
-       .HS 4A               ; Graphics mode 80 pixels per line 20 bytes per line 4 scan lines + load mem scan from 413f
-       .HS 41               ; Low Byte of Memory address
-       .HS 3F               ; Hi Byte of Memory address
-       .HS 41               ; Jump and wait for vertical blank Tells ANTIC Processor where to fetch next instruction.
-       .DA #LIST2           ; Low byte of display list address
-       .DA /LIST2           ; Hi byte of display list address 
+;--------------------------------
+; Second Display list instructios for game
+;--------------------------------
+LIST2  .BYTE $70               ; 8 Blank Lines
+       .BYTE $F0               ; Text Mode 0 40 pixels per line 40 bytes per line 8 scan lines + Horiz Scroll
+                               ; + Vertical Scroll and Enable Display List Interrupt + Load Mem Scan
+       .BYTE $64               ; Text Mode 40 pixels per line 40 bytes per line * 8 scan lines + Load Mem scan + Horiz Scroll                         
+       .BYTE #SCREEN           ; Low Address of Memory
+       .BYTE /SCREEN           ; High Address of Memory
+       .BYTE $24,$24,$24,$24,$24       ; Text Mode 40 pixels per line 40 bytes per line * 8 scan lines + vertical scroll * 12
+       .BYTE $24,$24,$24,$24,$24,$24,$24
+       .BYTE $A4                       ; Same Text mode plus displa list interrupt + vertical scroll
+       .BYTE $24,$24,$24,$24,$24       ; Text Mode 40 pixels per line 40 bytes per line * 8 scan lines + vertical scroll * 5
+       .BYTE $04               ; Same text mode no scroll
+       .BYTE $A0               ; Display list interrupt vertical scroll 1 blank line
+       .BYTE $45               ; Text Mode 40 pixels per line 40 bytes per line 16 scan lines + Load Memory scan at 3E60 
+       .BYTE $60               ; Low Byte of Memory address (3E60 is where he score line data is )
+       .BYTE $3E               ; Hi Byte of Memory address
+       .BYTE $05               ; Text Mode 40 pixels per line 40 bytes per line 16 scan lines
+       .BYTE $20               ; 1 blank line + Vertical Scroll
+       .BYTE $4A               ; Graphics mode 80 pixels per line 20 bytes per line 4 scan lines + load mem scan from 413f
+       .BYTE $41               ; Low Byte of Memory address
+       .BYTE $3F               ; Hi Byte of Memory address
+       .BYTE $41               ; Jump and wait for vertical blank Tells ANTIC Processor where to fetch next instruction.
+;       .WORD #LIST2           ; Low byte of display list address
+;       .WORD /LIST2           ; Hi byte of display list address 
+       .WORD LIST2    ; Stores words in memory at the current memory address in native format (LSB/MSB).
 
-*--------------------------------
-* First Display list instructios for intro screen 
-*--------------------------------
-LIST1  .HS 70               ; 8 Blank Lines
-       .HS 60               ; 7 Blank Lines
-       .HS 90               ; 1 Blank Line + Load Memory Scan + Horiz Scroll
-       .HS 4F               ; Graphic Mode 8 320 pixels per line 40 bytes per line 1 scan line + Horiz Scroll
-       .DA #NIGHTDAT        ; Low memory location of screen data
-       .DA /NIGHTDAT        ; High memory location of screen data
-       .HS 0F0F0F0F0F0F0F0F ; (Graphic Mode 8 320 pixels per line 40 bytes per line 1 scan line ) * 14 lines
-       .HS 0F0F0F0F0F0F
-       .HS 30               ; 4 blank lines
-       .HS 44               ; Graphics Mode 4 80 pixels per line 10 bytes per line 4 scan lines
-                            ; + Load Memory Scan from memory location 4000H = SCREEN
-       .HS #SCREEN          ; Low Address of Memory
-       .HS /SCREEN          ; High Address of Memory
-       .HS D0               ; ????
-       .HS 0505             ; (text mode 16 scan lines 40 pixels per line 40 bytes per line) * 2
-       .HS 040404040404     ; (text mode 8 scan lines 20 pixels per line 20 bytes per line) * 6
-       .HS 84               ; same text mode  + Display List Interrupt
-       .HS 04               ; (text mode 8 scan lines 20 pixels per line 20 bytes per line) * 9
-       .HS 0404040404040404 
-       .HS 41               ; Jump and wait for vertical blank Tells ANTIC Processor where to fetch next instruction.
-       .DA #LIST1           ; Low byte of display list address
-       .DA /LIST1           ; Hi byte of display list address 
+;--------------------------------
+; First Display list instructios for intro screen 
+;--------------------------------
+LIST1  .BYTE $70               ; 8 Blank Lines
+       .BYTE $60               ; 7 Blank Lines
+       .BYTE $90               ; 1 Blank Line + Load Memory Scan + Horiz Scroll
+       .BYTE $4F               ; Graphic Mode 8 320 pixels per line 40 bytes per line 1 scan line + Horiz Scroll
+       .WORD #NIGHTDAT         ; Low memory location of screen data
+       .WORD /NIGHTDAT         ; High memory location of screen data
+       .BYTE $0F,$0F,$0F,$0F,$0F,$0F,$0F,$0F ; (Graphic Mode 8 320 pixels per line 40 bytes per line 1 scan line ) * 14 lines
+       .BYTE $0F,$0F,$0F,$0F,$0F,$0F
+       .BYTE $30               ; 4 blank lines
+       .BYTE $44               ; Graphics Mode 4 80 pixels per line 10 bytes per line 4 scan lines
+                               ; + Load Memory Scan from memory location 4000H = SCREEN
+       .BYTE #SCREEN           ; Low Address of Memory
+       .BYTE /SCREEN           ; High Address of Memory
+       .BYTE $D0               ; ????
+       .BYTE $05,$05           ; (text mode 16 scan lines 40 pixels per line 40 bytes per line) * 2
+       .BYTE $04,$04,$04,$04,$04,$04     ; (text mode 8 scan lines 20 pixels per line 20 bytes per line) * 6
+       .BYTE $84               ; same text mode  + Display List Interrupt
+       .BYTE $04               ; (text mode 8 scan lines 20 pixels per line 20 bytes per line) * 9
+       .BYTE $04,$04,$04,$04,$04,$04,$04,$04 
+       .BYTE $41               ; Jump and wait for vertical blank Tells ANTIC Processor where to fetch next instruction.
+       .WORD #LIST1            ; Low byte of display list address
+       .WORD /LIST1            ; Hi byte of display list address 
 
-*--------------------------------
-* DATA TABLE FOR HI-RES NIGHTRAIDER!
-*--------------------------------
-NIGHTDAT   .HS 0000000000000000                
-           .HS 00000000000000000000000000000000
-           .HS 00000000000000000000000000000000
-           .HS 0000000000000000000060607E03FC18
-           .HS 187FE1FF00F007E07FC1FF87FC0FF000
-           .HS 00000000000000000000000000000000
-           .HS 0000C0C0300E1C3030CCC30703F00300
-           .HS 31C0C30C1C3870000000000000000000
-           .HS 00000000000000000001C18060181860
-           .HS 619986060E7006006181861818606000
-           .HS 00000000000000000000000000000000
-           .HS 0003C300C03000C0C0300C0C38700C00
-           .HS C303003030C000000000000000000000
-           .HS 00000000000000000007C60180600181
-           .HS 806018386060180186060060E1C00000
-           .HS 00000000000000000000000000000000
-           .HS 000DCC0300C003FF00C03FE0C0C03003
-           .HS 0C0F00FF81FC00000000000000000000
-           .HS 00000000000000000019D806018F87FE
-           .HS 01807F8181806006181E01FE01FC0000
-           .HS 00000000000000000000000000000000
-           .HS 0031F00C031F0C0C0300DC03FF00C00C
-           .HS 30300370001C00000000000000000000
-           .HS 00000000000000000061E01806061818
-           .HS 06019C07FE0180186060067000180000
-           .HS 00000000000000000000000000000000
-           .HS 00C1C0300C0C30300C031C0C0C030030
-           .HS C0C30C70303000000000000000000000
-           .HS 0000000000000000018180601C186060
-           .HS 18061C18180600638186187070E00000
-           .HS 00000000000000000000000000000000
-           .HS 030303F01FF0C0C0FC0C1C30303F03FE
-           .HS 0FFC30707F8000000000000000000000
-           .HS 0000000000000000060607E01FE18181
-           .HS F8181860607E07F81FF860607E000000
-           .HS 00000000000000000000000000000000
-           .HS 00000000000000000000000000000000
-           .HS 00000000000000000000000000000000
-           .HS 00000000000000000000000000000000
-           .HS 00000000000000000000000000000000
-           .HS 0000000000000000
-                                                                                                                                                                                             
+;--------------------------------
+; DATA TABLE FOR HI-RES NIGHTRAIDER!
+;--------------------------------
+NIGHTDAT   .BYTE $00,$00,$00,$00,$00,$00,$00,$00                
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$60,$60,$7E,$03,$FC,$18
+           .BYTE $18,$7F,$E1,$FF,$00,$F0,$07,$E0,$7F,$C1,$FF,$87,$FC,$0F,$F0,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$C0,$C0,$30,$0E,$1C,$30,$30,$CC,$C3,$07,$03,$F0,$03,$00
+           .BYTE $31,$C0,$C3,$0C,$1C,$38,$70,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$01,$C1,$80,$60,$18,$18,$60
+           .BYTE $61,$99,$86,$06,$0E,$70,$06,$00,$61,$81,$86,$18,$18,$60,$60,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$03,$C3,$00,$C0,$30,$00,$C0,$C0,$30,$0C,$0C,$38,$70,$0C,$00
+           .BYTE $C3,$03,$00,$30,$30,$C0,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$07,$C6,$01,$80,$60,$01,$81
+           .BYTE $80,$60,$18,$38,$60,$60,$18,$01,$86,$06,$00,$60,$E1,$C0,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$0D,$CC,$03,$00,$C0,$03,$FF,$00,$C0,$3F,$E0,$C0,$C0,$30,$03
+           .BYTE $0C,$0F,$00,$FF,$81,$FC,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$19,$D8,$06,$01,$8F,$87,$FE
+           .BYTE $01,$80,$7F,$81,$81,$80,$60,$06,$18,$1E,$01,$FE,$01,$FC,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$31,$F0,$0C,$03,$1F,$0C,$0C,$03,$00,$DC,$03,$FF,$00,$C0,$0C
+           .BYTE $30,$30,$03,$70,$00,$1C,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$61,$E0,$18,$06,$06,$18,$18
+           .BYTE $06,$01,$9C,$07,$FE,$01,$80,$18,$60,$60,$06,$70,$00,$18,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$C1,$C0,$30,$0C,$0C,$30,$30,$0C,$03,$1C,$0C,$0C,$03,$00,$30
+           .BYTE $C0,$C3,$0C,$70,$30,$30,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$01,$81,$80,$60,$1C,$18,$60,$60
+           .BYTE $18,$06,$1C,$18,$18,$06,$00,$63,$81,$86,$18,$70,$70,$E0,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $03,$03,$03,$F0,$1F,$F0,$C0,$C0,$FC,$0C,$1C,$30,$30,$3F,$03,$FE
+           .BYTE $0F,$FC,$30,$70,$7F,$80,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$06,$06,$07,$E0,$1F,$E1,$81,$81
+           .BYTE $F8,$18,$18,$60,$60,$7E,$07,$F8,$1F,$F8,$60,$60,$7E,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+           .BYTE $00,$00,$00,$00,$00,$00,$00,$00
