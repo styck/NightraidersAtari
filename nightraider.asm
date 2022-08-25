@@ -1198,7 +1198,7 @@ NOMISL     LDA HPOS1
            STA SAUCFLG
            STA $D207
 ?1         RTS 
-WRNMES     .BYTE $0C,$0F,$0E,$00,$0B,$16,$0F,$1C,$1E
+WRNMES     .BYTE $1C,$0F,$0E,$00,$0B,$16,$0F,$1C,$1E
 ;
 SAUCTBL    .WORD SAUCER1
            .WORD SAUCER2
