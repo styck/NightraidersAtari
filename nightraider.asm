@@ -135,9 +135,9 @@ P4     .BYTE $00,$00,$00,$00,$00,$80,$C0,$F0
 ;--------------------------------
 INTRO  LDA #$2C                 ;Setup character base address
        STA CHBASE
-       LDA <LIST1               ;Setup our display list pointers
+       LDA LIST1&255            ;Setup our display list pointers
        STA DLISTP               ;to point to our display list
-       LDA >LIST1
+       LDA LIST1/255
        STA DLISTP+1
        LDA #$00
        STA $D405                ;Put a zero in horizontal scroll reg
@@ -146,14 +146,14 @@ INTRO  LDA #$2C                 ;Setup character base address
        LDA #$03
        STA GRACTL               ;Enable player graphics
        JSR CLRMEN               ;Clear menu page
-       LDA <MIRQ1               ;Setup the irq vectors to
+       LDA MIRQ1&255               ;Setup the irq vectors to
        STA VDLST                ;point to our Irq routines
-       LDA >MIRQ1
+       LDA MIRQ1/255
        STA VDLST+1
-VSYNC  LDA $D40B                ;Is scan line at the top of the screen?
-       CMP #$80
+VSYNC  LDA $D40B                ;VCOUNT - Is scan line at the top of the screen?
+       CMP #$80                 ;For an NTSC machine, VCOUNT counts from $00 to $82; for PAL, it counts to $9B.
        BCC VSYNC                ;If not then loop
-       LDA #$C0
+       LDA #$C0                 ;NMIEN_DLI($80) | NMIEN_VBI($40) - activate display list interrupt and vertical blank interrupt
        STA NMIEN                ;Enable Display list interrupts
        LDA #$00
        STA TEMP1                ;Setup menu screen messages
@@ -283,12 +283,12 @@ CLRMEN LDA #$40                 ;Erase our menu screen
 MIRQ1  PHA
        TXA
        PHA
-       LDA $D40B
-       CMP #$30     
+       LDA $D40B        ;VCOUNT
+       CMP #$30         ;For an NTSC machine, VCOUNT counts from $00 to $82; for PAL, it counts to $9B.
        BCS MIRQ2
        LDA $2C6
        LDX #$11     
-?1     STA $D40A
+?1     STA $D40A        ;WSYNC - Wait for Sync 0 A write to WSYNC causes the CPU to halt execution until the start of horizontal blank.
        STA $D018
        CLC
        ADC #$02     
@@ -330,17 +330,17 @@ COLFIL LDA COLORT-1,X
        STA CLP0-1,X
        DEX
        BNE COLFIL
-       LDA <IRQ1
+       LDA IRQ1&255
        STA VDLST
-       LDA >IRQ1
+       LDA IRQ1/255
        STA VDLST+1
-       LDA <VBLANK
+       LDA VBLANK&255
        STA VBLK
-       LDA >VBLANK
+       LDA VBLANK/255
        STA VBLK+1
-       LDA <LIST2
+       LDA LIST2&255
        STA DLISTP
-       LDA >LIST2
+       LDA LIST2/255
        STA DLISTP+1
        LDA #$58
        STA LIST2+3
@@ -361,11 +361,11 @@ COLFIL LDA COLORT-1,X
        LDA #$31
        STA $26F
 CS     STA $D40A
-       LDA $D40B
-       CMP #$78     
+       LDA $D40B         ;VCOUNT
+       CMP #$78          ;For an NTSC machine, VCOUNT counts from $00 to $82; for PAL, it counts to $9B.
        BNE CS
        STA $D40A
-       LDA #$C0
+       LDA #$C0          ;NMIEN_DLI($80) | NMIEN_VBI($40) - activate display list interrupt and vertical blank interrupt
        STA NMIEN
        LDA #$3E  
        STA DMACTL 
@@ -546,10 +546,10 @@ BMES5      .BYTE $96,$8B,$9F,$98,$8D,$92
 ; MAIN GAME LOOP #1
 ;--------------------------------
            .LOCAL
-GM1        LDA <COLRUT   ;SETUP
-           STA COLLAD  ;COLLISION
-           LDA >COLRUT  ;ROUTINE
-           STA COLLAD+1 ;VECTOR
+GM1        LDA COLRUT&255   ;SETUP
+           STA COLLAD       ;COLLISION
+           LDA COLRUT/255   ;ROUTINE
+           STA COLLAD+1     ;VECTOR
 GMLOOP     JSR PAUSER
            LDA BASER  
            BEQ ?99
@@ -866,7 +866,7 @@ CON4       LDA LIST2+3
            DEX
            BPL ?2
 ?1         RTS
-;
+;--------------------------------
 ; SUBROUTINE TRAINER
 ; CHECKS FOR BRIDGES ON THE SCREN
 ; AND ROLLS TRAINS ACROSS THEM
@@ -2726,14 +2726,14 @@ ILOOP  STA $0,X
        STA $D009
        STA $D00A
        STA $D00B
-       LDA <RTEND
+       LDA RTEND&255
        STA VBLK  
        STA COLLAD
-       LDA >RTEND
+       LDA RTEND/255
        STA VBLK+1   
        STA COLLAD+1
-       LDA #$40
-       STA NMIEN
+       LDA #$40      ; NMIEN_VBI
+       STA NMIEN     ; activate vertical blank interrupt
        JSR CLRMIS
        LDX #$14
 ILOOP1 LDA #$00
@@ -2836,10 +2836,11 @@ DELAY2 DEY
 ;--------------------------------
 ; PRINT ROUTINE
 ;--------------------------------
+.LOCAL
 PRINT  STY TEMP2
-       LDA <WORDS
+       LDA WORDS&255
        STA TEMP3
-       LDA >WORDS
+       LDA WORDS/255
        STA TEMP4
        LDY #$00
 PRINT1 LDA (TEMP3),Y
@@ -2855,9 +2856,9 @@ PRINT3 DEX
        STA TEMP3
        BCC PRINT4
        INC TEMP4
-PRINT4 LDA <SCREEN
+PRINT4 LDA SCREEN&255
        STA TEMP5
-       LDA >SCREEN 
+       LDA SCREEN/255
        STA TEMP6
        LDX TEMP1
        BEQ LOOSE
@@ -2904,26 +2905,28 @@ LIST2  .BYTE $70               ; 8 Blank Lines
        .BYTE $F0               ; Text Mode 0 40 pixels per line 40 bytes per line 8 scan lines + Horiz Scroll
                                ; + Vertical Scroll and Enable Display List Interrupt + Load Mem Scan
        .BYTE $64               ; Text Mode 40 pixels per line 40 bytes per line * 8 scan lines + Load Mem scan + Horiz Scroll                         
-       .BYTE $00               ; Low address of SCREEN
-       .BYTE $40               ; High address of SCREEN
+       .BYTE SCREEN&255        ; Low Address of Memory
+       .BYTE SCREEN/255           ; High Address of Memory
        .BYTE $24,$24,$24,$24,$24       ; Text Mode 40 pixels per line 40 bytes per line * 8 scan lines + vertical scroll * 12
        .BYTE $24,$24,$24,$24,$24,$24,$24
        .BYTE $A4                       ; Same Text mode plus displa list interrupt + vertical scroll
        .BYTE $24,$24,$24,$24,$24       ; Text Mode 40 pixels per line 40 bytes per line * 8 scan lines + vertical scroll * 5
-       .BYTE $04 
-       .BYTE $A0
-       .BYTE $45
-       .BYTE $60
-       .BYTE $3E
-       .BYTE $05
-       .BYTE $20
-       .BYTE $4A 
-       .BYTE $40
-       .BYTE $3F
-       .BYTE $41  
+       .BYTE $04               ; Same text mode no scroll
+       .BYTE $A0               ; Display list interrupt vertical scroll 1 blank line
+       .BYTE $45               ; Text Mode 40 pixels per line 40 bytes per line 16 scan lines + Load Memory scan at 3E60 
+       .BYTE $60               ; Low Byte of Memory address (3E60 is where he score line data is )
+       .BYTE $3E               ; Hi Byte of Memory address
+       .BYTE $05               ; Text Mode 40 pixels per line 40 bytes per line 16 scan lines
+       .BYTE $20               ; 1 blank line + Vertical Scroll
+       .BYTE $4A               ; Graphics mode 80 pixels per line 20 bytes per line 4 scan lines + load mem scan from 413f
+       .BYTE $41               ; Low Byte of Memory address
+       .BYTE $3F               ; Hi Byte of Memory address
+       .BYTE $41               ; Jump and wait for vertical blank Tells ANTIC Processor where to fetch next instruction.
 ;       .DA #LIST2    ; .DA #expression (one byte, LSB of expression)
 ;       .DA /LIST2    ; .DA /expression (one byte, MSB of expression)
-       .WORD LIST2    ; Stores words in memory at the current memory address in native format (LSB/MSB).
+       .BYTE LIST2&255        ; Low byte of display list address
+       .BYTE LIST2/255        ; High byte of display list address 
+       ;.WORD LIST2    ; Stores words in memory at the current memory address in native format (LSB/MSB).
 
 ;--------------------------------
 ; First Display list instructios for intro screen 
@@ -2937,20 +2940,23 @@ LIST1  .BYTE $70               ; 8 Blank Lines
         .WORD NIGHTDAT    ; Stores words in memory at the current memory address in native format (LSB/MSB).
        .BYTE $0F,$0F,$0F,$0F,$0F,$0F,$0F,$0F ; (Graphic Mode 8 320 pixels per line 40 bytes per line 1 scan line ) * 14 lines
        .BYTE $0F,$0F,$0F,$0F,$0F,$0F
-       .BYTE $30
-       .BYTE $44
-       .BYTE $00               ; Low address of SCREEN
-       .BYTE $40               ; High address of SCREEN
-       .BYTE $D0
-       .BYTE $05,$05
-       .BYTE $04,$04,$04,$04,$04,$04
-       .BYTE $84
-       .BYTE $04
-       .BYTE $04,$04,$04,$04,$04,$04,$04,$04
-       .BYTE $41
+       .BYTE $30               ; 4 blank lines
+       .BYTE $44               ; Graphics Mode 4 80 pixels per line 10 bytes per line 4 scan lines
+                               ; + Load Memory Scan from memory location 4000H = SCREEN
+       .BYTE SCREEN&255        ; Low Address of Memory
+       .BYTE SCREEN/255        ; High Address of Memory
+       .BYTE $D0               ; ????
+       .BYTE $05,$05           ; (text mode 16 scan lines 40 pixels per line 40 bytes per line) * 2
+       .BYTE $04,$04,$04,$04,$04,$04     ; (text mode 8 scan lines 20 pixels per line 20 bytes per line) * 6
+       .BYTE $84               ; same text mode  + Display List Interrupt
+       .BYTE $04               ; (text mode 8 scan lines 20 pixels per line 20 bytes per line) * 9
+       .BYTE $04,$04,$04,$04,$04,$04,$04,$04 
+       .BYTE $41               ; Jump and wait for vertical blank Tells ANTIC Processor where to fetch next instruction.
 ;       .DA #LIST1   ; .DA #expression (one byte, LSB of expression) 
 ;       .DA /LIST1   ; .DA /expression (one byte, MSB of expression)
-       .WORD LIST1   ; Stores words in memory at the current memory address in native format (LSB/MSB).
+       .BYTE LIST1&255
+       .BYTE LIST1/255
+       ;.WORD LIST1   ; Stores words in memory at the current memory address in native format (LSB/MSB).
 
 ;--------------------------------
 ; DATA TABLE FOR HI-RES NIGHTRAIDER!
@@ -3146,9 +3152,9 @@ NOTWI3 LDX #$0C
        STA $37A0,X
        DEX
        BPL ?1
-       LDA <IRQ2   
+       LDA IRQ2&255
        STA VDLST
-       LDA >IRQ2
+       LDA IRQ2/255
        STA VDLST+1
        JMP RTEND
 ;--------------------------------
@@ -3216,8 +3222,8 @@ UPSY   LDA TPOINT
        CMP #$73
        BEQ NOTP
        INC TPOINT 
-NOTP   LDA $D40B
-       CMP #$50
+NOTP   LDA $D40B      ;VCOUNT
+       CMP #$50       ;For an NTSC machine, VCOUNT counts from $00 to $82; for PAL, it counts to $9B.
        BCC NOTP
        LDA #$00
        STA $D012
@@ -3235,9 +3241,9 @@ NOTP   LDA $D40B
        CLC
        ADC #$10
        STA $D003
-       LDA <IRQ3
+       LDA IRQ3&255
        STA VDLST
-       LDA >IRQ3
+       LDA IRQ3/255
        STA VDLST+1
        LDA $D008
        BEQ TT1
@@ -3413,9 +3419,9 @@ NOGAS  STA IRQVAR1
        STA $3E89,X
        DEX
        BPL ?2
-?1     LDA <IRQ1  
+?1     LDA IRQ1&255
        STA VDLST
-       LDA >IRQ1
+       LDA IRQ1/255
        STA VDLST+1
        JMP RTEND
 ;--------------------------------
@@ -3530,7 +3536,7 @@ NOMOV  DEC DELBAS
        BPL ?2
 NOMOV2 LDX #$10
 RANLOP LDA $D20A
-       EOR $D40B
+       EOR $D40B        ;VCOUNT - For an NTSC machine, VCOUNT counts from $00 to $82; for PAL, it counts to $9B.
        STA $717F,X 
        DEX
        BNE RANLOP
