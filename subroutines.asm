@@ -1,7 +1,6 @@
 ;--------------------------------
 ; SUBROUTINES FOR NIGHTRAIDERS
 ;--------------------------------
-           .LOCAL
 MAPFIL     STA TEMP2
            CMP #$60
            BEQ MAPCOL2
@@ -82,14 +81,14 @@ ILOOP  STA $0,X
        STA $D009
        STA $D00A
        STA $D00B
-       LDA <RTEND
+       LDA RTEND&255
        STA VBLK  
        STA COLLAD
-       LDA >RTEND
+       LDA RTEND/255
        STA VBLK+1   
        STA COLLAD+1
-       LDA #$40
-       STA NMIEN
+       LDA #$40      ; NMIEN_VBI
+       STA NMIEN     ; activate vertical blank interrupt
        JSR CLRMIS
        LDX #$14
 ILOOP1 LDA #$00
@@ -192,10 +191,11 @@ DELAY2 DEY
 ;--------------------------------
 ; PRINT ROUTINE
 ;--------------------------------
+.LOCAL
 PRINT  STY TEMP2
-       LDA <WORDS
+       LDA WORDS&255
        STA TEMP3
-       LDA >WORDS
+       LDA WORDS/255
        STA TEMP4
        LDY #$00
 PRINT1 LDA (TEMP3),Y
@@ -211,9 +211,9 @@ PRINT3 DEX
        STA TEMP3
        BCC PRINT4
        INC TEMP4
-PRINT4 LDA <SCREEN
+PRINT4 LDA SCREEN&255
        STA TEMP5
-       LDA >SCREEN 
+       LDA SCREEN/255
        STA TEMP6
        LDX TEMP1
        BEQ LOOSE
@@ -260,8 +260,8 @@ LIST2  .BYTE $70               ; 8 Blank Lines
        .BYTE $F0               ; Text Mode 0 40 pixels per line 40 bytes per line 8 scan lines + Horiz Scroll
                                ; + Vertical Scroll and Enable Display List Interrupt + Load Mem Scan
        .BYTE $64               ; Text Mode 40 pixels per line 40 bytes per line * 8 scan lines + Load Mem scan + Horiz Scroll                         
-       .BYTE #SCREEN           ; Low Address of Memory
-       .BYTE /SCREEN           ; High Address of Memory
+       .BYTE SCREEN&255        ; Low Address of Memory
+       .BYTE SCREEN/255        ; High Address of Memory
        .BYTE $24,$24,$24,$24,$24       ; Text Mode 40 pixels per line 40 bytes per line * 8 scan lines + vertical scroll * 12
        .BYTE $24,$24,$24,$24,$24,$24,$24
        .BYTE $A4                       ; Same Text mode plus displa list interrupt + vertical scroll
@@ -277,9 +277,11 @@ LIST2  .BYTE $70               ; 8 Blank Lines
        .BYTE $41               ; Low Byte of Memory address
        .BYTE $3F               ; Hi Byte of Memory address
        .BYTE $41               ; Jump and wait for vertical blank Tells ANTIC Processor where to fetch next instruction.
-;       .WORD #LIST2           ; Low byte of display list address
-;       .WORD /LIST2           ; Hi byte of display list address 
-       .WORD LIST2    ; Stores words in memory at the current memory address in native format (LSB/MSB).
+;       .DA #LIST2    ; .DA #expression (one byte, LSB of expression)
+;       .DA /LIST2    ; .DA /expression (one byte, MSB of expression)
+       .BYTE LIST2&255        ; Low byte of display list address
+       .BYTE LIST2/255        ; High byte of display list address 
+       ;.WORD LIST2    ; Stores words in memory at the current memory address in native format (LSB/MSB).
 
 ;--------------------------------
 ; First Display list instructios for intro screen 
@@ -288,15 +290,16 @@ LIST1  .BYTE $70               ; 8 Blank Lines
        .BYTE $60               ; 7 Blank Lines
        .BYTE $90               ; 1 Blank Line + Load Memory Scan + Horiz Scroll
        .BYTE $4F               ; Graphic Mode 8 320 pixels per line 40 bytes per line 1 scan line + Horiz Scroll
-       .WORD #NIGHTDAT         ; Low memory location of screen data
-       .WORD /NIGHTDAT         ; High memory location of screen data
+;       .DA #NIGHTDAT
+;       .DA /NIGHTDAT
+        .WORD NIGHTDAT    ; Stores words in memory at the current memory address in native format (LSB/MSB).
        .BYTE $0F,$0F,$0F,$0F,$0F,$0F,$0F,$0F ; (Graphic Mode 8 320 pixels per line 40 bytes per line 1 scan line ) * 14 lines
        .BYTE $0F,$0F,$0F,$0F,$0F,$0F
        .BYTE $30               ; 4 blank lines
        .BYTE $44               ; Graphics Mode 4 80 pixels per line 10 bytes per line 4 scan lines
                                ; + Load Memory Scan from memory location 4000H = SCREEN
-       .BYTE #SCREEN           ; Low Address of Memory
-       .BYTE /SCREEN           ; High Address of Memory
+       .BYTE SCREEN&255        ; Low Address of Memory
+       .BYTE SCREEN/255        ; High Address of Memory
        .BYTE $D0               ; ????
        .BYTE $05,$05           ; (text mode 16 scan lines 40 pixels per line 40 bytes per line) * 2
        .BYTE $04,$04,$04,$04,$04,$04     ; (text mode 8 scan lines 20 pixels per line 20 bytes per line) * 6
@@ -304,8 +307,11 @@ LIST1  .BYTE $70               ; 8 Blank Lines
        .BYTE $04               ; (text mode 8 scan lines 20 pixels per line 20 bytes per line) * 9
        .BYTE $04,$04,$04,$04,$04,$04,$04,$04 
        .BYTE $41               ; Jump and wait for vertical blank Tells ANTIC Processor where to fetch next instruction.
-       .WORD #LIST1            ; Low byte of display list address
-       .WORD /LIST1            ; Hi byte of display list address 
+;       .DA #LIST1   ; .DA #expression (one byte, LSB of expression) 
+;       .DA /LIST1   ; .DA /expression (one byte, MSB of expression)
+       .BYTE LIST1&255
+       .BYTE LIST1/255
+       ;.WORD LIST1   ; Stores words in memory at the current memory address in native format (LSB/MSB).
 
 ;--------------------------------
 ; DATA TABLE FOR HI-RES NIGHTRAIDER!
