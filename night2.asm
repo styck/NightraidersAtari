@@ -164,10 +164,10 @@ BMES5      .BYTE $96,$8B,$9F,$98,$8D,$92
 ; MAIN GAME LOOP #1
 ;--------------------------------
            .LOCAL
-GM1        LDA <COLRUT   ;SETUP
-           STA COLLAD  ;COLLISION
-           LDA >COLRUT  ;ROUTINE
-           STA COLLAD+1 ;VECTOR
+GM1        LDA COLRUT&255   ;SETUP
+           STA COLLAD       ;COLLISION
+           LDA COLRUT/255   ;ROUTINE
+           STA COLLAD+1     ;VECTOR
 GMLOOP     JSR PAUSER
            LDA BASER  
            BEQ ?99
@@ -298,7 +298,7 @@ TK         DEX
            ADC BSCOR1
            STA BSCOR1
            JMP KIL8
-.LOCAL           
+           .LOCAL
 KBRIDGE    LDA TEMP1
            SEC
            SBC #$20
@@ -338,7 +338,7 @@ KIL11      LDY EXPTBL2,X
            LDA EXPTBL3+1,X
            STA (TEMP1),Y
            JMP KIL8
-.LOCAL           
+           .LOCAL
 KIL12      LDA HITABLE+3,X 
            LDX #$00
 ?1         CMP PNTBL,X
@@ -411,7 +411,7 @@ CON3       LDA #$58
            INC MOVFLG
            INC BASFLG
            RTS
-.LOCAL           
+           .LOCAL
 CON2       LDA #$40
            STA TEMP2
            LDA #$00
@@ -462,7 +462,7 @@ CON2       LDA #$40
            DEX
            BNE ?6
 ?5         RTS
-.LOCAL
+           .LOCAL
 CON4       LDA LIST2+3
            CMP #$78
            BNE ?1
@@ -489,7 +489,7 @@ CON4       LDA LIST2+3
 ; CHECKS FOR BRIDGES ON THE SCREN
 ; AND ROLLS TRAINS ACROSS THEM
 ;--------------------------------
-.LOCAL
+           .LOCAL
 TRAINER    JSR CONTROL
            INC TRNCNT  
            LDA TRNCNT
@@ -527,7 +527,7 @@ TRAIN4     LDA TEMP2
            LDA #$21
            STA TRNPNT2
            RTS
-          .LOCAL           
+           .LOCAL
 TRAIN5     LDA TRNVAR1
            STA TEMP1
            LDA TRNVAR2
@@ -548,7 +548,7 @@ TRAIN5     LDA TRNVAR1
            BPL ?1
            INC TRNPNT1
            RTS
-.LOCAL
+           .LOCAL
 TRAIN6     LDY #$27
            LDX TRNPNT2
            BMI TRAIN7
@@ -563,7 +563,7 @@ TRAIN6     LDY #$27
            BPL ?1
            DEC TRNPNT2 
            RTS
-.LOCAL           
+           .LOCAL
 TRAIN7     LDY #$27
            LDA #$19
 ?1         STA (TEMP1),Y
@@ -581,7 +581,7 @@ TRNSTR     .BYTE $19,$9A,$9B,$9B,$9B,$9B,$9E,$9A
 ; PLAYER DEPENDING ON
 ; WHAT FLAGS ARE SET
 ;--------------------------------
-.LOCAL
+           .LOCAL
 ATTACK     JSR CONTROL
            DEC FLCNT2
            BNE ?3
@@ -661,7 +661,7 @@ ATTACK     JSR CONTROL
            BEQ TONE2
            LDA #25
            BNE TONE1
-           .LOCAL           
+           .LOCAL
 TONE2      LDA #100
 TONE1      STA $D206  
            LDA #$AF
@@ -732,7 +732,7 @@ MOVSAUC    INC SAUCNT
            BNE PLOTSAUC
            LDA #$00
            STA SAUCPNT
-.LOCAL           
+          .LOCAL
 PLOTSAUC   ASL
            TAX
            LDA SAUCTBL,X
@@ -796,7 +796,7 @@ MISCHK     LDA SMISY
            STA MISDIR
            LDA HPOS1
            SEC
-           .LOCAL           
+           .LOCAL
            SBC CROSSX
            BCC ?1
            CMP #$0D
@@ -808,15 +808,15 @@ MISCHK     LDA SMISY
            ADC #$01
            CMP #$0D
            BCC NOMISL
-           INC MISDIR  
-.LOCAL           
+           INC MISDIR
+           .LOCAL
 NOMISL     LDA HPOS1
            BNE ?1
            LDA #$00
            STA SAUCFLG
            STA $D207
 ?1         RTS 
-WRNMES     .BYTE $0C,$0F,$0E,$00,$0B,$16,$0F,$1C,$1E
+WRNMES     .BYTE $1C,$0F,$0E,$00,$0B,$16,$0F,$1C,$1E
 ;
 SAUCTBL    .WORD SAUCER1
            .WORD SAUCER2
@@ -847,7 +847,7 @@ SOUND      JSR CONTROL
 SOUND2     LDA #$00
            STA $D205
            INC EXPSND
-           .LOCAL           
+           .LOCAL
 SOUND3     LDA SMISY
            BNE ?1
            LDA WRNCNT
@@ -888,7 +888,7 @@ SOUND3     LDA SMISY
 ;--------------------------------
 ; OBJECT COLLISION HANDLER
 ;--------------------------------
-.LOCAL
+           .LOCAL
 COLRUT     LDA LIST2+3
            STA IRQVAR1
            LDA LIST2+4
@@ -956,7 +956,7 @@ COLRU3     LDA CHATBL,X
            BEQ COLRU5
            INX
            BNE COLRU3
-.LOCAL           
+           .LOCAL
 COLRU5     LDX #$00
 ?1         LDA CHTBL3,X
            CMP (IRQVAR1),Y
@@ -965,7 +965,7 @@ COLRU5     LDX #$00
            BEQ COLREND
            INX
            BNE ?1
-.LOCAL
+           .LOCAL
 COLRU4     CMP #$22
            BCC ?2
            CMP #$2A
@@ -1018,7 +1018,7 @@ COLREND    STA $D01E
 ;--------------------------------
 ; BRIDGE COLLAPSE ROUTINE
 ;--------------------------------
-.LOCAL
+           .LOCAL
 BRIDGER    JSR CONTROL
            LDA BRDFLG 
            BNE ?1
@@ -1052,7 +1052,7 @@ BRDTAB     .WORD BRIDGE1
 ;--------------------------------
 ; EXPLODE PLANE ON SCREEN
 ;--------------------------------
-.LOCAL
+           .LOCAL
 PLANEGON   JSR CONTROL
            LDA #$00
            STA HPOS3
@@ -1174,7 +1174,7 @@ SUP        DEY
 ;--------------------------------
 ; MISSLE FIRE ROUTINE
 ;--------------------------------
-.LOCAL
+           .LOCAL
 MISSLES    INC MISCNT
            LDA MISCNT
            CMP #$10
@@ -1212,8 +1212,8 @@ MISSLES    INC MISCNT
            BNE ?5
            LDA #$FF
            STA $2C2
-ENDMIS     RTS
-.LOCAL
+ENDMIS     RTS  
+           .LOCAL
 CKMISKL    LDA HPOS3
            SEC
            SBC CROSSX    
@@ -1234,7 +1234,7 @@ CKMISKL    LDA HPOS3
 ; SAUCDEATH!!!!
 ; CHECK FOR SAUCER HIT
 ;--------------------------------
-.LOCAL
+           .LOCAL
 UFODIE     JSR CONTROL
            JSR KILUFO
            LDX #$03  
@@ -1268,7 +1268,7 @@ UFODIE     JSR CONTROL
            LDA #$28
            STA UFCNT
            RTS
-.LOCAL           
+           .LOCAL
 KILUFO     LDA UFOEXP
            BNE ?1
 ?2         RTS   
@@ -1310,7 +1310,7 @@ KILUFO     LDA UFOEXP
 ;--------------------------------
 ; STAR ROUTINE
 ;--------------------------------
-.LOCAL
+           .LOCAL
 STARS      INC STRCNT
            LDA STRCNT
            CMP #$02
@@ -1334,7 +1334,7 @@ STARS      INC STRCNT
 ;--------------------------------
 ; STARPLOT SUBROUTINES
 ;--------------------------------
-.LOCAL
+           .LOCAL
 STARPLOT   LDX #$0D
 ?1         LDY STARY,X
            LDA YLOW,Y
@@ -1382,4 +1382,4 @@ YLOW       .BYTE $00,$28,$50,$78,$A0,$C8,$F0,$18
            .BYTE $80,$A8,$D0,$F8,$20
 YHI        .BYTE $40,$40,$40,$40,$40,$40,$40,$41
            .BYTE $41,$41,$41,$41,$41,$42,$42,$42
-           .BYTE $42,$42,$42.$42,$43
+           .BYTE $42,$42,$42,$42,$43
