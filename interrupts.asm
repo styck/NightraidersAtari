@@ -2,7 +2,6 @@
 ; INTERRUPT ROUTINES FOR
 ; NIGHTRAIDER
 ;--------------------------------
-       .LOCAL
 IRQ1   PHA
        TXA
        PHA
@@ -136,7 +135,7 @@ SND2   DEC HOLDER
        CMP #$80
        BNE NOTWI3
        INC SNDFLG2
-       .LOCAL       
+       .LOCAL
 NOTWI3 LDX #$0C
 ?1     LDA $3490,X
        STA $34A0,X
@@ -148,9 +147,9 @@ NOTWI3 LDX #$0C
        STA $37A0,X
        DEX
        BPL ?1
-       LDA <IRQ2   
+       LDA IRQ2&255
        STA VDLST
-       LDA >IRQ2
+       LDA IRQ2/255
        STA VDLST+1
        JMP RTEND
 ;--------------------------------
@@ -218,8 +217,8 @@ UPSY   LDA TPOINT
        CMP #$73
        BEQ NOTP
        INC TPOINT 
-NOTP   LDA $D40B
-       CMP #$50
+NOTP   LDA $D40B      ;VCOUNT
+       CMP #$50       ;For an NTSC machine, VCOUNT counts from $00 to $82; for PAL, it counts to $9B.
        BCC NOTP
        LDA #$00
        STA $D012
@@ -237,9 +236,9 @@ NOTP   LDA $D40B
        CLC
        ADC #$10
        STA $D003
-       LDA <IRQ3
+       LDA IRQ3&255
        STA VDLST
-       LDA >IRQ3
+       LDA IRQ3/255
        STA VDLST+1
        LDA $D008
        BEQ TT1
@@ -253,7 +252,7 @@ TT2    LDA $D00A
        BEQ TT3 
        ORA HIT3
        STA HIT3
-       .LOCAL       
+       .LOCAL
 TT3    LDA $D00B
        BEQ TT4
        ORA HIT4
@@ -391,7 +390,7 @@ PUFFS  CLC
        BEQ NOGAS
        DEY
        BNE PUFFS
-       .LOCAL       
+       .LOCAL
 NOGAS  STA IRQVAR1
        PLA
        TAY
@@ -415,9 +414,9 @@ NOGAS  STA IRQVAR1
        STA $3E89,X
        DEX
        BPL ?2
-?1     LDA <IRQ1  
+?1     LDA IRQ1&255
        STA VDLST
-       LDA >IRQ1
+       LDA IRQ1/255
        STA VDLST+1
        JMP RTEND
 ;--------------------------------
@@ -532,7 +531,7 @@ NOMOV  DEC DELBAS
        BPL ?2
 NOMOV2 LDX #$10
 RANLOP LDA $D20A
-       EOR $D40B
+       EOR $D40B        ;VCOUNT - For an NTSC machine, VCOUNT counts from $00 to $82; for PAL, it counts to $9B.
        STA $717F,X 
        DEX
        BNE RANLOP
