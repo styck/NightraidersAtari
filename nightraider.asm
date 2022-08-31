@@ -3136,9 +3136,9 @@ FDS1   LDA $3490,X
        STA $37A0,X
        DEX
        BPL FDS1
-       LDA IRQ2&255
+       LDA #IRQ2&255
        STA VDLST
-       LDA IRQ2/255
+       LDA #IRQ2/255
        STA VDLST+1
        JMP RTEND
 ;--------------------------------
@@ -3225,9 +3225,9 @@ NOTP   LDA $D40B      ;VCOUNT
        CLC
        ADC #$10
        STA $D003
-       LDA IRQ3&255
+       LDA #IRQ3&255
        STA VDLST
-       LDA IRQ3/255
+       LDA #IRQ3/255
        STA VDLST+1
        LDA $D008
        BEQ TT1
@@ -3401,9 +3401,9 @@ FDS4   LDA $3E89,X
        STA $3E89,X
        DEX
        BPL FDS4
-FDS3   LDA IRQ1&255
+FDS3   LDA #IRQ1&255
        STA VDLST
-       LDA IRQ1/255
+       LDA #IRQ1/255
        STA VDLST+1
        JMP RTEND
 ;--------------------------------
