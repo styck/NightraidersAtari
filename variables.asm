@@ -108,15 +108,14 @@ NONEND     .BYTE $00
 ;--------------------------------
 STRGFIL    .BYTE $40,$40,$01,$07,$01,$01,$1C,$FF,$A0,$50,$FF,$FF,$FF
 ;--------------------------------
-           .LOCAL
 INITVAR    LDX #ENDAT-DATA-1
            LDA #$00
-?1         STA DATA,X
+FDS7       STA DATA,X
            DEX
-           BPL ?1
+           BPL FDS7
            LDX #$0C 
-?2         LDA STRGFIL,X 
+FDS8       LDA STRGFIL,X 
            STA NONDAT,X
            DEX
-           BPL ?2
+           BPL FDS8
            RTS

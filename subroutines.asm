@@ -39,16 +39,15 @@ MAPFIL2    LDA (TEMP1),Y
            BNE MAPFIL2
            LDX #$00
            TXA
-          .LOCAL           
-?1         STA $4000,X
+FDS161     STA $4000,X
            STA $4100,X
            STA $4200,X
            DEX
-           BNE ?1
+           BNE FDS161
            LDX #$6F
-?2         STA $4300,X
+FDS162     STA $4300,X
            DEX
-           BNE ?2
+           BNE FDS162
            RTS
 ;--------------------------------
 ; SETUP GUAGE SCREEN
@@ -59,6 +58,7 @@ SETS2      LDA BSCR-1,X
            DEX
            BNE SETS2
            RTS
+
 BSCR       .BYTE $00,$1D,$0D,$19,$1C,$0F,$00,$00
            .BYTE $00,$00,$00,$00,$00,$00,$00,$00
            .BYTE $00,$00,$1D,$12,$13,$1A,$1D,$00
@@ -81,10 +81,10 @@ ILOOP  STA $0,X
        STA $D009
        STA $D00A
        STA $D00B
-       LDA RTEND&255
+       LDA #RTEND&255
        STA VBLK  
        STA COLLAD
-       LDA RTEND/255
+       LDA #RTEND/255
        STA VBLK+1   
        STA COLLAD+1
        LDA #$40      ; NMIEN_VBI
@@ -191,11 +191,11 @@ DELAY2 DEY
 ;--------------------------------
 ; PRINT ROUTINE
 ;--------------------------------
-.LOCAL
+
 PRINT  STY TEMP2
-       LDA WORDS&255
+       LDA #WORDS&255
        STA TEMP3
-       LDA WORDS/255
+       LDA #WORDS/255
        STA TEMP4
        LDY #$00
 PRINT1 LDA (TEMP3),Y
@@ -211,9 +211,9 @@ PRINT3 DEX
        STA TEMP3
        BCC PRINT4
        INC TEMP4
-PRINT4 LDA SCREEN&255
+PRINT4 LDA #SCREEN&255
        STA TEMP5
-       LDA SCREEN/255
+       LDA #SCREEN/255
        STA TEMP6
        LDX TEMP1
        BEQ LOOSE
@@ -246,6 +246,7 @@ PRINT8 SEC
        INY
        JMP PRINT7
 PRINT9 RTS
+
 ;--------------------------------
 ; DISPLAY LISTS
 ; Note: Display list interrupts interrupt the main processor so it can make a change

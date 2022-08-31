@@ -6,40 +6,39 @@
 ; ATTACKS PLAYER WITH ANDROID
 ; SHIPS
 ;--------------------------------
-           .LOCAL
 SPCATK     LDA SPACFLG
-           BNE ?2
-?1         RTS
-?2         LDA MUSCNT
+           BNE PF82
+PF81       RTS
+PF82       LDA MUSCNT
            CMP #$1A
-           BEQ ?3
+           BEQ PF83
            CMP #$19
-           BNE ?5
+           BNE PF85
            LDA LEVEL
            CLC
            ADC #$01
            STA WAVES
-?5         LDA #$00   
+PF85       LDA #$00   
            STA MUSDEL
            INC MUSCNT
            RTS
-?3         LDA #$2
+PF83       LDA #$2
            ADC MUSDEL
            STA MUSDEL
            CMP #$F0
-           BCS ?4
+           BCS PF84
            RTS
-?4         LDA #$00
+PF84       LDA #$00
            STA MUSDEL
            LDA WAVES
-           BNE ?9
+           BNE PF89
            INC MIKEY2
            LDA MIKEY2
            CMP #$30
-           BNE ?7
+           BNE PF87
            DEC SPACFLG
-?7         RTS
-?9         LDA FLYFLG  
+PF87       RTS
+PF89       LDA FLYFLG  
            BNE ALLDEAD
 ;--------------------------------
 ; IF FLYFLAG NOT SET THEN WE
@@ -51,31 +50,30 @@ SPCATK     LDA SPACFLG
            LDA $D20A
            AND #$07
            CMP #$05
-           BCC ?6
+           BCC PF86
            LSR
-?6         ASL
+PF86       ASL
            STA PATHPNT
            LDA #$00
            STA PSTRING
            STA PSTATUS
            LDX #$5F
-?8         LDA SPACL1,X
+PF88       LDA SPACL1,X
            STA $7380,X
            DEX
-           BPL ?8
+           BPL PF88
 ;--------------------------------
 ; PLOT SHIPS
 ;--------------------------------
-           .LOCAL
 ALLDEAD    LDA PSTATUS
            CMP #$FF
-           BNE ?1
+           BNE PF91
            DEC WAVES
-           BNE ?2
+           BNE PF92
            RTS
-?2         DEC FLYFLG
+PF92       DEC FLYFLG
            RTS
-?1         LDX PATHPNT
+PF91       LDX PATHPNT
            LDA PATHX,X
            STA TEMP1
            LDA PATHX+1,X
@@ -88,11 +86,11 @@ ALLDEAD    LDA PSTATUS
            STA TEMP5
            LDA PSHIP+1,X
            STA TEMP6
-PUTPLN     JSR ERASEPLN   
+           JSR ERASEPLN   ; PUTPLN lable was not used
            LDY PSTRING
            LDA (TEMP1),Y
            CMP #$FF
-           BEQ ?4
+           BEQ PF94
            LDA (TEMP3),Y
            TAX
            LDA (TEMP5),Y
@@ -106,11 +104,11 @@ PUTPLN     JSR ERASEPLN
            PLA
            PHA
            CMP #$74
-           BNE ?3
+           BNE PF93
            LDA SMISY
            ORA WRNCNT 
            ORA SAUCFLG
-           BNE ?3
+           BNE PF93
            TXA
            ASL
            ASL
@@ -126,7 +124,7 @@ PUTPLN     JSR ERASEPLN
            STA HPOS3
            LDA #$00
            STA MISDIR
-?3         PLA
+PF93       PLA
            STA (TEMP7),Y
            INY
            CLC
@@ -146,18 +144,17 @@ PUTPLN     JSR ERASEPLN
            STA (TEMP7),Y
            INC PSTRING
            RTS  
-?4         DEC FLYFLG
+PF94       DEC FLYFLG
            RTS
 ;--------------------------------
 ; ERASE PLANES
 ;--------------------------------
-           .LOCAL
 ERASEPLN   LDY PSTRING
-           BEQ ?1
+           BEQ FDS111
            DEY
            LDA (TEMP1),Y
            CMP #$FF
-           BEQ ?1
+           BEQ FDS111
            LDA (TEMP3),Y
            TAX
            LDA (TEMP1),Y
@@ -178,37 +175,36 @@ ERASEPLN   LDY PSTRING
            STA (TEMP7),Y
            INY
            STA (TEMP7),Y
-?1         RTS
+FDS111     RTS
 ;--------------------------------
 ; SPACE COLLISION HANDLER
 ;--------------------------------
-.LOCAL
 SPACKIL    LDA #$00  
            TAY
            TAX
-?1         LDA PLANCHR,X
+PF101      LDA PLANCHR,X
            CMP #$FF
-           BEQ ?6
+           BEQ PF106
            CMP (IRQVAR1),Y
-           BEQ ?2
+           BEQ PF102
            INX
-?6         CMP #$FF 
-           BNE ?1
+PF106      CMP #$FF 
+           BNE PF101
            JMP COLREND
-?2         LDA IRQVAR1
+PF102      LDA IRQVAR1
            SEC
            SBC PLANDIF,X 
            STA IRQVAR1
-           BCS ?3
+           BCS PF103
            DEC IRQVAR2
-?3         LDX #$00
-?4         LDA PLANFIND,X 
-           BEQ ?5
+PF103      LDX #$00
+PF104      LDA PLANFIND,X 
+           BEQ PF105
            INX
            CMP #$FF
-           BNE ?4
+           BNE PF104
            JMP COLREND
-?5         LDA #$5 
+PF105      LDA #$5 
            STA PLANFIND,X
            TXA
            ASL
@@ -223,7 +219,7 @@ SPACKIL    LDA #$00
            STA PSTATUS
            LDX LEVEL
            INX
-?99        LDA BSCOR0
+PF107      LDA BSCOR0
            CLC 
            ADC #$64 
            STA BSCOR0
@@ -231,8 +227,10 @@ SPACKIL    LDA #$00
            ADC #$00
            STA BSCOR1
            DEX
-           BNE ?99
+           BNE PF107
            JMP COLREND
+
+
 PLANCHR    .BYTE $70,$71,$72,$73,$74,$75,$76,$77
            .BYTE $78,$79,$7A,$7B,$FF
 PLANDIF    .BYTE $00,$01,$28,$29,$00,$01,$28,$29
@@ -244,27 +242,26 @@ PLANTIME   .BYTE $00,$00,$00,$00,$00,$00,$00,$00
 ;--------------------------------
 ; KILLER2 KILLS SPACE CHARACTERS
 ;--------------------------------
-.LOCAL
 KILLER2    LDA SPACFLG
            BNE STYX
            RTS
 STYX       INC MIKEY
            LDA MIKEY
            CMP #$20
-           BEQ ?1
+           BEQ RJS1
            RTS
-?1         LDA #$00
+RJS1       LDA #$00
            STA MIKEY
            TAX
-?2         LDA PLANFIND,X
+RJS2       LDA PLANFIND,X
            CMP #$FF
-           BNE ?3
+           BNE RJS3
            RTS
-?3         CMP #$00
-           BNE ?4
+RJS3       CMP #$00
+           BNE RJS4
            INX
-           BNE ?2
-?4         STX TEMP3
+           BNE RJS2
+RJS4       STX TEMP3
            DEC PLANFIND,X
            TXA
            ASL
@@ -275,10 +272,10 @@ STYX       INC MIKEY
            STA TEMP2
            LDX TEMP3
            LDA PLANFIND,X  
-           BNE ?5
-           BEQ ?6
-?5         LDA #$30
-?6         LDY #$00
+           BNE RJS5
+           BEQ RJS6
+RJS5       LDA #$30
+RJS6       LDY #$00
            STA (TEMP1),Y
            INY
            STA (TEMP1),Y
@@ -287,17 +284,17 @@ STYX       INC MIKEY
            INY
            STA (TEMP1),Y
            INX
-           JMP ?2
+           JMP RJS2
+
 ;--------------------------------
 ; MX SHOOTS MISSLES
 ;--------------------------------
-.LOCAL
 MX         INC MXDELAY
            LDA MXDELAY
            CMP #$10
-           BEQ ?4
+           BEQ RJS14
            RTS
-?4         LDA #$00
+RJS14      LDA #$00
            STA MXDELAY
            JSR MXKILL 
            LDA MXFLAG
@@ -308,17 +305,17 @@ MX         INC MXDELAY
            STA TEMP1
            LDA LIST2+4
            STA TEMP2
-           BCC ?1
+           BCC RJS11
            INC TEMP2
-?1         INC TEMP2
+RJS11      INC TEMP2
            LDY #$27
-?2         LDA (TEMP1),Y
+RJS12      LDA (TEMP1),Y
            CMP #$E6
-           BEQ ?3
+           BEQ RJS13
            DEY
-           BPL ?2
+           BPL RJS12
            RTS
-?3         TYA
+RJS13      TYA
            ASL
            ASL
            ADC #$2E
@@ -327,7 +324,7 @@ MX         INC MXDELAY
            LDA #$00
            STA MXSCRL
            RTS
-.LOCAL
+
 MX2        LDA MXSCRL 
            CMP #$0F
            BCS MX3 
@@ -336,31 +333,31 @@ MX2        LDA MXSCRL
            SBC MXSCRL
            TAY 
            LDX #$FF
-?2         INX
+FDS121         INX
            LDA MXDAT,X  
            STA $374B,Y
            INY
            CPX MXSCRL
-           BNE ?2
+           BNE FDS121
            INC MXSCRL
            RTS
-.LOCAL           
+
 MX3        INC $2C3
            LDX #$00
-?1         LDA $3700,X  
+FDS131     LDA $3700,X  
            STA $36FF,X  
            INX
            CPX #$60
-           BNE ?1
+           BNE FDS131
            INC MXSCRL
            LDA MXSCRL
            CMP #$FF
-           BEQ ?2
+           BEQ FDS132
            STA $D202
            LDA #$8F
            STA $D203
            RTS
-?2         DEC MXFLAG
+FDS132     DEC MXFLAG
            LDA #$50
            STA $D202
            LDA #$88
@@ -369,22 +366,21 @@ MX3        INC $2C3
 ;--------------------------------
 ; MXKILL CHECK FOR MX DEATH!
 ;--------------------------------
-.LOCAL
 MXKILL     LDA MXDEATH
-           BNE ?4 
+           BNE RJS24
            LDX #$03
-?1         LDA HIT1,X
+RJS21      LDA HIT1,X
            AND #$08
-           BNE ?2
+           BNE RJS22
            DEX
-           BPL ?1
+           BPL RJS21
            RTS
-?2         LDX #$03
-?3         LDA HIT1,X
+RJS22      LDX #$03
+RJS23      LDA HIT1,X
            AND #$07
            STA HIT1,X
            DEX
-           BPL ?3
+           BPL RJS23
            INC MXDEATH
            LDA #$00
            STA EXPSND 
@@ -400,44 +396,44 @@ MXKILL     LDA MXDEATH
 ;--------------------------------
 ; KILL MISSLE!
 ;--------------------------------
-?4         LDA #$50
+RJS24      LDA #$50
            STA $D202
            LDA #$88
            STA $D203
            LDX #$60  
-?5         LDA $3700,X
-           BNE ?55
+RJS25      LDA $3700,X
+           BNE RJS29
            DEX
-           BNE ?5
-?55        LDY #$0E
-?56        DEX
+           BNE RJS25
+RJS29      LDY #$0E
+RJS28      DEX
            LDA $D20A
            AND MXDAT,Y
            STA $3700,X  
            DEY
-           BPL ?56 
+           BPL RJS28
            DEC MCNT
-           BNE ?15
+           BNE RJS27
            LDA #$00
            STA MXDEATH
            LDX #$60
-?8         STA $3700,X
+RJS26      STA $3700,X
            DEX
-           BPL ?8
-?15        PLA
+           BPL RJS26
+RJS27      PLA
            PLA
            RTS
+
 MXDAT      .BYTE $10,$10,$10,$38,$38,$38,$38,$38 
            .BYTE $38,$38,$38,$7C,$7C,$44,$44
 ;--------------------------------
 ; KIL BASER
 ;--------------------------------
-           .LOCAL
 EXPLOB     LDA BASDEAD
            CMP #$03
-           BEQ ?1
+           BEQ RJS31
            RTS
-?1         LDA #$00
+RJS31      LDA #$00
            STA MOVFLG
            STA ACTFLG
            LDA #$54
@@ -455,46 +451,46 @@ EXPLOB     LDA BASDEAD
            STA $D203
            LDX #$00
            TXA
-?2         STA $48C0,X
+RJS32      STA $48C0,X
            STA $49C0,X
            STA $4AC0,X
            INX
            INX
-           BNE ?2
+           BNE RJS32
            LDA #$CF 
            STA $D201
            LDA #$8F
            STA $D203
            LDX #$FF
-?3         STX $D200
+RJS33      STX $D200
            TXA
            PHA
            EOR #$FF
            STA $D202
            TXA
            AND #$0F
-           BNE ?7
+           BNE RJS37
            LDX #$15
            LDA #$C0
            STA TEMP1
            LDA #$48
            STA TEMP2
-?4         LDY #$00
-?6         LDA (TEMP1),Y
+RJS34      LDY #$00
+RJS36      LDA (TEMP1),Y
            DEY
            STA (TEMP1),Y
            INY
            INY
            CPY #$15
-           BCC ?6
+           BCC RJS36
            LDY #$28 
-?5         LDA (TEMP1),Y
+RJS35      LDA (TEMP1),Y
            INY
            STA (TEMP1),Y
            DEY
            DEY
            CPY #$14
-           BCS ?5
+           BCS RJS35
            LDA TEMP1
            CLC
            ADC #$28
@@ -503,10 +499,10 @@ EXPLOB     LDA BASDEAD
            ADC #$00
            STA TEMP2
            DEX
-           BNE ?4
+           BNE RJS34
            LDX #$28
            LDY #$00
-?10        LDA $49C0,Y
+RJS38      LDA $49C0,Y
            STA $48C0,Y
            LDA $4AC0,Y
            STA $49C0,Y
@@ -515,31 +511,31 @@ EXPLOB     LDA BASDEAD
            LDA #$00
            STA $4BC0,Y
            INY
-           BNE ?10
-?7         LDY #$00
+           BNE RJS38
+RJS37      LDY #$00
            LDX #$05
-?20        DEY
-           BNE ?20
+RJS39      DEY
+           BNE RJS39
            DEX
-           BNE ?20 
+           BNE RJS39
            PLA
            TAX
            DEX
-           BNE ?3
+           BNE RJS33
            LDA #$00
            STA $D201
            STA $D203
            STA $2C8
            LDA #$2C
            STA $2F4
-           .LOCAL
+
 BONUS      LDX #$0E
-?1         LDA BONSTR,X
+RJS41      LDA BONSTR,X
            STA $4995,X
            DEX
-           BPL ?1
+           BPL RJS41
            LDX #$0F 
-?2         LDY MUSDATA,X
+RJS42      LDY MUSDATA,X
            STY $D200
            DEY
            STY $D202
@@ -548,18 +544,18 @@ BONUS      LDX #$0E
            STA $D203
            INY
            CPY #$00
-           BNE ?55
+           BNE RJS44
            STY $D201
            STY $D203
-?55        LDA MUSDLY,X
+RJS44      LDA MUSDLY,X
            LDY #$00
-?3         DEY
-           BNE ?3
+RJS43      DEY
+           BNE RJS43
            SEC
            SBC #$01
-           BNE ?3
+           BNE RJS43
            DEX
-           BPL ?2
+           BPL RJS42
            LDX #$10
            JSR DELAY
            LDA #$01
@@ -569,14 +565,14 @@ BONUS      LDX #$0E
            LDY LEVEL
            INY
            LDX #$02 
-?21        STX $49EB
+RJS45      STX $49EB
            LDA BSCOR0
            CLC
            ADC #$E8
            STA BSCOR0
-           BCC ?22
+           BCC RJS48
            INC BSCOR1
-?22        INC BSCOR1
+RJS48      INC BSCOR1
            INC BSCOR1
            INC BSCOR1
            TXA
@@ -590,17 +586,17 @@ BONUS      LDX #$0E
            TAX
            INX
            DEY
-           BNE ?21
+           BNE RJS45
            LDX #$50
            JSR DLONG
            LDA LEVEL
            CMP #$04
-           BNE ?87
+           BNE RJS46
            INC SHIPS
-?87        CMP #$05
-           BEQ ?9
+RJS46      CMP #$05
+           BEQ RJS47
            INC LEVEL
-?9         LDA #$58
+RJS47      LDA #$58
            STA LIST2+3
            LDA #$4C
            STA LIST2+4
@@ -610,26 +606,26 @@ BONUS      LDX #$0E
            JSR INITVAR
            LDX #$0C
            JMP CURRAN
+
 BONSTR     .BYTE $0F,$18,$0F,$17,$23,$00,$0E,$0F,$1D,$1E,$1C,$19,$23,$0F,$0E
 MUSDATA    .BYTE $00,$58,$00,$68,$00,$58,$00,$46,$00,$68,$00,$73,$00,$75,$00,$80
 MUSDLY     .BYTE $0A,$64,$0A,$7D,$0A,$7D,$0A,$7D,$0A,$7D,$0A,$64,$0A,$AF,$0A,$64
 ;--------------------------------
 ; BASKILER BAS CHARACTER KILL ROUTINES!
 ;--------------------------------
-           .LOCAL
 BASKILER   LDA (IRQVAR1),Y
            CMP #$3F
-           BEQ ?2
+           BEQ FDS142
            CMP #$40
-           BEQ ?1
+           BEQ FDS141
            JMP RETRY
-?1         LDA IRQVAR1
+FDS141     LDA IRQVAR1
            SEC
            SBC #$01
            STA IRQVAR1
-           BCS ?2
+           BCS FDS142
            DEC IRQVAR2
-?2         LDA #$B0
+FDS142     LDA #$B0
            STA (IRQVAR1),Y
            INY
            STA (IRQVAR1),Y
@@ -646,13 +642,13 @@ BASKILER   LDA (IRQVAR1),Y
            LDA IRQVAR2
            STA BASOLD+1,X
            JMP COLREND
+
 BASOLD     .BYTE $00,$00
            .BYTE $00,$00
            .BYTE $00,$00
 ;--------------------------------
 ; ENDGAME
 ;--------------------------------
-           .LOCAL
 ENDGAME    LDA #$00
            LDA #$00
            STA $D201
@@ -669,14 +665,14 @@ ENDGAME    LDA #$00
            STA HPOS4
            LDX #$00
            TXA
-?3         STA $3400,X
+FDS143     STA $3400,X
            STA $3500,X
            STA $3600,X
            STA $3700,X
            DEX
-           BNE ?3
+           BNE FDS143
            LDX #$5F
-?1         LDA GDAT,X
+FDS144     LDA GDAT,X
            STA $3420,X
            LDA ADAT,X
            STA $3520,X 
@@ -685,7 +681,7 @@ ENDGAME    LDA #$00
            LDA EDAT,X
            STA $3720,X
            DEX
-           BPL ?1
+           BPL FDS144
            LDA #$03
            STA $D008
            STA $D009
@@ -779,18 +775,17 @@ EDAT      .BYTE $FC,$FC,$FC,$FC,$80,$80,$80,$80
 ; PAUSER ROUTINE CHECK FOR
 ; PAUSE AND GAME RESTART!
 ;--------------------------------
-           .LOCAL
 PAUSER     LDA CONSOL
            ROR
-           BCS ?1
+           BCS FDS151
            JMP WARMSTART
-?1         ROR
+FDS151     ROR
            ROR
-           BCC ?2
+           BCC FDS152
            RTS
-?2         LDA CONSOL
+FDS152     LDA CONSOL
            AND #$04
-           BEQ ?2 
+           BEQ FDS152
            LDA MOVFLG
            PHA
            LDA ACTFLG
@@ -804,9 +799,9 @@ PAUSER     LDA CONSOL
            STA $D207
            LDA #$FF
            STA $2FC
-?3         LDA $2FC
+FDS153     LDA $2FC
            CMP #$FF
-           BEQ ?3
+           BEQ FDS153
            PLA
            STA ACTFLG
            PLA
@@ -820,17 +815,16 @@ PAUSER     LDA CONSOL
 ; FIREPOWER! FIRE FROM BASE AND
 ; FIRE FROM TANKS!
 ;--------------------------------
-           .LOCAL
 FIREPOWER  INC CNTFIRE
-           BPL ?9 
+           BPL RJS55 
            LDA #$00
            STA CNTFIRE
            LDA SMISY
            ORA WRNCNT
            ORA SAUCFLG
-           BEQ ?1
-?9         RTS 
-?1         LDA LIST2+3
+           BEQ RJS51
+RJS55      RTS 
+RJS51      LDA LIST2+3
            CLC
            ADC #$C8
            STA TEMP1
@@ -838,14 +832,14 @@ FIREPOWER  INC CNTFIRE
            ADC #$00
            STA TEMP2
            LDX #$08 
-?2         LDY #$27
-?3         LDA (TEMP1),Y
+RJS52      LDY #$27
+RJS53      LDA (TEMP1),Y
            CMP #$10
-           BEQ ?4
+           BEQ RJS54
            CMP #$40
-           BEQ ?4
+           BEQ RJS54
            DEY
-           BPL ?3
+           BPL RJS53
            LDA TEMP1
            CLC
            ADC #$28
@@ -854,9 +848,9 @@ FIREPOWER  INC CNTFIRE
            ADC #$00
            STA TEMP2
            DEX
-           BNE ?3
+           BNE RJS53
            RTS
-?4         DEY
+RJS54      DEY
            TYA
            ASL
            ASL
