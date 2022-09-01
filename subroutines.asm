@@ -9,7 +9,7 @@ MAPFIL     STA TEMP2
            LDA #$94
            STA $2C5
            LDA #$CA
-           STA $2C6
+           STA COLOR2
            LDA #$48
            STA $2C7
            BNE MAPMOVER  
@@ -18,7 +18,7 @@ MAPCOL2    LDA #$28
            LDA #$CA
            STA $2C5
            LDA #$94
-           STA $2C6
+           STA COLOR2
            LDA #$48
            STA $2C7
 MAPMOVER   LDA #$40  
@@ -39,7 +39,7 @@ MAPFIL2    LDA (TEMP1),Y
            BNE MAPFIL2
            LDX #$00
            TXA
-FDS161     STA $4000,X
+FDS161     STA $4000,X    ;Writing to SCREEN , loading map?
            STA $4100,X
            STA $4200,X
            DEX
@@ -76,11 +76,11 @@ INIT   LDA #$00
 ILOOP  STA $0,X
        INX
        BNE ILOOP
-       STA $D40E
-       STA $D008
-       STA $D009
-       STA $D00A
-       STA $D00B
+       STA NMIEN
+       STA SIZEP0    ; reset size of play missles
+       STA SIZEP1
+       STA SIZEP2
+       STA SIZEP3
        LDA #RTEND&255
        STA VBLK  
        STA COLLAD
@@ -101,11 +101,11 @@ ILOOP1 LDA #$00
        STA PMBASE
        LDX #$09
        LDA #$00
-ILOOP2 STA CPLAY0-1,X
+ILOOP2 STA PCOLR0-1,X
        DEX
        BNE ILOOP2
        LDX #$07
-ILOOP3 STA $D200,X
+ILOOP3 STA AUDF1,X
        DEX
        DEX
        CPX #$FF
@@ -117,12 +117,12 @@ CLRGUN STA GUNSX,X
        LDA #$40
        STA TPOINT
        LDA #$03
-       STA $232
-       STA $D20F
+       STA SSKCTL
+       STA SKCTL
        LDA #$00
-       STA $D208
+       STA ALLPOT
        LDA #$03
-       STA $D01E
+       STA HITCLR
        JSR INITVAR
        RTS
 ;--------------------------------
@@ -275,7 +275,7 @@ LIST2  .BYTE $70               ; 8 Blank Lines
        .BYTE $05               ; Text Mode 40 pixels per line 40 bytes per line 16 scan lines
        .BYTE $20               ; 1 blank line + Vertical Scroll
        .BYTE $4A               ; Graphics mode 80 pixels per line 20 bytes per line 4 scan lines + load mem scan from 413f
-       .BYTE $41               ; Low Byte of Memory address
+       .BYTE $40               ; Low Byte of Memory address
        .BYTE $3F               ; Hi Byte of Memory address
        .BYTE $41               ; Jump and wait for vertical blank Tells ANTIC Processor where to fetch next instruction.
 ;       .DA #LIST2    ; .DA #expression (one byte, LSB of expression)

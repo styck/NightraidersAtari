@@ -9,14 +9,14 @@ IRQ1   PHA
        PHA
        LDA PRESS
        BEQ NOPRES
-       LDA $D010
+       LDA GRAFP3
        BEQ MOVEM
        LDA #$00 
        STA PRESS
        JMP MOVEM
 NOPRES LDA ACTFLG
        BEQ MOVEM
-       LDA $D010   
+       LDA GRAFP3   
        BNE MOVEM
        INC PRESS
        LDX #$00
@@ -114,9 +114,9 @@ NOTWI2 LDA SNDFLG2
        LDA SNDFLG   
        BNE SND2   
        LDA #$88
-       STA $D201
+       STA AUDC1
        LDA HOLDER   
-       STA $D200 
+       STA AUDF1
        LDA HOLDER 
        CMP #$FA
        BNE SSS
@@ -131,7 +131,7 @@ SSS    SEC
        JMP NOTWI3
 SND2   DEC HOLDER  
        LDA HOLDER
-       STA $D201
+       STA AUDC1
        CMP #$80
        BNE NOTWI3
        INC SNDFLG2
@@ -157,24 +157,24 @@ IRQ2   PHA
        PHA
        TYA
        PHA
-       STA $D40A
-       STA $D40A
+       STA WSYNC
+       STA WSYNC
        LDA #$B4
-       STA $D012
+       STA COLPM0
        LDA #$44
-       STA $D013
+       STA COLPM1
        LDA #$92
-       STA $D014
-       STA $D015
+       STA COLPM2
+       STA COLPM3
        LDA ACTFLG  
        BEQ UPDATE  
-       LDA $D20A
+       LDA RANDOM
        ORA #$81      
        STA $359B
-       LDA $D20A
+       LDA RANDOM
        ORA #$81
        STA $349B
-       LDA $D300
+       LDA PORTA
        ROR
        ROR
        ROR
@@ -192,17 +192,17 @@ RIGHT  LDA CROSSX
        BEQ UPDATE
        INC CROSSX
 UPDATE LDA CROSSX
-       STA $D000
-       STA $D001
+       STA M0PF
+       STA M1PF
        SEC
        SBC #$08
-       STA $D002
+       STA M2PF
        CLC
        ADC #$10
-       STA $D003
+       STA M3PF
        LDA #$31
-       STA $D01B
-       LDA $D300 
+       STA PRIOR
+       LDA PORTA
        ROR  
        BCC UPSY
        ROR
@@ -216,49 +216,49 @@ UPSY   LDA TPOINT
        CMP #$73
        BEQ NOTP
        INC TPOINT 
-NOTP   LDA $D40B      ;VCOUNT
+NOTP   LDA VCOUNT
        CMP #$50       ;For an NTSC machine, VCOUNT counts from $00 to $82; for PAL, it counts to $9B.
        BCC NOTP
        LDA #$00
-       STA $D012
-       STA $D013
-       STA $D014
-       STA $D015
+       STA TRIG2
+       STA TRIG3
+       STA COLPM2
+       STA COLPM3
        LDA CROSSX
        SEC
        SBC #$10
-       STA $D000  
-       STA $D001
+       STA HPOSP0  
+       STA HPOSP1
        SEC
        SBC #$08
-       STA $D002
+       STA HPOSP2
        CLC
        ADC #$10
-       STA $D003
+       STA HPOSP3
        LDA #IRQ3&255
        STA VDLST
        LDA #IRQ3/255
        STA VDLST+1
-       LDA $D008
+       LDA SIZEP0
        BEQ TT1
        ORA HIT1  
        STA HIT1
-TT1    LDA $D009
+TT1    LDA SIZEP1
        BEQ TT2
        ORA HIT2
        STA HIT2
-TT2    LDA $D00A
+TT2    LDA SIZEP2
        BEQ TT3 
        ORA HIT3
        STA HIT3
-TT3    LDA $D00B
+TT3    LDA SIZEP3
        BEQ TT4
        ORA HIT4
        STA HIT4
        LDA SPACFLG
        BEQ TT4
        LDX #$03
-FDS2   LDA $D000,X 
+FDS2   LDA HPOSP0,X 
        AND #$0E
        BNE NOAH
        DEX
@@ -278,14 +278,14 @@ TT4    LDX #$00
 GOTH   TXA
        ASL
        TAY
-       LDA $D000,Y
+       LDA HPOSP0,Y
        AND #$0E 
        BNE NOAH
-       LDA $D001,Y
+       LDA HPOSP1,Y
        AND #$0E 
        BEQ NOH
 NOAH   JMP (COLLAD)  
-NOH    STA $D01E
+NOH    STA HITCLR
        JMP RTEND   
 ;--------------------------------
 IRQ3   PHA
@@ -293,19 +293,19 @@ IRQ3   PHA
        PHA
        TYA
        PHA
-       STA $D40A
+       STA WSYNC
        LDA #$2C
-       STA $D409
+       STA CHBASE
        LDA #$92
-       STA $D01A
+       STA COLBK
        LDA #$00
-       STA $D016
+       STA COLPF0
        LDA #$44
-       STA $D017
+       STA COLPF1
        LDA #$FF
-       STA $D018
+       STA COLPF2
        LDA #$C6
-       STA $D019
+       STA COLPF3
        LDA BSCOR0
        BNE SCORESIT
        LDA BSCOR1
@@ -440,7 +440,7 @@ MILOS  LDA #$00
        DEC LIST2+4
 NOMINU LDA #$07
        STA SCRCNT
-SCROLM STA $D405
+SCROLM STA VSCROLL
 FLICK  INC DELAYER    
        LDA DELAYER
        CMP #$0A
@@ -526,20 +526,20 @@ FDS6   LDA (IRQVAR1),Y
        DEY
        BPL FDS6
 NOMOV2 LDX #$10
-RANLOP LDA $D20A
-       EOR $D40B        ;VCOUNT - For an NTSC machine, VCOUNT counts from $00 to $82; for PAL, it counts to $9B.
+RANLOP LDA RANDOM
+       EOR VCOUNT       ;For an NTSC machine, VCOUNT counts from $00 to $82; for PAL, it counts to $9B.
        STA $717F,X 
        DEX
        BNE RANLOP
        LDA HPOS1 
-       STA $D000
+       STA HPOSP0
        LDA HPOS2
-       STA $D001
+       STA HPOSP1
        LDA HPOS3
-       STA $D002
+       STA HPOSP2
        LDA HPOS4
-       STA $D003
-       STA $D01E 
+       STA HPOSP3
+       STA HITCLR
        LDA SPACFLG
        BEQ NOSTAR
        LDA BASER

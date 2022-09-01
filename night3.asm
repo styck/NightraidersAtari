@@ -47,7 +47,7 @@ PF89       LDA FLYFLG
 ; NUMBER OF PLANES TO KILL
 ;--------------------------------
            INC FLYFLG
-           LDA $D20A
+           LDA RANDOM
            AND #$07
            CMP #$05
            BCC PF86
@@ -353,15 +353,15 @@ FDS131     LDA $3700,X
            LDA MXSCRL
            CMP #$FF
            BEQ FDS132
-           STA $D202
+           STA AUDF2
            LDA #$8F
-           STA $D203
+           STA AUDC2
            RTS
 FDS132     DEC MXFLAG
            LDA #$50
-           STA $D202
+           STA AUDF2
            LDA #$88
-           STA $D203
+           STA AUDC2
            RTS
 ;--------------------------------
 ; MXKILL CHECK FOR MX DEATH!
@@ -397,9 +397,9 @@ RJS23      LDA HIT1,X
 ; KILL MISSLE!
 ;--------------------------------
 RJS24      LDA #$50
-           STA $D202
+           STA AUDF2
            LDA #$88
-           STA $D203
+           STA AUDC2
            LDX #$60  
 RJS25      LDA $3700,X
            BNE RJS29
@@ -407,7 +407,7 @@ RJS25      LDA $3700,X
            BNE RJS25
 RJS29      LDY #$0E
 RJS28      DEX
-           LDA $D20A
+           LDA RANDOM
            AND MXDAT,Y
            STA $3700,X  
            DEY
@@ -443,12 +443,12 @@ RJS31      LDA #$00
            STA HPOS2
            STA HPOS3
            STA HPOS4
-           STA $D205
-           STA $D207
+           STA AUDC3
+           STA AUDC4
            LDA #$8F
-           STA $D201
+           STA AUDC1
            LDA #$CF
-           STA $D203
+           STA AUDC2
            LDX #$00
            TXA
 RJS32      STA $48C0,X
@@ -458,15 +458,15 @@ RJS32      STA $48C0,X
            INX
            BNE RJS32
            LDA #$CF 
-           STA $D201
+           STA AUDC1
            LDA #$8F
-           STA $D203
+           STA AUDC2
            LDX #$FF
-RJS33      STX $D200
+RJS33      STX AUDF1
            TXA
            PHA
            EOR #$FF
-           STA $D202
+           STA AUDF2
            TXA
            AND #$0F
            BNE RJS37
@@ -523,11 +523,11 @@ RJS39      DEY
            DEX
            BNE RJS33
            LDA #$00
-           STA $D201
-           STA $D203
+           STA AUDC1
+           STA AUDC2
            STA $2C8
            LDA #$2C
-           STA $2F4
+           STA CHBAS
 
 BONUS      LDX #$0E
 RJS41      LDA BONSTR,X
@@ -536,17 +536,17 @@ RJS41      LDA BONSTR,X
            BPL RJS41
            LDX #$0F 
 RJS42      LDY MUSDATA,X
-           STY $D200
+           STY AUDF1
            DEY
-           STY $D202
+           STY AUDF2
            LDA #$AF
-           STA $D201
-           STA $D203
+           STA AUDC1
+           STA AUDC2
            INY
            CPY #$00
            BNE RJS44
-           STY $D201
-           STY $D203
+           STY AUDC1
+           STY AUDC2
 RJS44      LDA MUSDLY,X
            LDY #$00
 RJS43      DEY
@@ -651,10 +651,10 @@ BASOLD     .BYTE $00,$00
 ;--------------------------------
 ENDGAME    LDA #$00
            LDA #$00
-           STA $D201
-           STA $D203
-           STA $D205
-           STA $D207
+           STA AUDC1
+           STA AUDC2
+           STA AUDC3
+           STA AUDC4
            LDA #$3D 
            STA HPOS1
            LDA #$5D
@@ -683,15 +683,15 @@ FDS144     LDA GDAT,X
            DEX
            BPL FDS144
            LDA #$03
-           STA $D008
-           STA $D009
-           STA $D00A
-           STA $D00B
+           STA SIZEP0     ;Set sizes of players
+           STA SIZEP1
+           STA SIZEP2
+           STA SIZEP3
            LDA #$94
-           STA $2C0
-           STA $2C1
-           STA $2C2
-           STA $2C3
+           STA PCOLR0
+           STA PCOLR1
+           STA PCOLR2
+           STA PCOLR3
            LDA SCORE1
            STA OLSCORE1
            LDA SCORE2
@@ -793,13 +793,13 @@ FDS152     LDA CONSOL
            LDA #$00
            STA MOVFLG
            STA ACTFLG
-           STA $D201
-           STA $D203
-           STA $D205
-           STA $D207
+           STA AUDC1
+           STA AUDC2
+           STA AUDC3
+           STA AUDC4
            LDA #$FF
-           STA $2FC
-FDS153     LDA $2FC
+           STA KEY
+FDS153     LDA KEY
            CMP #$FF
            BEQ FDS153
            PLA
@@ -807,9 +807,9 @@ FDS153     LDA $2FC
            PLA
            STA MOVFLG
            LDA #50
-           STA $D202
+           STA AUDF2
            LDA #$83
-           STA $D203
+           STA AUDC2
            RTS
 ;--------------------------------
 ; FIREPOWER! FIRE FROM BASE AND
