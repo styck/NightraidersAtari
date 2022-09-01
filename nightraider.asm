@@ -121,6 +121,7 @@ PACTL      = $D302           ; Porta A control
 PABTL      = $D303           ; Porta B control
 
 PMBASE     = $D407           ;Player missle base address
+CHBASE     = $D409           ;Character Set Base Address (high)
 WSYNC      = $D40A           ;Wait for horizontal blank sync.
 VCOUNT     = $D40B           ;Vertical line counter
 DISPLA     = $3F00           ;Another menu scree location
@@ -141,7 +142,7 @@ PCOLR3     = $2C3            ;Color player 4
 KEY        = $02FC           ;Read Keypress  
 CONSOL     = $D01F           ;Console switch address
 GRACTL     = $D01D           ;Graphic control address
-CHBASE     = $2F4            ;Character set base address - Font-Start
+CHBAS      = $2F4            ;Shadow register for hardware register - Character set base address - Font-Start
 STRIG0     = $284            ;Joystick trigger
 DMACTL     = $22F            ;Dma control register
 NMIEN      = $D40E           ;NMI control register
@@ -420,7 +421,7 @@ COLFIL LDA COLORT-1,X
        STA $D404
        JSR PMAKER
        LDA #$70
-       STA CHBASE
+       STA CHBAS
        LDA #$50
        JSR MAPFIL
        LDA #$31
@@ -560,7 +561,7 @@ MYOMY      STX AUDF1
            LDA #$50
            JSR MAPFIL
            LDA #$70
-           STA CHBASE
+           STA CHBAS
            INC MOVFLG
            INC ACTFLG
 ;--------------------------------
@@ -2354,7 +2355,7 @@ RJS39      DEY
            STA AUDC2
            STA $2C8
            LDA #$2C
-           STA CHBASE
+           STA CHBAS
 
 BONUS      LDX #$0E
 RJS41      LDA BONSTR,X
@@ -3003,7 +3004,7 @@ IRQ3   PHA
        LDA #$44
        STA COLPF1
        LDA #$FF
-       STA COLPF3
+       STA COLPF2
        LDA #$C6
        STA COLPF3
        LDA BSCOR0
@@ -3232,13 +3233,13 @@ RANLOP LDA RANDOM
        DEX
        BNE RANLOP
        LDA HPOS1 
-       STA AUDF1
+       STA HPOSP0
        LDA HPOS2
-       STA AUDC1
+       STA HPOSP1
        LDA HPOS3
-       STA AUDF2
+       STA HPOSP2
        LDA HPOS4
-       STA AUDC2
+       STA HPOSP3
        STA HITCLR
        LDA SPACFLG
        BEQ NOSTAR
