@@ -3493,6 +3493,82 @@ LIST1  .BYTE $70               ; 8 Blank Lines
        ;.WORD LIST1   ; Stores words in memory at the current memory address in native format (LSB/MSB).
 
 ;--------------------------------
+; THE ORIGINAL NIGHTRAIDERS RELEASE 
+; HAD A BOOTLOADER THAT ALSO LOADED THE
+; GAME CHARACTER SET AND DATA FROM RESERVED
+; SECTORS ON THE FLOPPY DISK.
+; THIS SUBROUTINE WILL PERFORM SAME FUNCTION
+; AND WAS TAKEN FROM THE BOOTLOADER SOURCE
+; A DISK WITH THE ORIGINAL NIGHTRAIDERS MUST
+; BE INSERTED IN DISK 0. WE CAN RETRIEVE THIS
+; DATA IN THE FUTURE AND INCLUDE IN THE SOURCE.
+; LOCATONS OF DATA FROM DISK ARE AS FOLLOWS
+; MAP1 5000-6000 SECTOR 50-70
+; MAP2 6000-7000 SECTOR 70-90
+; CSET 7000-8000 SECTOR 90-B0
+;--------------------------------
+;LDGAMEDAT  LDA #$31 ; THESE SETUP IO BLOCK PARMS FOR DOS
+;           STA $300 ; Device ="1"
+;           LDA #$01
+;           STA $301 ; Unit = 1
+;           LDA #$52
+;           STA $302 ; Cmd = 52 read
+;           LDA #$00 ;LOW BYTE OF READ DEST   
+;           STA $304
+;           LDA #$50 ;HIGH BYTE OF READ DEST
+;           STA $305
+;           LDA #$50 ;SECTOR TO READ LOW
+;           STA $30A
+;           LDA #$00 ;SECTOR TO READ HI BYTE
+;           STA $30B
+;           LDX #$50 ;START SECTOR TO READ
+;LDG1       STX $30A ; REDUNDANT BUT WE LOOP HERE SO NEED IT
+;           TXA
+;           PHA
+;           JSR $E453 ; CALL ATARI DOS IN ROM TO READ SECTOR 128 BYTES
+;           PLA
+;           TAX
+;           LDA $304  ; GET LOW BYTE OF DEST ADDR
+;           CLC
+;           ADC #$80  ; ADD 128
+;           STA $304  ; SAVE
+;           BCC LDG2  ; IF CARRY
+;           INC $305  ; BUMP HI BYTE
+;LDG2       INX       ; ADVANCE TO NEXT SECTOR
+;           CPX #$B1  ; ARE WE AT SECTOR B1
+;           BNE LDG1  ; IF NOT WE ARE DONE.
+;--------------------------------
+; NOW LOAD IN LAST CSET
+;--------------------------------
+; CSET1 $9000   SECTOR E0-E8
+;--------------------------------
+;SETLOAD    LDA #$00  ;LOW BYTE OF READ DEST
+;           STA $304
+;           LDA #$2C  ;HIGH BYTE OF READ DEST
+;           STA $305
+;           LDA #$E0  ;SECTOR TO READ LOW
+;           STA $30A
+;           LDA #$00  ;SECTOR TO READ HI BYTE
+;           STA $30B
+;           LDX #$E0  ; START SECTOR TO READ
+;LDG3       STX $30A  ; REDUNDANT BUT WE LOOP HERE SO NEED IT
+;           TXA
+;           PHA
+;           JSR $E453 ; CALL ATARI DOS IN ROM TO READ SECTOR
+;           PLA
+;           TAX
+;           LDA $304  ; GET LOW BYTE OF DEST ADDR
+;           CLC
+;           ADC #$80  ; ADD 128
+;           STA $304  ; SAVE
+;           BCC LDG4  ; IF CARRY
+;           INC $305  ; BUMP HI BYTE
+;LDG4       INX       ; ADVANCE TO NEXT SECTOR
+;           CPX #$E9  ; ARE WE AT SECTOR E9
+;           BNE LDG3  ; IF NOT WE ARE DONE.
+;           RTS
+
+;--------------------------------
 ; DATA TABLE FOR HI-RES NIGHTRAIDER!
 ;--------------------------------
 NIGHTDAT   .BYTE $00,$00,$00,$00,$00,$00,$00,$00                
