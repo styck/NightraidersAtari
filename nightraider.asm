@@ -2996,7 +2996,7 @@ IRQ3   PHA
        PHA
        STA WSYNC
        LDA #$2C
-       STA CHBAS
+       STA CHBASE
        LDA #$92
        STA COLBK
        LDA #$00
@@ -4042,3 +4042,8 @@ BASLOK     .WORD BASCAN1
            .WORD BASCAN2
            .WORD BASCAN1
 
+       ; Load in character sets and maps where game expects to be
+       *=$2C00  
+       .INCBIN "charset2.bin"
+       *= $5000
+       .INCBIN "maps.bin"
