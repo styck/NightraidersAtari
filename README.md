@@ -1,14 +1,12 @@
 # Nightraiders Atari
-Nightraiders atari computer game
+Nightraiders Atari computer game
 
-To build use the Altirra Visual Code Extension
-https://github.com/CycoPH/atasm-altirra-bridge
+Download Visual Code from Microsoft : https://code.visualstudio.com/Download
+Install the Atasm Altirra Bridge Visual Code Extension from the Extension manager, source code availble here: https://github.com/CycoPH/atasm-altirra-bridge
 
-Install from Visual Code fromt he Extnsion manager
+The single file nightraider.asm can be assembled and ran using the ATasm assembler that is built into the Altirra Extension, full debugging is supported.
 
-The single file nightraider.asm can be assembled and ran using the ATasm assembler that is built into the Altirra exention.
-
-The required build configurtion in atasm-build.json should look like this, the Exension settings should be checked to make sure ATasm is selected as well as other paramters specific to your emulation, such as NTSC/PAL.
+The required build configurtion in atasm-build.json should look like this, the Atasm Altirra Bridge Etxension settings should be checked to make sure ATasm is selected as well as other paramters specific to your emulation, such as NTSC/PAL.
 
 {
 	"comment": "Altirra configuration file.",
@@ -59,5 +57,5 @@ The atasm-build.json for the Mads build will look as shown below, it does not us
 	"withDebug": true
 }
 
-Once the atasm-build.json is complete (there is also an ATasm command to create it), within Visual Code to to View -> Command Palette, type ATasm to see the available commands, use "Atasm: Assemble source code and debug in Altirra" to run and debug the game.
+Once the atasm-build.json is complete (there is also an ATasm command to help create it), within Visual Code to to View -> Command Palette, type ATasm to see the available commands, use "Atasm: Assemble source code and debug in Altirra" to run and debug the game.
 
