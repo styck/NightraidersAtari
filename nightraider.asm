@@ -2996,7 +2996,7 @@ IRQ3   PHA
        PHA
        STA WSYNC
        LDA #$2C
-       STA CHBAS
+       STA CHBASE
        LDA #$92
        STA COLBK
        LDA #$00
