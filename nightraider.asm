@@ -204,7 +204,7 @@ P4     .BYTE $00,$00,$00,$00,$00,$80,$C0,$F0
 ; INTRODUCTION ROUTINE
 ;--------------------------------
 INTRO  LDA #$2C                 ;Setup character base address
-       STA CHBASE
+       STA CHBAS
        LDA #LIST1&255            ;Setup our display list pointers
        STA DLISTP               ;to point to our display list
        LDA #LIST1/255
@@ -450,7 +450,7 @@ CS     STA WSYNC
 ; NIGHTRAIDER GAME LOOPS
 ;--------------------------------
            LDA #$2C
-           STA CHBASE
+           STA CHBAS
            LDX #$0C
 CURRAN     LDA BMES1-1,X 
            STA $4CFF,X
@@ -2996,7 +2996,7 @@ IRQ3   PHA
        PHA
        STA WSYNC
        LDA #$2C
-       STA CHBASE
+       STA CHBAS
        LDA #$92
        STA COLBK
        LDA #$00
