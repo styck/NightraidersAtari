@@ -454,4 +454,8 @@ CS     STA WSYNC
        ICL "shapes.asm"
        ICL "variables.asm"
 
-
+       ; Load in character sets and maps where game expects to be
+       ORG $2C00  
+       INS "charset2.bin"
+       ORG $5000
+       INS "maps.bin"
