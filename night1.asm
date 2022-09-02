@@ -56,24 +56,94 @@ ACTFLG     = COLLAD+2        ;Plane action flag.
 ; ATARI LOCATIONS
 ;--------------------------------
 SCREEN     = $4000           ;Location in Memory of our Menu Screen Data
+
+M0PF       = $D000           ;Missile 0 to playfield collision
+M1PF       = $D001           ;Missile 1 to playfield collision
+M2PF       = $D002           ;Missile 2 to playfield collision
+M3PF       = $D003           ;Missile 3 to playfield collision
+
+HPOSP0     = $D000           ; Player 0 Horizontal Position
+HPOSP1     = $D001           ; Player 1 Horizontal Position
+HPOSP2     = $D002           ; Player 2 Horizontal Position
+HPOSP3     = $D003           ; Player 3 Horizontal Position
+
+HPOSM0     = $D004           ; Missile 0 Horizontal Position
+HPOSM1     = $D005           ; Missile 1 Horizontal Position
+HPOSM2     = $D006           ; Missile 2 Horizontal Position
+HPOSM3     = $D007           ; Missile 3 Horizontal Position
+
+SIZEP0     = $D008           ;Size of player 0
+SIZEP1     = $D009           ;Size of player 1
+SIZEP2     = $D00A           ;Size of player 2
+SIZEP3     = $D00B           ;Size of player 3
+
+TRIG0      = $D010           ;Read trigger button 0
+TRIG1      = $D011           ;Read trigger button 1
+TRIG2      = $D012           ;Read trigger button 2
+TRIG3      = $D013           ;Read trigger button 3
+
+COLPM0     = $D012           ;Color of player and missile 0
+COLPM1     = $D013           ;Color of player and missile 1
+COLPM2     = $D014           ;Color of player and missile 2
+COLPM3     = $D015           ;Color of player and missile 3
+
+COLPF0     = $D016           ;Color of playfield 0
+COLPF1     = $D017           ;Color of playfield 1
+COLPF2     = $D018           ;Color of playfield 2
+COLPF3     = $D019           ;Color of playfield 3
+COLBK      = $D01A           ;Playfield Background color
+
+PRIOR      = $D01B           ;Priority select
+HITCLR     = $D01E           ;Clear Player/Missile Collisions
+GRAFP3     = $D010           ;Graphics for player 3
+VSCROLL    = $D405           ;Vertical scroll register
+
+; Audio registers
+AUDF1      = $D200           ;Audio channel 1 frequency
+AUDC1      = $D201           ;Audio channel 1 control
+AUDF2      = $D202
+AUDC2      = $D203
+AUDF3      = $D204
+AUDC3      = $D205
+AUDF4      = $D206           ;Audio channel 4 frequency
+AUDC4      = $D207           ;Audio channel 4 control
+AUDCTL     = $D208           ;Audio control
+ALLPOT     = $D208           ; (Read) Read 8 line POT port state
+
+SKRES      = $D20A           ; (Write) Reset status (SKSTAT)
+RANDOM     = $D20A           ; (Read) Random number
+SKCTL      = $D20F           ;Serial Port Control
+SKSTAT     = $D20F           ;(Read) Serial port status
+
+PORTA      = $D300           ;Jack 0 & 1
+PORTB      = $D301           ;Jack 2 & 3
+PACTL      = $D302           ; Porta A control
+PABTL      = $D303           ; Porta B control
+
 PMBASE     = $D407           ;Player missle base address
+CHBASE     = $D409           ;Character Set Base Address (high)
+WSYNC      = $D40A           ;Wait for horizontal blank sync.
+VCOUNT     = $D40B           ;Vertical line counter
 DISPLA     = $3F00           ;Another menu scree location
 VDLST      = $200            ;Display list interrupt vector
 VBLK       = $224            ;Vertical blank interrupt vector
 DLISTP     = $230            ;Display list pointer
+SSKCTL     = $232            ;SKCTL
+GPRIOR     = $26F            ;data from CTIA PRIOR (D01B)
 CLB        = $2C8            ;Color register background
-CLP0       = $2C4            ;Color register playfield 1
-CLP1       = $2C5            ;Color register playfield 2
-CLP2       = $2C6            ;Color register playfield 3
-CLP3       = $2C7            ;Color register Playfield 4
-CPLAY0     = $2C0            ;Color player 1
-CPLAY1     = $2C1            ;Color player 2
-CPLAY2     = $2C2            ;Color player 3
-CPLAY3     = $2C3            ;Color player 4
+COLOR0     = $2C4            ;COLPF0 - Playfield 0 color
+COLOR1     = $2C5            ;COLPF1 - Playfield 1 color
+COLOR2     = $2C6            ;COLPF2 - Playfield 2 color
+COLOR3     = $2C7            ;COLPF3 - Playfield 3 color
+PCOLR0     = $2C0            ;Color player 1
+PCOLR1     = $2C1            ;Color player 2
+PCOLR2     = $2C2            ;Color player 3
+PCOLR3     = $2C3            ;Color player 4
+KEY        = $02FC           ;Read Keypress  
 CONSOL     = $D01F           ;Console switch address
 GRACTL     = $D01D           ;Graphic control address
-CHBASE     = $2F4            ;Character set base address
-TRIG0      = $284            ;Joystick trigger
+CHBAS      = $2F4            ;Shadow register for hardware register - Character set base address - Font-Start
+STRIG0     = $284            ;Joystick trigger
 DMACTL     = $22F            ;Dma control register
 NMIEN      = $D40E           ;NMI control register
 ;--------------------------------
@@ -135,13 +205,13 @@ P4     .BYTE $00,$00,$00,$00,$00,$80,$C0,$F0
 ; INTRODUCTION ROUTINE
 ;--------------------------------
 INTRO  LDA #$2C                 ;Setup character base address
-       STA CHBASE
+       STA CHBAS
        LDA #LIST1&255            ;Setup our display list pointers
        STA DLISTP               ;to point to our display list
        LDA #LIST1/255
        STA DLISTP+1
        LDA #$00
-       STA $D405                ;Put a zero in horizontal scroll reg
+       STA VSCROLL              ;Put a zero in horizontal scroll reg
        LDA #$3A
        STA DMACTL               ;Enable player DMA
        LDA #$03
@@ -151,7 +221,7 @@ INTRO  LDA #$2C                 ;Setup character base address
        STA VDLST                ;point to our Irq routines
        LDA #MIRQ1/255
        STA VDLST+1
-VSYNC  LDA $D40B                ;VCOUNT - Is scan line at the top of the screen?
+VSYNC  LDA VCOUNT               ;Is scan line at the top of the screen?
        CMP #$80                 ;For an NTSC machine, VCOUNT counts from $00 to $82; for PAL, it counts to $9B.
        BCC VSYNC                ;If not then loop
        LDA #$C0                 ;NMIEN_DLI($80) | NMIEN_VBI($40) - activate display list interrupt and vertical blank interrupt
@@ -176,7 +246,7 @@ FDS9   LDA HISCORE1,X           ;Get a BCD byte
        LSR                      ;
        CLC                      ;Add 1 to convert to
        ADC #$01                 ;our weird ascii
-       STA $4059,Y              ;Put on screen
+       STA SCREEN+$59,Y          ;Put on screen
        LDA OLSCORE1,X
        LSR  
        LSR
@@ -184,25 +254,25 @@ FDS9   LDA HISCORE1,X           ;Get a BCD byte
        LSR
        CLC
        ADC #$01
-       STA $4069,Y
+       STA SCREEN+$69,Y
        INY
        LDA HISCORE1,X           ;Get a BCD byte
        AND #$0F                 ;Only want right digit
        CLC                      ;Add 1 to convert to
        ADC #$01                 ;our weird ascii
-       STA $4059,Y              ;Put on screen
+       STA SCREEN+$59,Y              ;Put on screen
        LDA OLSCORE1,X
        AND #$0F
        CLC
        ADC #$01
-       STA $4069,Y
+       STA SCREEN+$69,Y
        INY
        DEX
        BPL FDS9
        LDA #$80
        STA TEMP7
        LDA #$98     
-       STA CLP3
+       STA COLOR3
        LDA #$06
        STA TEMP1
        LDX #$0A     
@@ -223,7 +293,7 @@ FDS9   LDA HISCORE1,X           ;Get a BCD byte
        STA LEVEL
 SELECT LDX #$14
        LDA #$00
-FDS10  STA $41A4,X
+FDS10  STA SCREEN+$1A4,X
        DEX
        BNE FDS10
        LDA #$0A
@@ -257,7 +327,7 @@ PF3    LDA CONSOL
        LDA #$00
        STA LEVEL
 PF4    JMP SELECT
-PF2    LDA $D010
+PF2    LDA TRIG0
        BNE CKEY
        JMP GAME
 ;--------------------------------
@@ -280,13 +350,13 @@ FDS11  STA (TEMP1),Y
 MIRQ1  PHA
        TXA
        PHA
-       LDA $D40B        ;VCOUNT
+       LDA VCOUNT
        CMP #$30         ;For an NTSC machine, VCOUNT counts from $00 to $82; for PAL, it counts to $9B.
        BCS MIRQ2
-       LDA $2C6
+       LDA COLOR2
        LDX #$11     
-FDS13  STA $D40A        ;WSYNC - Wait for Sync 0 A write to WSYNC causes the CPU to halt execution until the start of horizontal blank.
-       STA $D018
+FDS13  STA WSYNC        ;Wait for Sync 0 A write to WSYNC causes the CPU to halt execution until the start of horizontal blank.
+       STA COLPF2
        CLC
        ADC #$02     
        DEX
@@ -297,9 +367,9 @@ FDS13  STA $D40A        ;WSYNC - Wait for Sync 0 A write to WSYNC causes the CPU
        BNE FDS14
        LDA #$00
        STA CCNT
-       INC $2C6
+       INC COLOR2
 FDS14  LDA #$28     
-       STA $D018
+       STA COLPF2
        PLA
        TAX
        PLA
@@ -309,9 +379,9 @@ CCNT   .BYTE 00
 MIRQ2  TYA
        PHA
        LDA #$C8     
-       STA $D018
+       STA COLPF2
        LDA #$0F
-       STA $D019    
+       STA COLPF3   
        PLA
        TAY
        PLA
@@ -324,7 +394,7 @@ GAME   LDA #$00
        STA DMACTL 
        LDX #$05
 COLFIL LDA COLORT-1,X
-       STA CLP0-1,X
+       STA COLOR0-1,X
        DEX
        BNE COLFIL
        LDA #IRQ1&255
@@ -345,23 +415,23 @@ COLFIL LDA COLORT-1,X
        STA LIST2+4
        LDA #$07
        STA SCRCNT
-       STA $D405
+       STA VSCROLL
        JSR CLRMIS
        JSR SETSCREEN
        LDA #$0F
        STA $D404
        JSR PMAKER
        LDA #$70
-       STA $2F4
+       STA CHBAS
        LDA #$50
        JSR MAPFIL
        LDA #$31
-       STA $26F
-CS     STA $D40A
-       LDA $D40B         ;VCOUNT
+       STA GPRIOR
+CS     STA WSYNC
+       LDA VCOUNT
        CMP #$78          ;For an NTSC machine, VCOUNT counts from $00 to $82; for PAL, it counts to $9B.
        BNE CS
-       STA $D40A
+       STA WSYNC
        LDA #$C0          ;NMIEN_DLI($80) | NMIEN_VBI($40) - activate display list interrupt and vertical blank interrupt
        STA NMIEN
        LDA #$3E  
@@ -384,4 +454,8 @@ CS     STA $D40A
        ICL "shapes.asm"
        ICL "variables.asm"
 
-
+       ; Load in character sets and maps where game expects to be
+       ORG $2C00  
+       INS "charset2.bin"
+       ORG $5000
+       INS "maps.bin"

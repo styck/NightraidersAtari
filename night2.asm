@@ -2,7 +2,7 @@
 ; NIGHTRAIDER GAME LOOPS
 ;--------------------------------
            LDA #$2C
-           STA $2F4
+           STA CHBAS
            LDX #$0C
 CURRAN     LDA BMES1-1,X 
            STA $4CFF,X
@@ -57,12 +57,12 @@ MIO4       LDA BMES5-1,X
            JSR BEEPS
            LDX #$5
 MIO5       LDA #$A8
-           STA $D203
-           STA $D205
+           STA AUDC2
+           STA AUDC3
            LDA #85
-           STA $D202
+           STA AUDF2
            LDA #86 
-           STA $D204
+           STA AUDF3
            TXA
            PHA
            CLC
@@ -71,8 +71,8 @@ MIO5       LDA #$A8
            LDX #$04 
            JSR DLONG
            LDA #$00
-           STA $D203
-           STA $D205
+           STA AUDC2
+           STA AUDC3
            LDX #$10 
            JSR DLONG
            PLA
@@ -82,16 +82,16 @@ MIO5       LDA #$A8
            LDA #$01  
            STA $4E25  
            LDA #$A8
-           STA $D203
-           STA $D205
+           STA AUDC2
+           STA AUDC3
            LDA #50
-           STA $D202
+           STA AUDF2
            LDA #51
-           STA $D204
+           STA AUDF3
            LDA #$88
-           STA $D201
+           STA AUDC1
            LDX #$05
-MYOMY      STX $D200 
+MYOMY      STX AUDF1
            TXA
            PHA
            LDX #$3
@@ -102,18 +102,18 @@ MYOMY      STX $D200
            CPX #25  
            BNE MYOMY 
            LDA #$00
-           STA $D201
-           STA $D205
+           STA AUDC1
+           STA AUDC3
            LDA #$84
-           STA $D203
+           STA AUDC2
            LDA #$50 
-           STA $D202
+           STA AUDF2
            JSR DELAY
            LDX #$00
            LDA #$50
            JSR MAPFIL
            LDA #$70
-           STA $2F4
+           STA CHBAS
            INC MOVFLG
            INC ACTFLG
 ;--------------------------------
@@ -123,26 +123,26 @@ MYOMY      STX $D200
 ;--------------------------------
            JMP GM1
 BOOP       LDA #$AF
-           STA $D201
+           STA AUDC1
            LDA #$70
-           STA $D200
+           STA AUDF1
            LDX #$4 
            JSR DLONG   
            LDA #$00  
-           STA $D201   
+           STA AUDC1   
            LDX #$5 
            JSR DLONG  
            RTS
 BEEPS      LDA #$03
 BEEPS2     PHA  
            LDA #$AF
-           STA $D201
+           STA AUDC1
            LDA #$10
-           STA $D200
+           STA AUDF1
            LDX #$02
            JSR DLONG   
            LDA #$00  
-           STA $D201   
+           STA AUDC1   
            LDX #$02
            JSR DLONG
            PLA
@@ -152,6 +152,7 @@ BEEPS2     PHA
            LDX #$5
            JSR DLONG
            RTS
+
 BMES1      .BYTE $0D,$1F,$1C,$1C,$0F,$18,$1E,$00
            .BYTE $1C,$0B,$18,$15
 BMES2      .BYTE $17,$13,$1D,$1D,$13,$19,$18,$00
@@ -160,13 +161,14 @@ BMES3      .BYTE $8E,$8F,$9D,$9E,$9C,$99,$A3,$00,$8F
            .BYTE $98,$8F,$97,$A3
 BMES4      .BYTE $1D,$1E,$0B,$1E,$1F,$1D
 BMES5      .BYTE $96,$8B,$9F,$98,$8D,$92
+
 ;--------------------------------
 ; MAIN GAME LOOP #1
 ;--------------------------------
 GM1        LDA #COLRUT&255   ;SETUP
-           STA COLLAD       ;COLLISION
+           STA COLLAD        ;COLLISION
            LDA #COLRUT/255   ;ROUTINE
-           STA COLLAD+1     ;VECTOR
+           STA COLLAD+1      ;VECTOR
 GMLOOP     JSR PAUSER
            LDA BASER  
            BEQ PF5
@@ -627,7 +629,7 @@ PF36       LDA SAUCFLG
            INC SAUCFLG  
            LDY #$00
            LDX #$00
-           LDA $D20A
+           LDA RANDOM
            BMI PF34
            INX
            LDY #$FF
@@ -661,9 +663,9 @@ PF35       LDA WRNCNT
            LDA #25
            BNE TONE1
 TONE2      LDA #100
-TONE1      STA $D206  
+TONE1      STA AUDF4  
            LDA #$AF
-           STA $D207
+           STA AUDC4
            LDX #$09
 FDS34      LDA WRNMES-1,X
            STA $3E99,X
@@ -672,8 +674,8 @@ FDS34      LDA WRNMES-1,X
            DEC WRNCNT
            BNE FDS33
            LDA #$00
-           STA $D206
-           STA $D207
+           STA AUDF4
+           STA AUDC4
            LDX #$09
 FDS35      STA $3E99,X
            DEX
@@ -721,9 +723,9 @@ PF45       STA $3400,X
            DEY    
            BPL PF45
            LDA #$44
-           STA $2C0
+           STA PCOLR0
            LDA #$84
-           STA $2C1
+           STA PCOLR1
            LDA SAUCPNT
            CMP #$04
            BNE PLOTSAUC
@@ -763,14 +765,14 @@ FDS36      LDA (TEMP1),Y
            INC SAUCPNT
 FDS37      LDA SAUCT 
            BNE MISCHK
-           LDA $D20A
+           LDA RANDOM
            BMI FDS38
            LDA SAUCY
            CMP #$20
            BEQ MISCHK
            DEC SAUCT 
            JMP MISCHK  
-FDS38        LDA SAUCY
+FDS38      LDA SAUCY
 
            CMP #$60
            BEQ MISCHK
@@ -810,7 +812,7 @@ NOMISL     LDA HPOS1
            BNE FDS40
            LDA #$00
            STA SAUCFLG
-           STA $D207
+           STA AUDC4
 FDS40      RTS 
 WRNMES     .BYTE $1C,$0F,$0E,$00,$0B,$16,$0F,$1C,$1E
 ;
@@ -836,12 +838,12 @@ SOUND      JSR CONTROL
            BEQ SOUND3
            INC EXPSND
            LDA EXPSND
-           STA $D204
+           STA AUDF3
            LDA #$68
-           STA $D205
+           STA AUDC3
            BNE SOUND3
 SOUND2     LDA #$00
-           STA $D205
+           STA AUDC3
            INC EXPSND
 SOUND3     LDA SMISY
            BNE FDS41
@@ -850,21 +852,21 @@ SOUND3     LDA SMISY
            LDA SAUCFLG
            BNE FDS42
            LDA #$00
-           STA $D206
-           STA $D207
+           STA AUDF4
+           STA AUDC4
 FDS43      RTS
 FDS41      LDA #$A8
-           STA $D207
+           STA AUDC4
            LDA SMISY
-           STA $D206
+           STA AUDF4
            RTS
 FDS42      LDA VOLFLG    
            BNE FDS44
            LDA #$1
-           STA $D206
+           STA AUDF4
            LDA #$60
            ORA VOLUM
-           STA $D207
+           STA AUDC4
            INC VOLUM
            LDA VOLUM
            CMP #$0F
@@ -872,10 +874,10 @@ FDS42      LDA VOLFLG
            INC VOLFLG
            JMP FDS43
 FDS44      LDA #$1
-           STA $D206
+           STA AUDF4
            LDA #$60
            ORA VOLUM
-           STA $D207
+           STA AUDC4
            DEC VOLUM
            BNE FDS43
            DEC VOLFLG
@@ -1056,9 +1058,9 @@ PLANEGON   JSR CONTROL
            LDA #$50
            STA CRUD
 PF51       LDX #$0D
-PF52       LDA $D20A  
+PF52       LDA RANDOM  
            PHA
-           EOR $3490,X
+           EOR $3490,X   ;SCREEN addresses
            AND P1-1,X
            STA $3490,X
            PLA
@@ -1068,11 +1070,11 @@ PF52       LDA $D20A
            STA $3590,X
            DEX
            BNE PF52
-           LDA $D20A
+           LDA RANDOM
            AND #$3F
-           STA $D202
+           STA AUDF2
            LDA #$8F
-           STA $D203
+           STA AUDC2
            LDA TEMP1
            PHA
            LDX #$30
@@ -1096,7 +1098,7 @@ PF60       TXA
            BNE PF51
            DEC TEMP1
 PF53       LDA TEMP1
-           STA $D202
+           STA AUDF2
            LDA TEMP1
            AND #$0F
            BNE PF54
@@ -1104,7 +1106,7 @@ PF53       LDA TEMP1
            CMP #$90
            BCS PF55
            LDX #$10
-PF58       LDA $3490,X
+PF58       LDA $3490,X    ;Writing to SCREEN
            LSR
            STA $3490,X
            LDA $3590,X
@@ -1144,22 +1146,22 @@ PF59       TXA
            DEC TEMP1      
            BNE PF53
            LDA #$00
-           STA $D203
+           STA AUDC2
            DEC SHIPS
            BNE PF57
            JMP ENDGAME
 PF57       JSR PMAKER
            LDA #$35
-           STA $D202
+           STA AUDF2
            LDA #$AF
-           STA $D203
+           STA AUDC2
            LDY #$00
 SUP        DEY
            BNE SUP
            LDA #$84
-           STA $D203  
+           STA AUDC2  
            LDA #$50 
-           STA $D202
+           STA AUDF2
            INC ACTFLG  
            STA FUEL
            LDA #$00
@@ -1216,7 +1218,7 @@ CKMISKL    LDA HPOS3
            CMP #$0D
            BCS FDS73
            JMP FDS72
-FDS71       EOR #$FF
+FDS71      EOR #$FF
            CMP #$0C
            BCS FDS73
 FDS72      JSR PLANEGON  
@@ -1256,8 +1258,8 @@ FDS83      LDA HIT1,X
            INC HPOS2 
            INC HPOS2  
            LDA #$0F
-           STA $2C0
-           STA $2C1
+           STA PCOLR0
+           STA PCOLR1
            LDA #$28
            STA UFCNT
            RTS
@@ -1300,6 +1302,7 @@ FDS95      LDA HIT1,X
 FDS96      PLA  
            PLA
            RTS
+
 ;--------------------------------
 ; STAR ROUTINE
 ;--------------------------------
@@ -1357,7 +1360,7 @@ PF761      TAY
            LDA (IRQVAR1),Y
            BNE PF771
            LDA #$7F
-           BIT $D20A
+           BIT RANDOM
            BMI PF781
            LDA #$FF
 PF781      STA (IRQVAR1),Y  

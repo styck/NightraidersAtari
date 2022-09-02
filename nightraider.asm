@@ -56,24 +56,94 @@ ACTFLG     = COLLAD+2        ;Plane action flag.
 ; ATARI LOCATIONS
 ;--------------------------------
 SCREEN     = $4000           ;Location in Memory of our Menu Screen Data
+
+M0PF       = $D000           ;Missile 0 to playfield collision
+M1PF       = $D001           ;Missile 1 to playfield collision
+M2PF       = $D002           ;Missile 2 to playfield collision
+M3PF       = $D003           ;Missile 3 to playfield collision
+
+HPOSP0     = $D000           ; Player 0 Horizontal Position
+HPOSP1     = $D001           ; Player 1 Horizontal Position
+HPOSP2     = $D002           ; Player 2 Horizontal Position
+HPOSP3     = $D003           ; Player 3 Horizontal Position
+
+HPOSM0     = $D004           ; Missile 0 Horizontal Position
+HPOSM1     = $D005           ; Missile 1 Horizontal Position
+HPOSM2     = $D006           ; Missile 2 Horizontal Position
+HPOSM3     = $D007           ; Missile 3 Horizontal Position
+
+SIZEP0     = $D008           ;Size of player 0
+SIZEP1     = $D009           ;Size of player 1
+SIZEP2     = $D00A           ;Size of player 2
+SIZEP3     = $D00B           ;Size of player 3
+
+TRIG0      = $D010           ;Read trigger button 0
+TRIG1      = $D011           ;Read trigger button 1
+TRIG2      = $D012           ;Read trigger button 2
+TRIG3      = $D013           ;Read trigger button 3
+
+COLPM0     = $D012           ;Color of player and missile 0
+COLPM1     = $D013           ;Color of player and missile 1
+COLPM2     = $D014           ;Color of player and missile 2
+COLPM3     = $D015           ;Color of player and missile 3
+
+COLPF0     = $D016           ;Color of playfield 0
+COLPF1     = $D017           ;Color of playfield 1
+COLPF2     = $D018           ;Color of playfield 2
+COLPF3     = $D019           ;Color of playfield 3
+COLBK      =  $D01A          ;Playfield Background color
+
+PRIOR      = $D01B           ;Priority select
+HITCLR     = $D01E           ;Clear Player/Missile Collisions
+GRAFP3     = $D010           ;Graphics for player 3
+VSCROLL    = $D405           ;Vertical scroll register
+
+; Audio registers
+AUDF1      = $D200           ;Audio channel 1 frequency
+AUDC1      = $D201           ;Audio channel 1 control
+AUDF2      = $D202
+AUDC2      = $D203
+AUDF3      = $D204
+AUDC3      = $D205
+AUDF4      = $D206           ;Audio channel 4 frequency
+AUDC4      = $D207           ;Audio channel 4 control
+AUDCTL     = $D208           ;Audio control
+ALLPOT     = $D208           ; (Read) Read 8 line POT port state
+
+SKRES      = $D20A           ; (Write) Reset status (SKSTAT)
+RANDOM     = $D20A           ; (Read) Random number
+SKCTL      = $D20F           ;Serial Port Control
+SKSTAT     = $D20F           ;(Read) Serial port status
+
+PORTA      = $D300           ;Jack 0 & 1
+PORTB      = $D301           ;Jack 2 & 3
+PACTL      = $D302           ; Porta A control
+PABTL      = $D303           ; Porta B control
+
 PMBASE     = $D407           ;Player missle base address
+CHBASE     = $D409           ;Character Set Base Address (high)
+WSYNC      = $D40A           ;Wait for horizontal blank sync.
+VCOUNT     = $D40B           ;Vertical line counter
 DISPLA     = $3F00           ;Another menu scree location
 VDLST      = $200            ;Display list interrupt vector
 VBLK       = $224            ;Vertical blank interrupt vector
 DLISTP     = $230            ;Display list pointer
+SSKCTL     = $232            ;SKCTL
+GPRIOR     = $26F            ;data from CTIA PRIOR (D01B)
 CLB        = $2C8            ;Color register background
-CLP0       = $2C4            ;Color register playfield 1
-CLP1       = $2C5            ;Color register playfield 2
-CLP2       = $2C6            ;Color register playfield 3
-CLP3       = $2C7            ;Color register Playfield 4
-CPLAY0     = $2C0            ;Color player 1
-CPLAY1     = $2C1            ;Color player 2
-CPLAY2     = $2C2            ;Color player 3
-CPLAY3     = $2C3            ;Color player 4
+COLOR0     = $2C4            ;COLPF0 - Playfield 0 color
+COLOR1     = $2C5            ;COLPF1 - Playfield 1 color
+COLOR2     = $2C6            ;COLPF2 - Playfield 2 color
+COLOR3     = $2C7            ;COLPF3 - Playfield 3 color
+PCOLR0     = $2C0            ;Color player 1
+PCOLR1     = $2C1            ;Color player 2
+PCOLR2     = $2C2            ;Color player 3
+PCOLR3     = $2C3            ;Color player 4
+KEY        = $02FC           ;Read Keypress  
 CONSOL     = $D01F           ;Console switch address
 GRACTL     = $D01D           ;Graphic control address
-CHBASE     = $2F4            ;Character set base address
-TRIG0      = $284            ;Joystick trigger
+CHBAS      = $2F4            ;Shadow register for hardware register - Character set base address - Font-Start
+STRIG0     = $284            ;Joystick trigger
 DMACTL     = $22F            ;Dma control register
 NMIEN      = $D40E           ;NMI control register
 ;--------------------------------
@@ -140,7 +210,7 @@ INTRO  LDA #$2C                 ;Setup character base address
        LDA #LIST1/255
        STA DLISTP+1
        LDA #$00
-       STA $D405                ;Put a zero in horizontal scroll reg
+       STA VSCROLL              ;Put a zero in horizontal scroll reg
        LDA #$3A
        STA DMACTL               ;Enable player DMA
        LDA #$03
@@ -150,7 +220,7 @@ INTRO  LDA #$2C                 ;Setup character base address
        STA VDLST                ;point to our Irq routines
        LDA #MIRQ1/255
        STA VDLST+1
-VSYNC  LDA $D40B                ;VCOUNT - Is scan line at the top of the screen?
+VSYNC  LDA VCOUNT               ;Is scan line at the top of the screen?
        CMP #$80                 ;For an NTSC machine, VCOUNT counts from $00 to $82; for PAL, it counts to $9B.
        BCC VSYNC                ;If not then loop
        LDA #$C0                 ;NMIEN_DLI($80) | NMIEN_VBI($40) - activate display list interrupt and vertical blank interrupt
@@ -175,7 +245,7 @@ FDS9   LDA HISCORE1,X           ;Get a BCD byte
        LSR                      ;
        CLC                      ;Add 1 to convert to
        ADC #$01                 ;our weird ascii
-       STA $4059,Y              ;Put on screen
+       STA SCREEN+$59,Y          ;Put on screen
        LDA OLSCORE1,X
        LSR  
        LSR
@@ -183,25 +253,25 @@ FDS9   LDA HISCORE1,X           ;Get a BCD byte
        LSR
        CLC
        ADC #$01
-       STA $4069,Y
+       STA SCREEN+$69,Y
        INY
        LDA HISCORE1,X           ;Get a BCD byte
        AND #$0F                 ;Only want right digit
        CLC                      ;Add 1 to convert to
        ADC #$01                 ;our weird ascii
-       STA $4059,Y              ;Put on screen
+       STA SCREEN+$59,Y              ;Put on screen
        LDA OLSCORE1,X
        AND #$0F
        CLC
        ADC #$01
-       STA $4069,Y
+       STA SCREEN+$69,Y
        INY
        DEX
        BPL FDS9
        LDA #$80
        STA TEMP7
        LDA #$98     
-       STA CLP3
+       STA COLOR3
        LDA #$06
        STA TEMP1
        LDX #$0A     
@@ -222,7 +292,7 @@ FDS9   LDA HISCORE1,X           ;Get a BCD byte
        STA LEVEL
 SELECT LDX #$14
        LDA #$00
-FDS10  STA $41A4,X
+FDS10  STA SCREEN+$1A4,X
        DEX
        BNE FDS10
        LDA #$0A
@@ -256,7 +326,7 @@ PF3    LDA CONSOL
        LDA #$00
        STA LEVEL
 PF4    JMP SELECT
-PF2    LDA $D010
+PF2    LDA TRIG0
        BNE CKEY
        JMP GAME
 ;--------------------------------
@@ -279,13 +349,13 @@ FDS11  STA (TEMP1),Y
 MIRQ1  PHA
        TXA
        PHA
-       LDA $D40B        ;VCOUNT
+       LDA VCOUNT
        CMP #$30         ;For an NTSC machine, VCOUNT counts from $00 to $82; for PAL, it counts to $9B.
        BCS MIRQ2
-       LDA $2C6
+       LDA COLOR2
        LDX #$11     
-FDS13  STA $D40A        ;WSYNC - Wait for Sync 0 A write to WSYNC causes the CPU to halt execution until the start of horizontal blank.
-       STA $D018
+FDS13  STA WSYNC        ;Wait for Sync 0 A write to WSYNC causes the CPU to halt execution until the start of horizontal blank.
+       STA COLPF2
        CLC
        ADC #$02     
        DEX
@@ -296,9 +366,9 @@ FDS13  STA $D40A        ;WSYNC - Wait for Sync 0 A write to WSYNC causes the CPU
        BNE FDS14
        LDA #$00
        STA CCNT
-       INC $2C6
+       INC COLOR2
 FDS14  LDA #$28     
-       STA $D018
+       STA COLPF2
        PLA
        TAX
        PLA
@@ -308,9 +378,9 @@ CCNT   .BYTE 00
 MIRQ2  TYA
        PHA
        LDA #$C8     
-       STA $D018
+       STA COLPF2
        LDA #$0F
-       STA $D019    
+       STA COLPF3   
        PLA
        TAY
        PLA
@@ -323,7 +393,7 @@ GAME   LDA #$00
        STA DMACTL 
        LDX #$05
 COLFIL LDA COLORT-1,X
-       STA CLP0-1,X
+       STA COLOR0-1,X
        DEX
        BNE COLFIL
        LDA #IRQ1&255
@@ -344,23 +414,23 @@ COLFIL LDA COLORT-1,X
        STA LIST2+4
        LDA #$07
        STA SCRCNT
-       STA $D405
+       STA VSCROLL
        JSR CLRMIS
        JSR SETSCREEN
        LDA #$0F
        STA $D404
        JSR PMAKER
        LDA #$70
-       STA $2F4
+       STA CHBAS
        LDA #$50
        JSR MAPFIL
        LDA #$31
-       STA $26F
-CS     STA $D40A
-       LDA $D40B         ;VCOUNT
+       STA GPRIOR
+CS     STA WSYNC
+       LDA VCOUNT
        CMP #$78          ;For an NTSC machine, VCOUNT counts from $00 to $82; for PAL, it counts to $9B.
        BNE CS
-       STA $D40A
+       STA WSYNC
        LDA #$C0          ;NMIEN_DLI($80) | NMIEN_VBI($40) - activate display list interrupt and vertical blank interrupt
        STA NMIEN
        LDA #$3E  
@@ -380,7 +450,7 @@ CS     STA $D40A
 ; NIGHTRAIDER GAME LOOPS
 ;--------------------------------
            LDA #$2C
-           STA $2F4
+           STA CHBASE
            LDX #$0C
 CURRAN     LDA BMES1-1,X 
            STA $4CFF,X
@@ -435,12 +505,12 @@ MIO4       LDA BMES5-1,X
            JSR BEEPS
            LDX #$5
 MIO5       LDA #$A8
-           STA $D203
-           STA $D205
+           STA AUDC2
+           STA AUDC3
            LDA #85
-           STA $D202
+           STA AUDF2
            LDA #86 
-           STA $D204
+           STA AUDF3
            TXA
            PHA
            CLC
@@ -449,8 +519,8 @@ MIO5       LDA #$A8
            LDX #$04 
            JSR DLONG
            LDA #$00
-           STA $D203
-           STA $D205
+           STA AUDC2
+           STA AUDC3
            LDX #$10 
            JSR DLONG
            PLA
@@ -460,16 +530,16 @@ MIO5       LDA #$A8
            LDA #$01  
            STA $4E25  
            LDA #$A8
-           STA $D203
-           STA $D205
+           STA AUDC2
+           STA AUDC3
            LDA #50
-           STA $D202
+           STA AUDF2
            LDA #51
-           STA $D204
+           STA AUDF3
            LDA #$88
-           STA $D201
+           STA AUDC1
            LDX #$05
-MYOMY      STX $D200 
+MYOMY      STX AUDF1
            TXA
            PHA
            LDX #$3
@@ -480,18 +550,18 @@ MYOMY      STX $D200
            CPX #25  
            BNE MYOMY 
            LDA #$00
-           STA $D201
-           STA $D205
+           STA AUDC1
+           STA AUDC3
            LDA #$84
-           STA $D203
+           STA AUDC2
            LDA #$50 
-           STA $D202
+           STA AUDF2
            JSR DELAY
            LDX #$00
            LDA #$50
            JSR MAPFIL
            LDA #$70
-           STA $2F4
+           STA CHBAS
            INC MOVFLG
            INC ACTFLG
 ;--------------------------------
@@ -501,26 +571,26 @@ MYOMY      STX $D200
 ;--------------------------------
            JMP GM1
 BOOP       LDA #$AF
-           STA $D201
+           STA AUDC1
            LDA #$70
-           STA $D200
+           STA AUDF1
            LDX #$4 
            JSR DLONG   
            LDA #$00  
-           STA $D201   
+           STA AUDC1   
            LDX #$5 
            JSR DLONG  
            RTS
 BEEPS      LDA #$03
 BEEPS2     PHA  
            LDA #$AF
-           STA $D201
+           STA AUDC1
            LDA #$10
-           STA $D200
+           STA AUDF1
            LDX #$02
            JSR DLONG   
            LDA #$00  
-           STA $D201   
+           STA AUDC1   
            LDX #$02
            JSR DLONG
            PLA
@@ -530,6 +600,7 @@ BEEPS2     PHA
            LDX #$5
            JSR DLONG
            RTS
+
 BMES1      .BYTE $0D,$1F,$1C,$1C,$0F,$18,$1E,$00
            .BYTE $1C,$0B,$18,$15
 BMES2      .BYTE $17,$13,$1D,$1D,$13,$19,$18,$00
@@ -538,13 +609,14 @@ BMES3      .BYTE $8E,$8F,$9D,$9E,$9C,$99,$A3,$00,$8F
            .BYTE $98,$8F,$97,$A3
 BMES4      .BYTE $1D,$1E,$0B,$1E,$1F,$1D
 BMES5      .BYTE $96,$8B,$9F,$98,$8D,$92
+
 ;--------------------------------
 ; MAIN GAME LOOP #1
 ;--------------------------------
 GM1        LDA #COLRUT&255   ;SETUP
-           STA COLLAD       ;COLLISION
+           STA COLLAD        ;COLLISION
            LDA #COLRUT/255   ;ROUTINE
-           STA COLLAD+1     ;VECTOR
+           STA COLLAD+1      ;VECTOR
 GMLOOP     JSR PAUSER
            LDA BASER  
            BEQ PF5
@@ -1005,7 +1077,7 @@ PF36       LDA SAUCFLG
            INC SAUCFLG  
            LDY #$00
            LDX #$00
-           LDA $D20A
+           LDA RANDOM
            BMI PF34
            INX
            LDY #$FF
@@ -1039,9 +1111,9 @@ PF35       LDA WRNCNT
            LDA #25
            BNE TONE1
 TONE2      LDA #100
-TONE1      STA $D206  
+TONE1      STA AUDF4  
            LDA #$AF
-           STA $D207
+           STA AUDC4
            LDX #$09
 FDS34      LDA WRNMES-1,X
            STA $3E99,X
@@ -1050,8 +1122,8 @@ FDS34      LDA WRNMES-1,X
            DEC WRNCNT
            BNE FDS33
            LDA #$00
-           STA $D206
-           STA $D207
+           STA AUDF4
+           STA AUDC4
            LDX #$09
 FDS35      STA $3E99,X
            DEX
@@ -1099,9 +1171,9 @@ PF45       STA $3400,X
            DEY    
            BPL PF45
            LDA #$44
-           STA $2C0
+           STA PCOLR0
            LDA #$84
-           STA $2C1
+           STA PCOLR1
            LDA SAUCPNT
            CMP #$04
            BNE PLOTSAUC
@@ -1141,14 +1213,14 @@ FDS36      LDA (TEMP1),Y
            INC SAUCPNT
 FDS37      LDA SAUCT 
            BNE MISCHK
-           LDA $D20A
+           LDA RANDOM
            BMI FDS38
            LDA SAUCY
            CMP #$20
            BEQ MISCHK
            DEC SAUCT 
            JMP MISCHK  
-FDS38        LDA SAUCY
+FDS38      LDA SAUCY
 
            CMP #$60
            BEQ MISCHK
@@ -1188,7 +1260,7 @@ NOMISL     LDA HPOS1
            BNE FDS40
            LDA #$00
            STA SAUCFLG
-           STA $D207
+           STA AUDC4
 FDS40      RTS 
 WRNMES     .BYTE $1C,$0F,$0E,$00,$0B,$16,$0F,$1C,$1E
 ;
@@ -1214,12 +1286,12 @@ SOUND      JSR CONTROL
            BEQ SOUND3
            INC EXPSND
            LDA EXPSND
-           STA $D204
+           STA AUDF3
            LDA #$68
-           STA $D205
+           STA AUDC3
            BNE SOUND3
 SOUND2     LDA #$00
-           STA $D205
+           STA AUDC3
            INC EXPSND
 SOUND3     LDA SMISY
            BNE FDS41
@@ -1228,21 +1300,21 @@ SOUND3     LDA SMISY
            LDA SAUCFLG
            BNE FDS42
            LDA #$00
-           STA $D206
-           STA $D207
+           STA AUDF4
+           STA AUDC4
 FDS43      RTS
 FDS41      LDA #$A8
-           STA $D207
+           STA AUDC4
            LDA SMISY
-           STA $D206
+           STA AUDF4
            RTS
 FDS42      LDA VOLFLG    
            BNE FDS44
            LDA #$1
-           STA $D206
+           STA AUDF4
            LDA #$60
            ORA VOLUM
-           STA $D207
+           STA AUDC4
            INC VOLUM
            LDA VOLUM
            CMP #$0F
@@ -1250,10 +1322,10 @@ FDS42      LDA VOLFLG
            INC VOLFLG
            JMP FDS43
 FDS44      LDA #$1
-           STA $D206
+           STA AUDF4
            LDA #$60
            ORA VOLUM
-           STA $D207
+           STA AUDC4
            DEC VOLUM
            BNE FDS43
            DEC VOLFLG
@@ -1434,9 +1506,9 @@ PLANEGON   JSR CONTROL
            LDA #$50
            STA CRUD
 PF51       LDX #$0D
-PF52       LDA $D20A  
+PF52       LDA RANDOM  
            PHA
-           EOR $3490,X
+           EOR $3490,X   ;SCREEN addresses
            AND P1-1,X
            STA $3490,X
            PLA
@@ -1446,11 +1518,11 @@ PF52       LDA $D20A
            STA $3590,X
            DEX
            BNE PF52
-           LDA $D20A
+           LDA RANDOM
            AND #$3F
-           STA $D202
+           STA AUDF2
            LDA #$8F
-           STA $D203
+           STA AUDC2
            LDA TEMP1
            PHA
            LDX #$30
@@ -1474,7 +1546,7 @@ PF60       TXA
            BNE PF51
            DEC TEMP1
 PF53       LDA TEMP1
-           STA $D202
+           STA AUDF2
            LDA TEMP1
            AND #$0F
            BNE PF54
@@ -1482,7 +1554,7 @@ PF53       LDA TEMP1
            CMP #$90
            BCS PF55
            LDX #$10
-PF58       LDA $3490,X
+PF58       LDA $3490,X    ;Writing to SCREEN
            LSR
            STA $3490,X
            LDA $3590,X
@@ -1522,22 +1594,22 @@ PF59       TXA
            DEC TEMP1      
            BNE PF53
            LDA #$00
-           STA $D203
+           STA AUDC2
            DEC SHIPS
            BNE PF57
            JMP ENDGAME
 PF57       JSR PMAKER
            LDA #$35
-           STA $D202
+           STA AUDF2
            LDA #$AF
-           STA $D203
+           STA AUDC2
            LDY #$00
 SUP        DEY
            BNE SUP
            LDA #$84
-           STA $D203  
+           STA AUDC2  
            LDA #$50 
-           STA $D202
+           STA AUDF2
            INC ACTFLG  
            STA FUEL
            LDA #$00
@@ -1594,7 +1666,7 @@ CKMISKL    LDA HPOS3
            CMP #$0D
            BCS FDS73
            JMP FDS72
-FDS71       EOR #$FF
+FDS71      EOR #$FF
            CMP #$0C
            BCS FDS73
 FDS72      JSR PLANEGON  
@@ -1634,8 +1706,8 @@ FDS83      LDA HIT1,X
            INC HPOS2 
            INC HPOS2  
            LDA #$0F
-           STA $2C0
-           STA $2C1
+           STA PCOLR0
+           STA PCOLR1
            LDA #$28
            STA UFCNT
            RTS
@@ -1736,7 +1808,7 @@ PF761      TAY
            LDA (IRQVAR1),Y
            BNE PF771
            LDA #$7F
-           BIT $D20A
+           BIT RANDOM
            BMI PF781
            LDA #$FF
 PF781      STA (IRQVAR1),Y  
@@ -1803,7 +1875,7 @@ PF89       LDA FLYFLG
 ; NUMBER OF PLANES TO KILL
 ;--------------------------------
            INC FLYFLG
-           LDA $D20A
+           LDA RANDOM
            AND #$07
            CMP #$05
            BCC PF86
@@ -2109,15 +2181,15 @@ FDS131     LDA $3700,X
            LDA MXSCRL
            CMP #$FF
            BEQ FDS132
-           STA $D202
+           STA AUDF2
            LDA #$8F
-           STA $D203
+           STA AUDC2
            RTS
 FDS132     DEC MXFLAG
            LDA #$50
-           STA $D202
+           STA AUDF2
            LDA #$88
-           STA $D203
+           STA AUDC2
            RTS
 ;--------------------------------
 ; MXKILL CHECK FOR MX DEATH!
@@ -2153,9 +2225,9 @@ RJS23      LDA HIT1,X
 ; KILL MISSLE!
 ;--------------------------------
 RJS24      LDA #$50
-           STA $D202
+           STA AUDF2
            LDA #$88
-           STA $D203
+           STA AUDC2
            LDX #$60  
 RJS25      LDA $3700,X
            BNE RJS29
@@ -2163,7 +2235,7 @@ RJS25      LDA $3700,X
            BNE RJS25
 RJS29      LDY #$0E
 RJS28      DEX
-           LDA $D20A
+           LDA RANDOM
            AND MXDAT,Y
            STA $3700,X  
            DEY
@@ -2199,12 +2271,12 @@ RJS31      LDA #$00
            STA HPOS2
            STA HPOS3
            STA HPOS4
-           STA $D205
-           STA $D207
+           STA AUDC3
+           STA AUDC4
            LDA #$8F
-           STA $D201
+           STA AUDC1
            LDA #$CF
-           STA $D203
+           STA AUDC2
            LDX #$00
            TXA
 RJS32      STA $48C0,X
@@ -2214,15 +2286,15 @@ RJS32      STA $48C0,X
            INX
            BNE RJS32
            LDA #$CF 
-           STA $D201
+           STA AUDC1
            LDA #$8F
-           STA $D203
+           STA AUDC2
            LDX #$FF
-RJS33      STX $D200
+RJS33      STX AUDF1
            TXA
            PHA
            EOR #$FF
-           STA $D202
+           STA AUDF2
            TXA
            AND #$0F
            BNE RJS37
@@ -2279,11 +2351,11 @@ RJS39      DEY
            DEX
            BNE RJS33
            LDA #$00
-           STA $D201
-           STA $D203
+           STA AUDC1
+           STA AUDC2
            STA $2C8
            LDA #$2C
-           STA $2F4
+           STA CHBAS
 
 BONUS      LDX #$0E
 RJS41      LDA BONSTR,X
@@ -2292,17 +2364,17 @@ RJS41      LDA BONSTR,X
            BPL RJS41
            LDX #$0F 
 RJS42      LDY MUSDATA,X
-           STY $D200
+           STY AUDF1
            DEY
-           STY $D202
+           STY AUDF2
            LDA #$AF
-           STA $D201
-           STA $D203
+           STA AUDC1
+           STA AUDC2
            INY
            CPY #$00
            BNE RJS44
-           STY $D201
-           STY $D203
+           STY AUDC1
+           STY AUDC2
 RJS44      LDA MUSDLY,X
            LDY #$00
 RJS43      DEY
@@ -2407,10 +2479,10 @@ BASOLD     .BYTE $00,$00
 ;--------------------------------
 ENDGAME    LDA #$00
            LDA #$00
-           STA $D201
-           STA $D203
-           STA $D205
-           STA $D207
+           STA AUDC1
+           STA AUDC2
+           STA AUDC3
+           STA AUDC4
            LDA #$3D 
            STA HPOS1
            LDA #$5D
@@ -2439,15 +2511,15 @@ FDS144     LDA GDAT,X
            DEX
            BPL FDS144
            LDA #$03
-           STA $D008
-           STA $D009
-           STA $D00A
-           STA $D00B
+           STA SIZEP0     ;Set sizes of players
+           STA SIZEP1
+           STA SIZEP2
+           STA SIZEP3
            LDA #$94
-           STA $2C0
-           STA $2C1
-           STA $2C2
-           STA $2C3
+           STA PCOLR0
+           STA PCOLR1
+           STA PCOLR2
+           STA PCOLR3
            LDA SCORE1
            STA OLSCORE1
            LDA SCORE2
@@ -2549,13 +2621,13 @@ FDS152     LDA CONSOL
            LDA #$00
            STA MOVFLG
            STA ACTFLG
-           STA $D201
-           STA $D203
-           STA $D205
-           STA $D207
+           STA AUDC1
+           STA AUDC2
+           STA AUDC3
+           STA AUDC4
            LDA #$FF
-           STA $2FC
-FDS153     LDA $2FC
+           STA KEY
+FDS153     LDA KEY
            CMP #$FF
            BEQ FDS153
            PLA
@@ -2563,9 +2635,9 @@ FDS153     LDA $2FC
            PLA
            STA MOVFLG
            LDA #50
-           STA $D202
+           STA AUDF2
            LDA #$83
-           STA $D203
+           STA AUDC2
            RTS
 ;--------------------------------
 ; FIREPOWER! FIRE FROM BASE AND
@@ -2638,14 +2710,14 @@ IRQ1   PHA
        PHA
        LDA PRESS
        BEQ NOPRES
-       LDA $D010
+       LDA GRAFP3
        BEQ MOVEM
        LDA #$00 
        STA PRESS
        JMP MOVEM
 NOPRES LDA ACTFLG
        BEQ MOVEM
-       LDA $D010   
+       LDA GRAFP3   
        BNE MOVEM
        INC PRESS
        LDX #$00
@@ -2743,9 +2815,9 @@ NOTWI2 LDA SNDFLG2
        LDA SNDFLG   
        BNE SND2   
        LDA #$88
-       STA $D201
+       STA AUDC1
        LDA HOLDER   
-       STA $D200 
+       STA AUDF1
        LDA HOLDER 
        CMP #$FA
        BNE SSS
@@ -2760,7 +2832,7 @@ SSS    SEC
        JMP NOTWI3
 SND2   DEC HOLDER  
        LDA HOLDER
-       STA $D201
+       STA AUDC1
        CMP #$80
        BNE NOTWI3
        INC SNDFLG2
@@ -2786,24 +2858,24 @@ IRQ2   PHA
        PHA
        TYA
        PHA
-       STA $D40A
-       STA $D40A
+       STA WSYNC
+       STA WSYNC
        LDA #$B4
-       STA $D012
+       STA COLPM0
        LDA #$44
-       STA $D013
+       STA COLPM1
        LDA #$92
-       STA $D014
-       STA $D015
+       STA COLPM2
+       STA COLPM3
        LDA ACTFLG  
        BEQ UPDATE  
-       LDA $D20A
+       LDA RANDOM
        ORA #$81      
        STA $359B
-       LDA $D20A
+       LDA RANDOM
        ORA #$81
        STA $349B
-       LDA $D300
+       LDA PORTA
        ROR
        ROR
        ROR
@@ -2821,17 +2893,17 @@ RIGHT  LDA CROSSX
        BEQ UPDATE
        INC CROSSX
 UPDATE LDA CROSSX
-       STA $D000
-       STA $D001
+       STA M0PF
+       STA M1PF
        SEC
        SBC #$08
-       STA $D002
+       STA M2PF
        CLC
        ADC #$10
-       STA $D003
+       STA M3PF
        LDA #$31
-       STA $D01B
-       LDA $D300 
+       STA PRIOR
+       LDA PORTA
        ROR  
        BCC UPSY
        ROR
@@ -2845,49 +2917,49 @@ UPSY   LDA TPOINT
        CMP #$73
        BEQ NOTP
        INC TPOINT 
-NOTP   LDA $D40B      ;VCOUNT
+NOTP   LDA VCOUNT
        CMP #$50       ;For an NTSC machine, VCOUNT counts from $00 to $82; for PAL, it counts to $9B.
        BCC NOTP
        LDA #$00
-       STA $D012
-       STA $D013
-       STA $D014
-       STA $D015
+       STA TRIG2
+       STA TRIG3
+       STA COLPM2
+       STA COLPM3
        LDA CROSSX
        SEC
        SBC #$10
-       STA $D000  
-       STA $D001
+       STA HPOSP0  
+       STA HPOSP1
        SEC
        SBC #$08
-       STA $D002
+       STA HPOSP2
        CLC
        ADC #$10
-       STA $D003
+       STA HPOSP3
        LDA #IRQ3&255
        STA VDLST
        LDA #IRQ3/255
        STA VDLST+1
-       LDA $D008
+       LDA SIZEP0
        BEQ TT1
        ORA HIT1  
        STA HIT1
-TT1    LDA $D009
+TT1    LDA SIZEP1
        BEQ TT2
        ORA HIT2
        STA HIT2
-TT2    LDA $D00A
+TT2    LDA SIZEP2
        BEQ TT3 
        ORA HIT3
        STA HIT3
-TT3    LDA $D00B
+TT3    LDA SIZEP3
        BEQ TT4
        ORA HIT4
        STA HIT4
        LDA SPACFLG
        BEQ TT4
        LDX #$03
-FDS2   LDA $D000,X 
+FDS2   LDA HPOSP0,X 
        AND #$0E
        BNE NOAH
        DEX
@@ -2907,14 +2979,14 @@ TT4    LDX #$00
 GOTH   TXA
        ASL
        TAY
-       LDA $D000,Y
+       LDA HPOSP0,Y
        AND #$0E 
        BNE NOAH
-       LDA $D001,Y
+       LDA HPOSP1,Y
        AND #$0E 
        BEQ NOH
 NOAH   JMP (COLLAD)  
-NOH    STA $D01E
+NOH    STA HITCLR
        JMP RTEND   
 ;--------------------------------
 IRQ3   PHA
@@ -2922,19 +2994,19 @@ IRQ3   PHA
        PHA
        TYA
        PHA
-       STA $D40A
+       STA WSYNC
        LDA #$2C
-       STA $D409
+       STA CHBASE
        LDA #$92
-       STA $D01A
+       STA COLBK
        LDA #$00
-       STA $D016
+       STA COLPF0
        LDA #$44
-       STA $D017
+       STA COLPF1
        LDA #$FF
-       STA $D018
+       STA COLPF2
        LDA #$C6
-       STA $D019
+       STA COLPF3
        LDA BSCOR0
        BNE SCORESIT
        LDA BSCOR1
@@ -3069,7 +3141,7 @@ MILOS  LDA #$00
        DEC LIST2+4
 NOMINU LDA #$07
        STA SCRCNT
-SCROLM STA $D405
+SCROLM STA VSCROLL
 FLICK  INC DELAYER    
        LDA DELAYER
        CMP #$0A
@@ -3155,20 +3227,20 @@ FDS6   LDA (IRQVAR1),Y
        DEY
        BPL FDS6
 NOMOV2 LDX #$10
-RANLOP LDA $D20A
-       EOR $D40B        ;VCOUNT - For an NTSC machine, VCOUNT counts from $00 to $82; for PAL, it counts to $9B.
+RANLOP LDA RANDOM
+       EOR VCOUNT       ;For an NTSC machine, VCOUNT counts from $00 to $82; for PAL, it counts to $9B.
        STA $717F,X 
        DEX
        BNE RANLOP
        LDA HPOS1 
-       STA $D000
+       STA HPOSP0
        LDA HPOS2
-       STA $D001
+       STA HPOSP1
        LDA HPOS3
-       STA $D002
+       STA HPOSP2
        LDA HPOS4
-       STA $D003
-       STA $D01E 
+       STA HPOSP3
+       STA HITCLR
        LDA SPACFLG
        BEQ NOSTAR
        LDA BASER
@@ -3187,7 +3259,7 @@ MAPFIL     STA TEMP2
            LDA #$94
            STA $2C5
            LDA #$CA
-           STA $2C6
+           STA COLOR2
            LDA #$48
            STA $2C7
            BNE MAPMOVER  
@@ -3196,7 +3268,7 @@ MAPCOL2    LDA #$28
            LDA #$CA
            STA $2C5
            LDA #$94
-           STA $2C6
+           STA COLOR2
            LDA #$48
            STA $2C7
 MAPMOVER   LDA #$40  
@@ -3217,7 +3289,7 @@ MAPFIL2    LDA (TEMP1),Y
            BNE MAPFIL2
            LDX #$00
            TXA
-FDS161     STA $4000,X
+FDS161     STA $4000,X    ;Writing to SCREEN , loading map?
            STA $4100,X
            STA $4200,X
            DEX
@@ -3254,11 +3326,11 @@ INIT   LDA #$00
 ILOOP  STA $0,X
        INX
        BNE ILOOP
-       STA $D40E
-       STA $D008
-       STA $D009
-       STA $D00A
-       STA $D00B
+       STA NMIEN
+       STA SIZEP0    ; reset size of play missles
+       STA SIZEP1
+       STA SIZEP2
+       STA SIZEP3
        LDA #RTEND&255
        STA VBLK  
        STA COLLAD
@@ -3279,11 +3351,11 @@ ILOOP1 LDA #$00
        STA PMBASE
        LDX #$09
        LDA #$00
-ILOOP2 STA CPLAY0-1,X
+ILOOP2 STA PCOLR0-1,X
        DEX
        BNE ILOOP2
        LDX #$07
-ILOOP3 STA $D200,X
+ILOOP3 STA AUDF1,X
        DEX
        DEX
        CPX #$FF
@@ -3295,12 +3367,12 @@ CLRGUN STA GUNSX,X
        LDA #$40
        STA TPOINT
        LDA #$03
-       STA $232
-       STA $D20F
+       STA SSKCTL
+       STA SKCTL
        LDA #$00
-       STA $D208
+       STA ALLPOT
        LDA #$03
-       STA $D01E
+       STA HITCLR
        JSR INITVAR
        RTS
 ;--------------------------------
@@ -3453,7 +3525,7 @@ LIST2  .BYTE $70               ; 8 Blank Lines
        .BYTE $05               ; Text Mode 40 pixels per line 40 bytes per line 16 scan lines
        .BYTE $20               ; 1 blank line + Vertical Scroll
        .BYTE $4A               ; Graphics mode 80 pixels per line 20 bytes per line 4 scan lines + load mem scan from 413f
-       .BYTE $41               ; Low Byte of Memory address
+       .BYTE $40               ; Low Byte of Memory address
        .BYTE $3F               ; Hi Byte of Memory address
        .BYTE $41               ; Jump and wait for vertical blank Tells ANTIC Processor where to fetch next instruction.
 ;       .DA #LIST2    ; .DA #expression (one byte, LSB of expression)
