@@ -208,61 +208,72 @@ DELAY2 DEY
        RTS
 ;--------------------------------
 ; PRINT ROUTINE
+; Prints a Message on Screen
+; Enter with X= msg# we want to display from list located at WORDS
+; each msg begins and ends with 00. TEMP1 = line # on screen where
+; first line is 0. Y is start printing pos on line. 
+; TEMP7 contains a logical or value that get's or'd with the char
+; of the msg. Not sure if it's to select differrent char sets.
 ;--------------------------------
-
-PRINT  STY TEMP2
-       LDA #WORDS&255
+PRINT  STY TEMP2            ; save y line print pos for later
+       LDA #WORDS&255       ; Setup TEMP3/TEMP4 as indirect pointer to WORDS
        STA TEMP3
        LDA #WORDS/255
        STA TEMP4
-       LDY #$00
-PRINT1 LDA (TEMP3),Y
-       BEQ PRINT3
-PRINT2 INY
-       JMP PRINT1
-PRINT3 DEX
-       BNE PRINT2
-       INY
-       TYA
-       CLC
-       ADC TEMP3
-       STA TEMP3
-       BCC PRINT4
-       INC TEMP4
-PRINT4 LDA #SCREEN&255
+       LDY #$00             ; init y index to 0
+PRINT1 LDA (TEMP3),Y        ; get a byte from WORDS offset by y
+       BEQ PRINT3           ; if 0 we are at beginning of msg.
+PRINT2 INY                  ; else advance index
+       JMP PRINT1           ; keep searching 
+PRINT3 DEX                  ; subtract 1 from msg# 
+       BNE PRINT2           ; if not 0 its not msg keep searching
+       INY                  ; y points to $00 of msg bump to point to beginning
+       TYA                  ; move offset to acc
+       CLC                  ; now add to our indirect address to for new
+       ADC TEMP3            ; indirect address in TEMP3/TEMP4 pointing to our msg.
+       STA TEMP3            ; add y to low byte and save
+       BCC PRINT4           ; if it caused a carry 
+       INC TEMP4            ; bump hi byte
+;--------------------------------
+PRINT4 LDA #SCREEN&255      ; Setup TEMP5/TEMP6 as indirect pointer to SCREEN
        STA TEMP5
        LDA #SCREEN/255
        STA TEMP6
-       LDX TEMP1
-       BEQ LOOSE
-PRINT5 LDA TEMP5
-       CLC
+;--------------------------------
+       LDX TEMP1            ; get line # on screen where we want to print
+       BEQ LOOSE            ; if first line then we have our line go print
+;--------------------------------
+PRINT5 LDA TEMP5            ; otherwise add 40 ($28) to screen indirect address
+       CLC                  ; pointer in TEMP5/TEMP6 so it points to next line
        ADC #$28
        STA TEMP5
        BCC PRINT6
        INC TEMP6  
-PRINT6 DEX 
-       BNE PRINT5
-LOOSE  LDY #$00 
-PRINT7 LDA (TEMP3),Y
-       BEQ PRINT9
-       CMP #$20
-       BNE PRINT8
-       LDA #$36
-PRINT8 SEC
-       SBC #$36
-       ORA TEMP7
-       TAX
-       TYA
-       PHA
-       LDY TEMP2
-       TXA
-       STA (TEMP5),Y
-       INC TEMP2
-       PLA
-       TAY
-       INY
-       JMP PRINT7
+;--------------------------------
+PRINT6 DEX                  ; dec line counter
+       BNE PRINT5           ; if not 0 loop for next line
+;--------------------------------
+LOOSE  LDY #$00             ; y index = 0
+PRINT7 LDA (TEMP3),Y        ; get char from msg data
+       BEQ PRINT9           ; if 0 end of msg we are done!
+;--------------------------------
+       CMP #$20             ; else check if it's a space char 
+       BNE PRINT8           ; if not branch
+       LDA #$36             ; otherwise add $36 due to sub below
+PRINT8 SEC                  ; sec
+       SBC #$36             ; subtract $36 from char for atascii computation
+       ORA TEMP7            ; logical or with data in temp7 to select charset ?
+       TAX                  ; save a in X
+       TYA                  ; transfer y to acc
+       PHA                  ; and save in stack
+       LDY TEMP2            ; restore y screen line horiz offset index from temp2
+       TXA                  ; restore acc from x
+       STA (TEMP5),Y        ; save data to screen memory offset by y index
+       INC TEMP2            ; bump screen line horiz offset
+       PLA                  ; pull a from stack
+       TAY                  ; restore y msg data index
+       INY                  ; bump y to point to next char of msg
+       JMP PRINT7           ; loop to repear for next char of msg
 PRINT9 RTS
 
 ;--------------------------------

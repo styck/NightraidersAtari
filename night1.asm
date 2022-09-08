@@ -212,40 +212,49 @@ P4     .BYTE $00,$00,$00,$00,$00,$80,$C0,$F0
 ; INTRODUCTION ROUTINE
 ;--------------------------------
 INTRO  LDA #$2C                 ;Setup character base address
-       STA CHBAS
-       LDA #LIST1&255            ;Setup our display list pointers
-       STA DLISTP               ;to point to our display list
+       STA CHBAS                ;for our font $2C00
+;--------------------------------
+       LDA #LIST1&255           ;Setup our display list pointers
+       STA DLISTP               ;to point to our display list LIST1
        LDA #LIST1/255
        STA DLISTP+1
+;--------------------------------
        LDA #$00
        STA VSCROLL              ;Put a zero in horizontal scroll reg
        LDA #$3A
        STA DMACTL               ;Enable player DMA
        LDA #$03
        STA GRACTL               ;Enable player graphics
+;--------------------------------
        JSR CLRMEN               ;Clear menu page
-       LDA #MIRQ1&255               ;Setup the irq vectors to
+;--------------------------------
+       LDA #MIRQ1&255           ;Setup the irq vectors to
        STA VDLST                ;point to our Irq routines
        LDA #MIRQ1/255
        STA VDLST+1
+;--------------------------------
 VSYNC  LDA VCOUNT               ;Is scan line at the top of the screen?
        CMP #$80                 ;For an NTSC machine, VCOUNT counts from $00 to $82; for PAL, it counts to $9B.
        BCC VSYNC                ;If not then loop
        LDA #$C0                 ;NMIEN_DLI($80) | NMIEN_VBI($40) - activate display list interrupt and vertical blank interrupt
        STA NMIEN                ;Enable Display list interrupts
-       LDA #$00
-       STA TEMP1                ;Setup menu screen messages
-       STA TEMP7
-       LDX #$01     
-       LDY #$00     
-       JSR PRINT                ;By peter filiberti etc....
-       INC TEMP1
-       LDX #$02
-       LDY #$07     
-       JSR PRINT                ;High score    Your score
-       
-SCORER LDX #$02                 ;Put high score and last score
-       LDY #$00                 ;on screen
+;--------------------------------
+       LDA #$00                 ;ACC = 0
+       STA TEMP1                ;Setup for Line 0 on Screen
+       STA TEMP7                ;No offset for charset
+       LDX #$01                 ;Print MSG #1
+       LDY #$00                 ;Offset on Screen line is 0
+       JSR PRINT                ;Go Print By peter filiberti etc....
+;--------------------------------
+       INC TEMP1                ;Next line on Screen
+       LDX #$02                 ;Print MSG #2
+       LDY #$07                 ;Offset on Screen line is 7
+       JSR PRINT                ;Go Print High score    Your score
+;--------------------------------
+; Now Print Score Data on Screen
+;--------------------------------
+SCORER LDX #$02                 ;# of BCD Bytes to print for each score
+       LDY #$00                 ;Init Screen offset to 0
 FDS9   LDA HISCORE1,X           ;Get a BCD byte
        LSR                      ; 
        LSR                      ;
@@ -253,103 +262,125 @@ FDS9   LDA HISCORE1,X           ;Get a BCD byte
        LSR                      ;
        CLC                      ;Add 1 to convert to
        ADC #$01                 ;our weird ascii
-       STA SCREEN+$59,Y          ;Put on screen
+       STA SCREEN+$59,Y         ;Put on screen
+;--------------------------------
        LDA OLSCORE1,X
-       LSR  
-       LSR
-       LSR
-       LSR
-       CLC
-       ADC #$01
-       STA SCREEN+$69,Y
-       INY
+       LSR                      ; 
+       LSR                      ;
+       LSR                      ;Only want left digit
+       LSR                      ;
+       CLC                      ;Add 1 to convert to
+       ADC #$01                 ;our weird ascii
+       STA SCREEN+$69,Y         ;Put on Screen
+;--------------------------------
+       INY                      ;Bump Screen Offset
+;--------------------------------
        LDA HISCORE1,X           ;Get a BCD byte
        AND #$0F                 ;Only want right digit
        CLC                      ;Add 1 to convert to
        ADC #$01                 ;our weird ascii
-       STA SCREEN+$59,Y              ;Put on screen
-       LDA OLSCORE1,X
-       AND #$0F
-       CLC
-       ADC #$01
-       STA SCREEN+$69,Y
-       INY
-       DEX
-       BPL FDS9
-       LDA #$80
-       STA TEMP7
-       LDA #$98     
-       STA COLOR3
-       LDA #$06
-       STA TEMP1
-       LDX #$0A     
-       LDY #$02     
-       JSR PRINT
-       INC TEMP1
-       LDX #$0B
-       LDY #$03
-       JSR PRINT
-       LDA #$0A
-       STA TEMP1
+       STA SCREEN+$59,Y         ;Put on screen
+;--------------------------------
+       LDA OLSCORE1,X           ;Get a BCD byte
+       AND #$0F                 ;Only want right digit
+       CLC                      ;Add 1 to convert to
+       ADC #$01                 ;our weird ascii
+       STA SCREEN+$69,Y         ;put on screen
+;--------------------------------
+       INY                      ;Bump Screen Offset
+       DEX                      ;Dec # of BCD bytes to do
+       BPL FDS9                 ;if not done loop
+;--------------------------------
+       LDA #$80                 ;set charset offset to $80
+       STA TEMP7                ;set in TEMP7 for print routine
+       LDA #$98                 ;get color for playfied
+       STA COLOR3               ;set this for 3rd playfield color
+;--------------------------------
+       LDA #$06                 ;Set line offset to 6
+       STA TEMP1                ;Setup for Line 6 on Screen
+       LDX #$0A                 ;Print MSG #10
+       LDY #$02                 ;with line horiz offset of 2
+       JSR PRINT                ;PRESS SELECT TO CHANGE STARTING RANK
+;--------------------------------
+       INC TEMP1                ;advance a line
+       LDX #$0B                 ;Print MSG #11
+       LDY #$03                 ;with line horiz offset of 3
+       JSR PRINT                ;PRESS START OR FIRE BUTTON TO PLAY
+;--------------------------------
+       LDA #$0A                 ;Set line offset to 10
+       STA TEMP1                ;Setup for line 10 on screen
+       LDA #$00                 ;Set charset offset to 0
+       STA TEMP7                ;set in TEMP7 for print routine
+       LDX #$03                 ;print MSG #3
+       LDY #$04                 ;with horiz offset of 4
+       JSR PRINT                ;CURRENT RANK
+;--------------------------------
        LDA #$00
-       STA TEMP7    
-       LDX #$03
-       LDY #$04     
-       JSR PRINT
-       LDA #$00
-       STA LEVEL
-SELECT LDX #$14
-       LDA #$00
-FDS10  STA SCREEN+$1A4,X
-       DEX
+       STA LEVEL                ; Init default game level to 0
+;--------------------------------
+SELECT LDX #$14                 ; Erase 20 bytes of screen data
+       LDA #$00                 ; A=0
+FDS10  STA SCREEN+$1A4,X        ; Erase at Level screen location offset
+       DEX                      ; dec counter if not 0 more bytes to clear loop
        BNE FDS10
-       LDA #$0A
-       STA TEMP1
-       LDA #$80
-       STA TEMP7
-       LDA LEVEL 
+;--------------------------------
+       LDA #$0A                 ;Set line offset to 10
+       STA TEMP1                ;Setup for line 10 on screen
+       LDA #$80                 ;set charset offset to $80
+       STA TEMP7                ;set in TEMP7 for print routine
+       LDA LEVEL                ;get game level
        CLC
-       ADC #$04
-       TAX
-       LDY #$17
-       JSR PRINT
-       JSR BEEPS
-       LDA #$00
-       STA TEMP6
+       ADC #$04                 ;add 4 to compute msg # to print
+       TAX                      ;and store in x for print routine
+       LDY #$17                 ;horizontal offset of 23
+       JSR PRINT                ;print level
+;--------------------------------
+       JSR BEEPS                ;play a few beep sounds
+;--------------------------------
+       LDA #$00                 ;zero out TEMP6 7 and 8
+       STA TEMP6                ;not sure why...
        STA TEMP7
        STA TEMP8
-CKEY   LDA CONSOL
-       ROR
-       BCS PF1
-       JMP GAME
-PF1    ROR
-       BCS PF2
-PF3    LDA CONSOL
-       AND #$02
-       BEQ PF3
-       INC LEVEL
-       LDA LEVEL
-       CMP #$06
-       BNE PF4
-       LDA #$00
-       STA LEVEL
-PF4    JMP SELECT
-PF2    LDA TRIG0
-       BNE CKEY
-       JMP GAME
 ;--------------------------------
-CLRMEN LDA #$40                 ;Erase our menu screen
-       STA TEMP2                ;$4000-$5000
-       LDY #$00
-       STY TEMP1
-FDS12  TYA
-FDS11  STA (TEMP1),Y
-       INY
-       BNE FDS11
-       INC TEMP2
-       LDA TEMP2
-       CMP #$50
-       BNE FDS12
+CKEY   LDA CONSOL               ; Read console keys
+       ROR                      ; look at bit 0 Start
+       BCS PF1                  ; if not pressed branch
+       JMP GAME                 ; otherwise start game
+;--------------------------------
+PF1    ROR                      ; look at bit 1 Select
+       BCS PF2                  ; if not pressed branch
+;--------------------------------
+PF3    LDA CONSOL               ; Read console keys
+       AND #$02                 ; check bit 1 Select
+       BEQ PF3                  ; if still pressed branch
+       INC LEVEL                ; else bump level
+       LDA LEVEL                ; get level
+       CMP #$06                 ; is it 6?
+       BNE PF4                  ; if not branch
+       LDA #$00                 ; else wrap reset it back
+       STA LEVEL                ; to level 0
+PF4    JMP SELECT               ; go print new level and repeat
+PF2    LDA TRIG0                ; read game control fire button
+       BNE CKEY                 ; if not pressed branch
+       JMP GAME                 ; else start game
+
+;--------------------------------
+; CLRMEN Clears our Menu Screen
+; $4000 - $4FFF
+;--------------------------------
+CLRMEN LDA #$40                 ;Set TEMP1/TEMP2 as indirect pointer
+       STA TEMP2                ;to $4000
+       LDY #$00                 ;start y offset at 0
+       STY TEMP1                
+FDS12  TYA                      ; acc = 0;
+FDS11  STA (TEMP1),Y            ; zero a location in memory indirect index,y
+       INY                      ; bump index 
+       BNE FDS11                ; if not 0 yet loop until all 256 bytes are erased
+;--------------------------------
+       INC TEMP2                ; bump high byte of pointer
+       LDA TEMP2                ; get it
+       CMP #$50                 ; are we at $50 = $5000 yet?
+       BNE FDS12                ; if not repeat until we are
        RTS
 ;--------------------------------
 ; MIRQ1 IRQ FOR MENU!
