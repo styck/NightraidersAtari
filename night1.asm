@@ -230,8 +230,8 @@ INTRO  LDA #$2C                 ;Setup character base address
 ;--------------------------------
        LDA #MIRQ1&255           ;Setup the irq vectors to
        STA VDLST                ;point to our Irq routines
-       LDA #MIRQ1/255
-       STA VDLST+1
+       LDA #MIRQ1/255           ;for use during Menu 
+       STA VDLST+1              ;operations.
 ;--------------------------------
 VSYNC  LDA VCOUNT               ;Is scan line at the top of the screen?
        CMP #$80                 ;For an NTSC machine, VCOUNT counts from $00 to $82; for PAL, it counts to $9B.
@@ -376,41 +376,42 @@ FDS12  TYA                      ; acc = 0;
 FDS11  STA (TEMP1),Y            ; zero a location in memory indirect index,y
        INY                      ; bump index 
        BNE FDS11                ; if not 0 yet loop until all 256 bytes are erased
-;--------------------------------
+;       
        INC TEMP2                ; bump high byte of pointer
        LDA TEMP2                ; get it
        CMP #$50                 ; are we at $50 = $5000 yet?
        BNE FDS12                ; if not repeat until we are
        RTS
+
 ;--------------------------------
 ; MIRQ1 IRQ FOR MENU!
 ;--------------------------------
-MIRQ1  PHA
-       TXA
-       PHA
-       LDA VCOUNT
+MIRQ1  PHA              ; Save ACC
+       TXA              ; A=X
+       PHA              ; Save X
+       LDA VCOUNT       ; Get Vertical Line Count of screen display
        CMP #$30         ;For an NTSC machine, VCOUNT counts from $00 to $82; for PAL, it counts to $9B.
-       BCS MIRQ2
-       LDA COLOR2
-       LDX #$11     
+       BCS MIRQ2        ;if > 48 branch
+       LDA COLOR2       ;Get Color2
+       LDX #$11         ;Set X as counter for 17 lines this will animate Nightraiders Logo Colors
 FDS13  STA WSYNC        ;Wait for Sync 0 A write to WSYNC causes the CPU to halt execution until the start of horizontal blank.
-       STA COLPF2
-       CLC
-       ADC #$02     
-       DEX
-       BNE FDS13 
-       INC CCNT
-       LDA CCNT
-       CMP #$08     
-       BNE FDS14
-       LDA #$00
-       STA CCNT
-       INC COLOR2
-FDS14  LDA #$28     
-       STA COLPF2
-       PLA
-       TAX
-       PLA
+       STA COLPF2       ;save color in color playfield register
+       CLC              ;add 2 to color for next line
+       ADC #$02         ;for colo shift
+       DEX              ;Done for all 17 horiz lines?
+       BNE FDS13        ;if not loop
+       INC CCNT         ;inc CCNT = ?
+       LDA CCNT         ;load it
+       CMP #$08         ;is it 8?
+       BNE FDS14        ;if not branch
+       LDA #$00         ;else reset back to 0 
+       STA CCNT         
+       INC COLOR2       ;Advance color2 for next screen frame
+FDS14  LDA #$28         ;we are past Nightraiders LOGO restore playfield
+       STA COLPF2       ;color2 for rest of display
+       PLA              ;get a
+       TAX              ;restore x
+       PLA              ;restore a
        RTI    
 CCNT   .BYTE 00
 ;--------------------------------
@@ -426,63 +427,88 @@ MIRQ2  TYA
        TAX
        PLA
        RTI
+
+;--------------------------------
+; GAME - Game Play Starts Here
 ;--------------------------------
 GAME   LDA #$00
-       STA NMIEN   
-       STA DMACTL 
-       LDX #$05
-COLFIL LDA COLORT-1,X
-       STA COLOR0-1,X
-       DEX
-       BNE COLFIL
-       LDA #IRQ1&255
-       STA VDLST
-       LDA #IRQ1/255
-       STA VDLST+1
-       LDA #VBLANK&255
+       STA NMIEN            ;Disable NMI
+       STA DMACTL           ;Disable DMACTL
+       LDX #$05             ;Init 5 Colors x=index to colorT table
+COLFIL LDA COLORT-1,X       ;Get Color from table
+       STA COLOR0-1,X       ;Set Color Register
+       DEX                  ;Dec index
+       BNE COLFIL           ;If not 0 loop until all 5 done
+;       
+       LDA #IRQ1&255        ;Setup the irq vectors to
+       STA VDLST            ;point to our Irq routines
+       LDA #IRQ1/255        ;for use during Game
+       STA VDLST+1          ;operations.
+;       
+       LDA #VBLANK&255      ;setup vertical blank interrupt vector
        STA VBLK
        LDA #VBLANK/255
        STA VBLK+1
-       LDA #LIST2&255
-       STA DLISTP
+;       
+       LDA #LIST2&255       ;Game uses display list LIST2 so 
+       STA DLISTP           ;setup pointer to that 
        LDA #LIST2/255
        STA DLISTP+1
+;--------------------------------
+; Modify Display List 2 to point the screen data initially
+; to $4C58. Note: This gets modfied on the fly as screen 
+; scrolls.
+;--------------------------------
        LDA #$58
        STA LIST2+3
        LDA #$4C
        STA LIST2+4
+;--------------------------------
+; There are 8 vertical lines per char on screen and so we scroll
+; using the scroll register 8 times then reset it and
+; move the display list memory pointers LIST2+3 LIST2+4
+;
        LDA #$07
-       STA SCRCNT
-       STA VSCROLL
-       JSR CLRMIS
-       JSR SETSCREEN
+       STA SCRCNT    ; Initialize our scroll count to 7
+       STA VSCROLL   ; Set Vertical Scroll Register to match
+;
+       JSR CLRMIS    ; Clear Missle player disp data
+       JSR SETSCREEN ; Setup our Screen Data from Map
+;       
        LDA #$0F
        STA $D404
-       JSR PMAKER
-       LDA #$70
-       STA CHBAS
+       JSR PMAKER    ; Build Image Data of Plane
+;       
+       LDA #$70      ; Change our Character Set Data to
+       STA CHBAS     ; Character set at $7000
+;       
        LDA #$50
        JSR MAPFIL
+;       
        LDA #$31
        STA GPRIOR
-CS     STA WSYNC
-       LDA VCOUNT
-       CMP #$78          ;For an NTSC machine, VCOUNT counts from $00 to $82; for PAL, it counts to $9B.
-       BNE CS
-       STA WSYNC
-       LDA #$C0          ;NMIEN_DLI($80) | NMIEN_VBI($40) - activate display list interrupt and vertical blank interrupt
+;       
+CS     STA WSYNC     ; Wait for Horizontal Sync (Stops Processor until Sync)
+       LDA VCOUNT    ; Get vertical line we are displaying
+       CMP #$78      ; For an NTSC machine, VCOUNT counts from $00 to $82; for PAL, it counts to $9B.
+       BNE CS        ; if not = $78 loop until so
+       STA WSYNC     ; Wait for Horizontal Sync (Stops Processor until Sync)
+;
+       LDA #$C0      ;NMIEN_DLI($80) | NMIEN_VBI($40) - activate display list interrupt and vertical blank interrupt
        STA NMIEN
-       LDA #$3E  
+       LDA #$3E      ;Init DMA 
        STA DMACTL 
-       LDA #$00
-       STA BSCOR0
+;
+       LDA #$00      
+       STA BSCOR0    ;Initalize Binary Score data
        STA BSCOR1
-       STA SCORE1
+       STA SCORE1    ;And BCD Score Data to 0
        STA SCORE2
        STA SCORE3
-       LDA #$50
+;
+       LDA #$50      ;Initialize Starting Fuel Amount (80)
        STA FUEL
-       LDA #$04
+       LDA #$04      ;Initialize # of Ships
        STA SHIPS
 
        ICL "night2.asm"
