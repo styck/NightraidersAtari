@@ -21,6 +21,7 @@ BSCOR1     = BSCOR0+1        ;temporary score holder by the game.
 SCORE1     = BSCOR1+1        ;This is the actual game score
 SCORE2     = SCORE1+1        ;stored in BCD it is also the same
 SCORE3     = SCORE2+1        ;score put on game screen while playing.
+;--------------------------------
 TEMP1      = SCORE3+1        ;TEMP1 through TEMP8 are temporary
 TEMP2      = TEMP1+1         ;locations used by main program and
 TEMP3      = TEMP2+1         ;subroutines. The INTERRUPT routines
@@ -30,26 +31,32 @@ TEMP6      = TEMP5+1         ;""
 TEMP7      = TEMP6+1         ;""
 TEMP8      = TEMP7+1         ;""
 CLRVAR     = TEMP8+1
+;--------------------------------
 LEVEL      = CLRVAR+1        ;Games level of play 0-6
 SCRCNT     = LEVEL+1         ;Screen fine scroll counter
+;--------------------------------
 HPOS1      = SCRCNT+1        ;Horizontal position player1
 HPOS2      = HPOS1+1         ;Horizontal position player2
 HPOS3      = HPOS2+1         ;Horizontal position player3
-HPOS4      = HPOS3+1         ;Horizontal position plyer4
+HPOS4      = HPOS3+1         ;Horizontal position player4
+;--------------------------------
 MOVFLG     = HPOS4+1         ;Flag for screen movement
 FUEL       = MOVFLG+1        ;Fuel in planes tank 0-$50
 CROSSX     = FUEL+1          ;Plane horizontal axis position
 MISSLEX    = CROSSX+1        ;Missle horizontal position
 SHIPS      = MISSLEX+1       ;Number of ships left. start=3
+;--------------------------------
 IRQVAR1    = SHIPS+1         ;IRQVAR1 through IRQVAR2 are
 IRQVAR2    = IRQVAR1+1       ;temporary locations to be
 IRQVAR3    = IRQVAR2+2       ;used by interrupt routines only.
 IRQVAR4    = IRQVAR3+3       ;Main program should not use these!
+;--------------------------------
 TPOINT     = IRQVAR4+1       ;Target point positioner.
 HIT1       = TPOINT+1        ;HIT1-HIT4 are copies of the
 HIT2       = HIT1+1          ;colision register updated every
 HIT3       = HIT2+1          ;60 hz. It is used by main program
 HIT4       = HIT3+1          ;interrupts logicaly or data in these.
+;--------------------------------
 COLLAD     = HIT4+1          ;Screen collision address (TWO BYTES)
 ACTFLG     = COLLAD+2        ;Plane action flag.
 ;--------------------------------
@@ -124,7 +131,7 @@ PMBASE     = $D407           ;Player missle base address
 CHBASE     = $D409           ;Character Set Base Address (high)
 WSYNC      = $D40A           ;Wait for horizontal blank sync.
 VCOUNT     = $D40B           ;Vertical line counter
-DISPLA     = $3F00           ;Another menu scree location
+DISPLA     = $3F00           ;Another menu screen location
 VDLST      = $200            ;Display list interrupt vector
 VBLK       = $224            ;Vertical blank interrupt vector
 DLISTP     = $230            ;Display list pointer
