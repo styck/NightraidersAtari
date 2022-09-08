@@ -72,79 +72,95 @@ BSCR       .BYTE $00,$1D,$0D,$19,$1C,$0F,$00,$00
 ;--------------------------------
 ; INITIALIZE GAME VARIABLES
 ;--------------------------------
-INIT   LDA #$00
-ILOOP  STA $0,X
-       INX
-       BNE ILOOP
-       STA NMIEN
+INIT   LDA #$00      ; Init memor to $00 Enter with X as start index
+ILOOP  STA $0,X      ; Save in zeropage address offset by X
+       INX           ; bump x we are clearing to top of zeropage $FF
+       BNE ILOOP     ; if x not 0 loop
+;--------------------------------
+       STA NMIEN     ; Disable Non Maskable Interrupts
+;--------------------------------
        STA SIZEP0    ; reset size of play missles
        STA SIZEP1
        STA SIZEP2
        STA SIZEP3
-       LDA #RTEND&255
-       STA VBLK  
-       STA COLLAD
-       LDA #RTEND/255
+;--------------------------------
+       LDA #RTEND&255       ; Set interupt address to
+       STA VBLK             ; default RTEN to return immediately
+       STA COLLAD           ; for both Collisions and 
+       LDA #RTEND/255       ; vertical blank 
        STA VBLK+1   
        STA COLLAD+1
+;--------------------------------
        LDA #$40      ; NMIEN_VBI
        STA NMIEN     ; activate vertical blank interrupt
-       JSR CLRMIS
+;--------------------------------
+       JSR CLRMIS    ; Clear player missle area ram
        LDX #$14
 ILOOP1 LDA #$00
        STA $3FBF,X  
        DEX
        BNE ILOOP1
-       STA GRACTL
-       STA DMACTL
-       LDA #$30
-       STA PMBASE
-       LDX #$09
-       LDA #$00
+;--------------------------------
+       STA GRACTL    ; Set Graphic Control?
+       STA DMACTL    ; Set DMA Control?
+;--------------------------------
+       LDA #$30      ; Set Player Missle Memory to 
+       STA PMBASE    ; Start at $3000 Make this a define in future!
+--------------------------------
+       LDX #$09      ; clear PCOLOR0-3 
+       LDA #$00      ; plus 5 other bytes why?
 ILOOP2 STA PCOLR0-1,X
        DEX
        BNE ILOOP2
-       LDX #$07
-ILOOP3 STA AUDF1,X
+--------------------------------
+       LDX #$07      ; clear all 4 Audio Control Registers
+ILOOP3 STA AUDF1,X   ; they are spaced 2 apart.
        DEX
-       DEX
-       CPX #$FF
-       BNE ILOOP3
-       LDX #$05
+       DEX           ; can we use BPL here and not do compare?
+       CPX #$FF      ; -1?
+       BNE ILOOP3    ; if not branch 
+--------------------------------
+       LDX #$05      ; zero GUNSX and y Pos
 CLRGUN STA GUNSX,X
        DEX
-       BPL CLRGUN
+       BPL CLRGUN    ; loop until x is -1 FF
+--------------------------------
        LDA #$40
-       STA TPOINT
-       LDA #$03
-       STA SSKCTL
+       STA TPOINT    ; Initialize TPOINT to 64
+       LDA #$03      
+       STA SSKCTL    ; Initialize to 3
        STA SKCTL
-       LDA #$00
+       LDA #$00      ; AllPOT = 0
        STA ALLPOT
-       LDA #$03
+       LDA #$03      ; HITCLR = 3
        STA HITCLR
-       JSR INITVAR
+       JSR INITVAR   ; INIT MORE VARIABLES
        RTS
 ;--------------------------------
 ; MAKE PLANE
+; Copies Plane Images from P1-P4
+; Locatons to the Player Missle Sprite
+; Locations starting at Location $3490
 ;--------------------------------
-PMAKER LDX #$0C
-PM1    LDA P1-1,X  
-       STA $3490,X
-       LDA P2-1,X
-       STA $3590,X
-       LDA P3-1,X
-       STA $3690,X
-       LDA P4-1,X
-       STA $3790,X
-       DEX
-       BNE PM1
+PMAKER LDX #$0C             ; Copy 12 bytes of data for each image
+PM1    LDA P1-1,X           ; Get plane image #1 data
+       STA $3490,X          ; Store in sprite ram
+       LDA P2-1,X           ; Get plane image #2 data
+       STA $3590,X          ; Store in sprite ram
+       LDA P3-1,X           ; Get plane image #3 data
+       STA $3690,X          ; Store in sprite ram
+       LDA P4-1,X           ; Get plane image #4 data
+       STA $3790,X          ; Store in sprite ram
+       DEX                  ; index -=1
+       BNE PM1              ; if not 0 loop
        LDA #$82
-       STA CROSSX
+       STA CROSSX           ; CROSSX = $82;
        RTS
 ;--------------------------------
 ; RTEND RESTORE REGISTERS
 ; AFTER INTERRUPT
+; 6502 interupts save registers a, x and y
+; on stack automatically!
 ;--------------------------------
 RTEND  PLA
        TAY
@@ -153,21 +169,23 @@ RTEND  PLA
        PLA
 NOINT  RTI
 ;--------------------------------
-; CLEAR PLAYER MISSLE AREA
+; CLEAR PLAYER MISSLE AREA $3000-$37FF
 ;--------------------------------
-CLRMIS LDA #$00
-       STA TEMP1
+CLRMIS LDA #$00      ; Set TEMP1 & 2 as indirect pointer
+       STA TEMP1     ; to $3000 Player Missle Ram
        LDA #$30
        STA TEMP2
-       LDY #$00
-CLROP  LDA #$00  
-CLROP2 STA (TEMP1),Y
-       INY
-       BNE CLROP2
-       INC TEMP2
-       LDA TEMP2
-       CMP #$38
-       BNE CLROP
+;--------------------------------
+       LDY #$00      ; y index = 0
+CLROP  LDA #$00      ; a= 0
+CLROP2 STA (TEMP1),Y ; zero a locaton in ram offset by y
+       INY           ; y=y+1
+       BNE CLROP2    ; loop for all 256 bytes until y is 0 
+;--------------------------------
+       INC TEMP2     ; bump hi byte of indirect pointer
+       LDA TEMP2     ; get it
+       CMP #$38      ; are we at $3800?
+       BNE CLROP     ; if not loop until we are done
        RTS
 ;--------------------------------
 ; LONG DELAY ROUTINE
@@ -190,61 +208,72 @@ DELAY2 DEY
        RTS
 ;--------------------------------
 ; PRINT ROUTINE
+; Prints a Message on Screen
+; Enter with X= msg# we want to display from list located at WORDS
+; each msg begins and ends with 00. TEMP1 = line # on screen where
+; first line is 0. Y is start printing pos on line. 
+; TEMP7 contains a logical or value that get's or'd with the char
+; of the msg. Not sure if it's to select differrent char sets.
 ;--------------------------------
-
-PRINT  STY TEMP2
-       LDA #WORDS&255
+PRINT  STY TEMP2            ; save y line print pos for later
+       LDA #WORDS&255       ; Setup TEMP3/TEMP4 as indirect pointer to WORDS
        STA TEMP3
        LDA #WORDS/255
        STA TEMP4
-       LDY #$00
-PRINT1 LDA (TEMP3),Y
-       BEQ PRINT3
-PRINT2 INY
-       JMP PRINT1
-PRINT3 DEX
-       BNE PRINT2
-       INY
-       TYA
-       CLC
-       ADC TEMP3
-       STA TEMP3
-       BCC PRINT4
-       INC TEMP4
-PRINT4 LDA #SCREEN&255
+       LDY #$00             ; init y index to 0
+PRINT1 LDA (TEMP3),Y        ; get a byte from WORDS offset by y
+       BEQ PRINT3           ; if 0 we are at beginning of msg.
+PRINT2 INY                  ; else advance index
+       JMP PRINT1           ; keep searching 
+PRINT3 DEX                  ; subtract 1 from msg# 
+       BNE PRINT2           ; if not 0 its not msg keep searching
+       INY                  ; y points to $00 of msg bump to point to beginning
+       TYA                  ; move offset to acc
+       CLC                  ; now add to our indirect address to for new
+       ADC TEMP3            ; indirect address in TEMP3/TEMP4 pointing to our msg.
+       STA TEMP3            ; add y to low byte and save
+       BCC PRINT4           ; if it caused a carry 
+       INC TEMP4            ; bump hi byte
+;--------------------------------
+PRINT4 LDA #SCREEN&255      ; Setup TEMP5/TEMP6 as indirect pointer to SCREEN
        STA TEMP5
        LDA #SCREEN/255
        STA TEMP6
-       LDX TEMP1
-       BEQ LOOSE
-PRINT5 LDA TEMP5
-       CLC
+;--------------------------------
+       LDX TEMP1            ; get line # on screen where we want to print
+       BEQ LOOSE            ; if first line then we have our line go print
+;--------------------------------
+PRINT5 LDA TEMP5            ; otherwise add 40 ($28) to screen indirect address
+       CLC                  ; pointer in TEMP5/TEMP6 so it points to next line
        ADC #$28
        STA TEMP5
        BCC PRINT6
        INC TEMP6  
-PRINT6 DEX 
-       BNE PRINT5
-LOOSE  LDY #$00 
-PRINT7 LDA (TEMP3),Y
-       BEQ PRINT9
-       CMP #$20
-       BNE PRINT8
-       LDA #$36
-PRINT8 SEC
-       SBC #$36
-       ORA TEMP7
-       TAX
-       TYA
-       PHA
-       LDY TEMP2
-       TXA
-       STA (TEMP5),Y
-       INC TEMP2
-       PLA
-       TAY
-       INY
-       JMP PRINT7
+;--------------------------------
+PRINT6 DEX                  ; dec line counter
+       BNE PRINT5           ; if not 0 loop for next line
+;--------------------------------
+LOOSE  LDY #$00             ; y index = 0
+PRINT7 LDA (TEMP3),Y        ; get char from msg data
+       BEQ PRINT9           ; if 0 end of msg we are done!
+;--------------------------------
+       CMP #$20             ; else check if it's a space char 
+       BNE PRINT8           ; if not branch
+       LDA #$36             ; otherwise add $36 due to sub below
+PRINT8 SEC                  ; sec
+       SBC #$36             ; subtract $36 from char for atascii computation
+       ORA TEMP7            ; logical or with data in temp7 to select charset ?
+       TAX                  ; save a in X
+       TYA                  ; transfer y to acc
+       PHA                  ; and save in stack
+       LDY TEMP2            ; restore y screen line horiz offset index from temp2
+       TXA                  ; restore acc from x
+       STA (TEMP5),Y        ; save data to screen memory offset by y index
+       INC TEMP2            ; bump screen line horiz offset
+       PLA                  ; pull a from stack
+       TAY                  ; restore y msg data index
+       INY                  ; bump y to point to next char of msg
+       JMP PRINT7           ; loop to repear for next char of msg
 PRINT9 RTS
 
 ;--------------------------------

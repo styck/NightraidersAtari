@@ -21,6 +21,7 @@ BSCOR1     = BSCOR0+1        ;temporary score holder by the game.
 SCORE1     = BSCOR1+1        ;This is the actual game score
 SCORE2     = SCORE1+1        ;stored in BCD it is also the same
 SCORE3     = SCORE2+1        ;score put on game screen while playing.
+;--------------------------------
 TEMP1      = SCORE3+1        ;TEMP1 through TEMP8 are temporary
 TEMP2      = TEMP1+1         ;locations used by main program and
 TEMP3      = TEMP2+1         ;subroutines. The INTERRUPT routines
@@ -30,26 +31,32 @@ TEMP6      = TEMP5+1         ;""
 TEMP7      = TEMP6+1         ;""
 TEMP8      = TEMP7+1         ;""
 CLRVAR     = TEMP8+1
+;--------------------------------
 LEVEL      = CLRVAR+1        ;Games level of play 0-6
 SCRCNT     = LEVEL+1         ;Screen fine scroll counter
+;--------------------------------
 HPOS1      = SCRCNT+1        ;Horizontal position player1
 HPOS2      = HPOS1+1         ;Horizontal position player2
 HPOS3      = HPOS2+1         ;Horizontal position player3
-HPOS4      = HPOS3+1         ;Horizontal position plyer4
+HPOS4      = HPOS3+1         ;Horizontal position player4
+;--------------------------------
 MOVFLG     = HPOS4+1         ;Flag for screen movement
 FUEL       = MOVFLG+1        ;Fuel in planes tank 0-$50
 CROSSX     = FUEL+1          ;Plane horizontal axis position
 MISSLEX    = CROSSX+1        ;Missle horizontal position
 SHIPS      = MISSLEX+1       ;Number of ships left. start=3
+;--------------------------------
 IRQVAR1    = SHIPS+1         ;IRQVAR1 through IRQVAR2 are
 IRQVAR2    = IRQVAR1+1       ;temporary locations to be
 IRQVAR3    = IRQVAR2+2       ;used by interrupt routines only.
 IRQVAR4    = IRQVAR3+3       ;Main program should not use these!
+;--------------------------------
 TPOINT     = IRQVAR4+1       ;Target point positioner.
 HIT1       = TPOINT+1        ;HIT1-HIT4 are copies of the
 HIT2       = HIT1+1          ;colision register updated every
 HIT3       = HIT2+1          ;60 hz. It is used by main program
 HIT4       = HIT3+1          ;interrupts logicaly or data in these.
+;--------------------------------
 COLLAD     = HIT4+1          ;Screen collision address (TWO BYTES)
 ACTFLG     = COLLAD+2        ;Plane action flag.
 ;--------------------------------
@@ -124,7 +131,7 @@ PMBASE     = $D407           ;Player missle base address
 CHBASE     = $D409           ;Character Set Base Address (high)
 WSYNC      = $D40A           ;Wait for horizontal blank sync.
 VCOUNT     = $D40B           ;Vertical line counter
-DISPLA     = $3F00           ;Another menu scree location
+DISPLA     = $3F00           ;Another menu screen location
 VDLST      = $200            ;Display list interrupt vector
 VBLK       = $224            ;Vertical blank interrupt vector
 DLISTP     = $230            ;Display list pointer
@@ -205,40 +212,49 @@ P4     .BYTE $00,$00,$00,$00,$00,$80,$C0,$F0
 ; INTRODUCTION ROUTINE
 ;--------------------------------
 INTRO  LDA #$2C                 ;Setup character base address
-       STA CHBAS
-       LDA #LIST1&255            ;Setup our display list pointers
-       STA DLISTP               ;to point to our display list
+       STA CHBAS                ;for our font $2C00
+;--------------------------------
+       LDA #LIST1&255           ;Setup our display list pointers
+       STA DLISTP               ;to point to our display list LIST1
        LDA #LIST1/255
        STA DLISTP+1
+;--------------------------------
        LDA #$00
        STA VSCROLL              ;Put a zero in horizontal scroll reg
        LDA #$3A
        STA DMACTL               ;Enable player DMA
        LDA #$03
        STA GRACTL               ;Enable player graphics
+;--------------------------------
        JSR CLRMEN               ;Clear menu page
-       LDA #MIRQ1&255               ;Setup the irq vectors to
+;--------------------------------
+       LDA #MIRQ1&255           ;Setup the irq vectors to
        STA VDLST                ;point to our Irq routines
-       LDA #MIRQ1/255
-       STA VDLST+1
+       LDA #MIRQ1/255           ;for use during Menu 
+       STA VDLST+1              ;operations.
+;--------------------------------
 VSYNC  LDA VCOUNT               ;Is scan line at the top of the screen?
        CMP #$80                 ;For an NTSC machine, VCOUNT counts from $00 to $82; for PAL, it counts to $9B.
        BCC VSYNC                ;If not then loop
        LDA #$C0                 ;NMIEN_DLI($80) | NMIEN_VBI($40) - activate display list interrupt and vertical blank interrupt
        STA NMIEN                ;Enable Display list interrupts
-       LDA #$00
-       STA TEMP1                ;Setup menu screen messages
-       STA TEMP7
-       LDX #$01     
-       LDY #$00     
-       JSR PRINT                ;By peter filiberti etc....
-       INC TEMP1
-       LDX #$02
-       LDY #$07     
-       JSR PRINT                ;High score    Your score
-       
-SCORER LDX #$02                 ;Put high score and last score
-       LDY #$00                 ;on screen
+;--------------------------------
+       LDA #$00                 ;ACC = 0
+       STA TEMP1                ;Setup for Line 0 on Screen
+       STA TEMP7                ;No offset for charset
+       LDX #$01                 ;Print MSG #1
+       LDY #$00                 ;Offset on Screen line is 0
+       JSR PRINT                ;Go Print By peter filiberti etc....
+;--------------------------------
+       INC TEMP1                ;Next line on Screen
+       LDX #$02                 ;Print MSG #2
+       LDY #$07                 ;Offset on Screen line is 7
+       JSR PRINT                ;Go Print High score    Your score
+;--------------------------------
+; Now Print Score Data on Screen
+;--------------------------------
+SCORER LDX #$02                 ;# of BCD Bytes to print for each score
+       LDY #$00                 ;Init Screen offset to 0
 FDS9   LDA HISCORE1,X           ;Get a BCD byte
        LSR                      ; 
        LSR                      ;
@@ -246,133 +262,156 @@ FDS9   LDA HISCORE1,X           ;Get a BCD byte
        LSR                      ;
        CLC                      ;Add 1 to convert to
        ADC #$01                 ;our weird ascii
-       STA SCREEN+$59,Y          ;Put on screen
+       STA SCREEN+$59,Y         ;Put on screen
+;--------------------------------
        LDA OLSCORE1,X
-       LSR  
-       LSR
-       LSR
-       LSR
-       CLC
-       ADC #$01
-       STA SCREEN+$69,Y
-       INY
+       LSR                      ; 
+       LSR                      ;
+       LSR                      ;Only want left digit
+       LSR                      ;
+       CLC                      ;Add 1 to convert to
+       ADC #$01                 ;our weird ascii
+       STA SCREEN+$69,Y         ;Put on Screen
+;--------------------------------
+       INY                      ;Bump Screen Offset
+;--------------------------------
        LDA HISCORE1,X           ;Get a BCD byte
        AND #$0F                 ;Only want right digit
        CLC                      ;Add 1 to convert to
        ADC #$01                 ;our weird ascii
-       STA SCREEN+$59,Y              ;Put on screen
-       LDA OLSCORE1,X
-       AND #$0F
-       CLC
-       ADC #$01
-       STA SCREEN+$69,Y
-       INY
-       DEX
-       BPL FDS9
-       LDA #$80
-       STA TEMP7
-       LDA #$98     
-       STA COLOR3
-       LDA #$06
-       STA TEMP1
-       LDX #$0A     
-       LDY #$02     
-       JSR PRINT
-       INC TEMP1
-       LDX #$0B
-       LDY #$03
-       JSR PRINT
-       LDA #$0A
-       STA TEMP1
+       STA SCREEN+$59,Y         ;Put on screen
+;--------------------------------
+       LDA OLSCORE1,X           ;Get a BCD byte
+       AND #$0F                 ;Only want right digit
+       CLC                      ;Add 1 to convert to
+       ADC #$01                 ;our weird ascii
+       STA SCREEN+$69,Y         ;put on screen
+;--------------------------------
+       INY                      ;Bump Screen Offset
+       DEX                      ;Dec # of BCD bytes to do
+       BPL FDS9                 ;if not done loop
+;--------------------------------
+       LDA #$80                 ;set charset offset to $80
+       STA TEMP7                ;set in TEMP7 for print routine
+       LDA #$98                 ;get color for playfied
+       STA COLOR3               ;set this for 3rd playfield color
+;--------------------------------
+       LDA #$06                 ;Set line offset to 6
+       STA TEMP1                ;Setup for Line 6 on Screen
+       LDX #$0A                 ;Print MSG #10
+       LDY #$02                 ;with line horiz offset of 2
+       JSR PRINT                ;PRESS SELECT TO CHANGE STARTING RANK
+;--------------------------------
+       INC TEMP1                ;advance a line
+       LDX #$0B                 ;Print MSG #11
+       LDY #$03                 ;with line horiz offset of 3
+       JSR PRINT                ;PRESS START OR FIRE BUTTON TO PLAY
+;--------------------------------
+       LDA #$0A                 ;Set line offset to 10
+       STA TEMP1                ;Setup for line 10 on screen
+       LDA #$00                 ;Set charset offset to 0
+       STA TEMP7                ;set in TEMP7 for print routine
+       LDX #$03                 ;print MSG #3
+       LDY #$04                 ;with horiz offset of 4
+       JSR PRINT                ;CURRENT RANK
+;--------------------------------
        LDA #$00
-       STA TEMP7    
-       LDX #$03
-       LDY #$04     
-       JSR PRINT
-       LDA #$00
-       STA LEVEL
-SELECT LDX #$14
-       LDA #$00
-FDS10  STA SCREEN+$1A4,X
-       DEX
+       STA LEVEL                ; Init default game level to 0
+;--------------------------------
+SELECT LDX #$14                 ; Erase 20 bytes of screen data
+       LDA #$00                 ; A=0
+FDS10  STA SCREEN+$1A4,X        ; Erase at Level screen location offset
+       DEX                      ; dec counter if not 0 more bytes to clear loop
        BNE FDS10
-       LDA #$0A
-       STA TEMP1
-       LDA #$80
-       STA TEMP7
-       LDA LEVEL 
+;--------------------------------
+       LDA #$0A                 ;Set line offset to 10
+       STA TEMP1                ;Setup for line 10 on screen
+       LDA #$80                 ;set charset offset to $80
+       STA TEMP7                ;set in TEMP7 for print routine
+       LDA LEVEL                ;get game level
        CLC
-       ADC #$04
-       TAX
-       LDY #$17
-       JSR PRINT
-       JSR BEEPS
-       LDA #$00
-       STA TEMP6
+       ADC #$04                 ;add 4 to compute msg # to print
+       TAX                      ;and store in x for print routine
+       LDY #$17                 ;horizontal offset of 23
+       JSR PRINT                ;print level
+;--------------------------------
+       JSR BEEPS                ;play a few beep sounds
+;--------------------------------
+       LDA #$00                 ;zero out TEMP6 7 and 8
+       STA TEMP6                ;not sure why...
        STA TEMP7
        STA TEMP8
-CKEY   LDA CONSOL
-       ROR
-       BCS PF1
-       JMP GAME
-PF1    ROR
-       BCS PF2
-PF3    LDA CONSOL
-       AND #$02
-       BEQ PF3
-       INC LEVEL
-       LDA LEVEL
-       CMP #$06
-       BNE PF4
-       LDA #$00
-       STA LEVEL
-PF4    JMP SELECT
-PF2    LDA TRIG0
-       BNE CKEY
-       JMP GAME
 ;--------------------------------
-CLRMEN LDA #$40                 ;Erase our menu screen
-       STA TEMP2                ;$4000-$5000
-       LDY #$00
-       STY TEMP1
-FDS12  TYA
-FDS11  STA (TEMP1),Y
-       INY
-       BNE FDS11
-       INC TEMP2
-       LDA TEMP2
-       CMP #$50
-       BNE FDS12
+CKEY   LDA CONSOL               ; Read console keys
+       ROR                      ; look at bit 0 Start
+       BCS PF1                  ; if not pressed branch
+       JMP GAME                 ; otherwise start game
+;--------------------------------
+PF1    ROR                      ; look at bit 1 Select
+       BCS PF2                  ; if not pressed branch
+;--------------------------------
+PF3    LDA CONSOL               ; Read console keys
+       AND #$02                 ; check bit 1 Select
+       BEQ PF3                  ; if still pressed branch
+       INC LEVEL                ; else bump level
+       LDA LEVEL                ; get level
+       CMP #$06                 ; is it 6?
+       BNE PF4                  ; if not branch
+       LDA #$00                 ; else wrap reset it back
+       STA LEVEL                ; to level 0
+PF4    JMP SELECT               ; go print new level and repeat
+PF2    LDA TRIG0                ; read game control fire button
+       BNE CKEY                 ; if not pressed branch
+       JMP GAME                 ; else start game
+
+;--------------------------------
+; CLRMEN Clears our Menu Screen
+; $4000 - $4FFF
+;--------------------------------
+CLRMEN LDA #$40                 ;Set TEMP1/TEMP2 as indirect pointer
+       STA TEMP2                ;to $4000
+       LDY #$00                 ;start y offset at 0
+       STY TEMP1                
+FDS12  TYA                      ; acc = 0;
+FDS11  STA (TEMP1),Y            ; zero a location in memory indirect index,y
+       INY                      ; bump index 
+       BNE FDS11                ; if not 0 yet loop until all 256 bytes are erased
+;       
+       INC TEMP2                ; bump high byte of pointer
+       LDA TEMP2                ; get it
+       CMP #$50                 ; are we at $50 = $5000 yet?
+       BNE FDS12                ; if not repeat until we are
        RTS
+
 ;--------------------------------
 ; MIRQ1 IRQ FOR MENU!
 ;--------------------------------
-MIRQ1  PHA
-       TXA
-       PHA
-       LDA VCOUNT
+MIRQ1  PHA              ; Save ACC
+       TXA              ; A=X
+       PHA              ; Save X
+       LDA VCOUNT       ; Get Vertical Line Count of screen display
        CMP #$30         ;For an NTSC machine, VCOUNT counts from $00 to $82; for PAL, it counts to $9B.
-       BCS MIRQ2
-       LDA COLOR2
-       LDX #$11     
+       BCS MIRQ2        ;if > 48 branch
+       LDA COLOR2       ;Get Color2
+       LDX #$11         ;Set X as counter for 17 lines this will animate Nightraiders Logo Colors
 FDS13  STA WSYNC        ;Wait for Sync 0 A write to WSYNC causes the CPU to halt execution until the start of horizontal blank.
-       STA COLPF2
-       CLC
-       ADC #$02     
-       DEX
-       BNE FDS13 
-       INC CCNT
-       LDA CCNT
-       CMP #$08     
-       BNE FDS14
-       LDA #$00
-       STA CCNT
-       INC COLOR2
-FDS14  LDA #$28     
-       STA COLPF2
-       PLA
-       TAX
-       PLA
+       STA COLPF2       ;save color in color playfield register
+       CLC              ;add 2 to color for next line
+       ADC #$02         ;for colo shift
+       DEX              ;Done for all 17 horiz lines?
+       BNE FDS13        ;if not loop
+       INC CCNT         ;inc CCNT = ?
+       LDA CCNT         ;load it
+       CMP #$08         ;is it 8?
+       BNE FDS14        ;if not branch
+       LDA #$00         ;else reset back to 0 
+       STA CCNT         
+       INC COLOR2       ;Advance color2 for next screen frame
+FDS14  LDA #$28         ;we are past Nightraiders LOGO restore playfield
+       STA COLPF2       ;color2 for rest of display
+       PLA              ;get a
+       TAX              ;restore x
+       PLA              ;restore a
        RTI    
 CCNT   .BYTE 00
 ;--------------------------------
@@ -388,63 +427,88 @@ MIRQ2  TYA
        TAX
        PLA
        RTI
+
+;--------------------------------
+; GAME - Game Play Starts Here
 ;--------------------------------
 GAME   LDA #$00
-       STA NMIEN   
-       STA DMACTL 
-       LDX #$05
-COLFIL LDA COLORT-1,X
-       STA COLOR0-1,X
-       DEX
-       BNE COLFIL
-       LDA #IRQ1&255
-       STA VDLST
-       LDA #IRQ1/255
-       STA VDLST+1
-       LDA #VBLANK&255
+       STA NMIEN            ;Disable NMI
+       STA DMACTL           ;Disable DMACTL
+       LDX #$05             ;Init 5 Colors x=index to colorT table
+COLFIL LDA COLORT-1,X       ;Get Color from table
+       STA COLOR0-1,X       ;Set Color Register
+       DEX                  ;Dec index
+       BNE COLFIL           ;If not 0 loop until all 5 done
+;       
+       LDA #IRQ1&255        ;Setup the irq vectors to
+       STA VDLST            ;point to our Irq routines
+       LDA #IRQ1/255        ;for use during Game
+       STA VDLST+1          ;operations.
+;       
+       LDA #VBLANK&255      ;setup vertical blank interrupt vector
        STA VBLK
        LDA #VBLANK/255
        STA VBLK+1
-       LDA #LIST2&255
-       STA DLISTP
+;       
+       LDA #LIST2&255       ;Game uses display list LIST2 so 
+       STA DLISTP           ;setup pointer to that 
        LDA #LIST2/255
        STA DLISTP+1
+;--------------------------------
+; Modify Display List 2 to point the screen data initially
+; to $4C58. Note: This gets modfied on the fly as screen 
+; scrolls.
+;--------------------------------
        LDA #$58
        STA LIST2+3
        LDA #$4C
        STA LIST2+4
+;--------------------------------
+; There are 8 vertical lines per char on screen and so we scroll
+; using the scroll register 8 times then reset it and
+; move the display list memory pointers LIST2+3 LIST2+4
+;
        LDA #$07
-       STA SCRCNT
-       STA VSCROLL
-       JSR CLRMIS
-       JSR SETSCREEN
+       STA SCRCNT    ; Initialize our scroll count to 7
+       STA VSCROLL   ; Set Vertical Scroll Register to match
+;
+       JSR CLRMIS    ; Clear Missle player disp data
+       JSR SETSCREEN ; Setup our Screen Data from Map
+;       
        LDA #$0F
        STA $D404
-       JSR PMAKER
-       LDA #$70
-       STA CHBAS
+       JSR PMAKER    ; Build Image Data of Plane
+;       
+       LDA #$70      ; Change our Character Set Data to
+       STA CHBAS     ; Character set at $7000
+;       
        LDA #$50
        JSR MAPFIL
+;       
        LDA #$31
        STA GPRIOR
-CS     STA WSYNC
-       LDA VCOUNT
-       CMP #$78          ;For an NTSC machine, VCOUNT counts from $00 to $82; for PAL, it counts to $9B.
-       BNE CS
-       STA WSYNC
-       LDA #$C0          ;NMIEN_DLI($80) | NMIEN_VBI($40) - activate display list interrupt and vertical blank interrupt
+;       
+CS     STA WSYNC     ; Wait for Horizontal Sync (Stops Processor until Sync)
+       LDA VCOUNT    ; Get vertical line we are displaying
+       CMP #$78      ; For an NTSC machine, VCOUNT counts from $00 to $82; for PAL, it counts to $9B.
+       BNE CS        ; if not = $78 loop until so
+       STA WSYNC     ; Wait for Horizontal Sync (Stops Processor until Sync)
+;
+       LDA #$C0      ;NMIEN_DLI($80) | NMIEN_VBI($40) - activate display list interrupt and vertical blank interrupt
        STA NMIEN
-       LDA #$3E  
+       LDA #$3E      ;Init DMA 
        STA DMACTL 
-       LDA #$00
-       STA BSCOR0
+;
+       LDA #$00      
+       STA BSCOR0    ;Initalize Binary Score data
        STA BSCOR1
-       STA SCORE1
+       STA SCORE1    ;And BCD Score Data to 0
        STA SCORE2
        STA SCORE3
-       LDA #$50
+;
+       LDA #$50      ;Initialize Starting Fuel Amount (80)
        STA FUEL
-       LDA #$04
+       LDA #$04      ;Initialize # of Ships
        STA SHIPS
 
        ICL "night2.asm"
