@@ -1,158 +1,183 @@
 ;--------------------------------
 ; NIGHTRAIDER GAME LOOPS
 ;--------------------------------
-           LDA #$2C
-           STA CHBAS
-           LDX #$0C
-CURRAN     LDA BMES1-1,X 
+           LDA #$2C         ; Set Character Font Address to $2C00
+           STA CHBAS        ; to Select Font for Game Intro
+           LDX #$0C         ; Copy 12 bytes
+CURRAN     LDA BMES1-1,X    ; from BMES1 to Sceen Memory at $4CFF
            STA $4CFF,X
-           DEX
+           DEX              ; Loop till x=0 done
            BNE CURRAN 
-           JSR BOOP
-           LDY LEVEL
-           INY
-FINDLEV    DEY
-           BEQ GOGO
-LOPFIND    INX
-           LDA LEVNAM,X
-           BNE LOPFIND
-           INX
-           BNE FINDLEV
-GOGO       LDA LEVNAM,X
-           BEQ TERR
-           CMP #$20
-           BNE SIRS
-           LDA #$36
-SIRS       SEC
-           SBC #$36
-           ORA #$80
-           STA $4D0F,Y
-           INY
-           INX
-           JMP GOGO
-TERR       JSR BEEPS
-           LDX #17
-MIO        LDA BMES2-1,X
-           STA $4D72,X
-           DEX
-           BNE MIO
-           JSR BOOP
-           LDX #$0D
-MIO2       LDA BMES3-1,X
-           STA $4D86,X
-           DEX
-           BNE MIO2
-           JSR BEEPS
-           LDX #$6
-MIO3       LDA BMES4-1,X
-           STA $4DF5,X
-           DEX
-           BNE MIO3
-           JSR BOOP
-           LDX #$6
-MIO4       LDA BMES5-1,X
-           STA $4DFE,X 
-           DEX
-           BNE MIO4
-           JSR BEEPS
-           LDX #$5
-MIO5       LDA #$A8
-           STA AUDC2
-           STA AUDC3
-           LDA #85
-           STA AUDF2
-           LDA #86 
-           STA AUDF3
-           TXA
-           PHA
-           CLC
-           ADC #$01
-           STA $4E25
-           LDX #$04 
-           JSR DLONG
-           LDA #$00
-           STA AUDC2
-           STA AUDC3
-           LDX #$10 
-           JSR DLONG
-           PLA
-           TAX
-           DEX
-           BNE MIO5
-           LDA #$01  
-           STA $4E25  
-           LDA #$A8
-           STA AUDC2
-           STA AUDC3
-           LDA #50
-           STA AUDF2
-           LDA #51
-           STA AUDF3
-           LDA #$88
-           STA AUDC1
-           LDX #$05
-MYOMY      STX AUDF1
-           TXA
-           PHA
-           LDX #$3
-           JSR DLONG
-           PLA
-           TAX
-           INX
-           CPX #25  
-           BNE MYOMY 
-           LDA #$00
-           STA AUDC1
-           STA AUDC3
-           LDA #$84
-           STA AUDC2
-           LDA #$50 
-           STA AUDF2
-           JSR DELAY
-           LDX #$00
-           LDA #$50
-           JSR MAPFIL
-           LDA #$70
-           STA CHBAS
-           INC MOVFLG
-           INC ACTFLG
+           JSR BOOP         ; Make a Boop Sound
+           LDY LEVEL        ; Y = Game Level
+           INY              ; add 1 to enter loop cause we sub1
+FINDLEV    DEY              ; Y=Y=1
+           BEQ GOGO         ; if Y=0 we are done branch x= offset to level text
+                            ; enter here x=0 from above
+LOPFIND    INX              ; x=x+1
+           LDA LEVNAM,X     ; get next char from level text data
+           BNE LOPFIND      ; if not 0 branch skip over this msg
+           INX              ; we found 0 inx to point to first char of msg
+           BNE FINDLEV      ; this is equivalent of a jmp we assume x will never be 0!
+                            ; jump up to see if this is the msg we want (y=0 after DEY)
+;--------------------------------
+GOGO       LDA LEVNAM,X     ; here we found our msg get a char
+           BEQ TERR         ; if 0 we are at end of msg txt branch
+           CMP #$20         ; is it a ' ' char?
+           BNE SIRS         ; if a space branch
+           LDA #$36         ; else force to $36 so subtract = 0 our space char
+SIRS       SEC              ; set carry
+           SBC #$36         ; subtract $36 to adjust for our ascii
+           ORA #$80         ; set hi bit for font selection
+           STA $4D0F,Y      ; copy to screen memory
+           INY              ; bump index into screen memory
+           INX              ; bump index into our msg
+           JMP GOGO         ; continue copying msg to sceen
+;--------------------------------
+TERR       JSR BEEPS        ; makes 3 beeps
+;--------------------------------
+           LDX #17          ; copy 17 bytes
+MIO        LDA BMES2-1,X    ; of BMESG2 to screen 
+           STA $4D72,X      ; at $4D72
+           DEX              ; dec x counter/offset
+           BNE MIO          ; loop till complete x=0
+;
+           JSR BOOP         ; make boop sound
+;  
+           LDX #$0D         ; copy 13 bytes
+MIO2       LDA BMES3-1,X    ; of BMES3 to screen
+           STA $4D86,X      ; at $4D86
+           DEX              ; dec x counter/offset
+           BNE MIO2         ; loop till complete x=0
+;
+           JSR BEEPS        ; makes 3 beeps
+;    
+           LDX #$6          ; copy 6 bytes
+MIO3       LDA BMES4-1,X    ; of BMES4 to screen
+           STA $4DF5,X      ; at $4DF5
+           DEX              ; dec x counter/offset
+           BNE MIO3         ; loop till complete x=0
+;
+           JSR BOOP         ; make boop sound
+;  
+           LDX #$6          ; copy 6 bytes
+MIO4       LDA BMES5-1,X    ; of BMES5 to screen
+           STA $4DFE,X      ; at $4DFE
+           DEX              ; dec x counter/offset
+           BNE MIO4         ; loop till complete x=0
+;
+           JSR BEEPS        ; makes 3 beeps
+;    
+; The following code produces the countdown timer
+;
+           LDX #$5          ; countdown from 5 x=count
+MIO5       LDA #$A8         ; A8 does what?
+           STA AUDC2        ; Set Audio Control Reg 2
+           STA AUDC3        ; Set Audio Control Reg 3
+           LDA #85          ; Get frequency
+           STA AUDF2        ; Set Audio Freq Reg 2
+           LDA #86          ; Get frequency
+           STA AUDF3        ; Set Audio Freq Reg 3
+           TXA              ; a=x
+           PHA              ; save x our counter on stack
+           CLC              ; clear carry for addition
+           ADC #$01         ; add 1 to our count
+           STA $4E25        ; write to screen memory to show count
+           LDX #$04         ; x=4 (delay val)
+           JSR DLONG        ; do long delay
+           LDA #$00         ; a=0
+           STA AUDC2        ; clear our Audio Control Reg 2
+           STA AUDC3        ; clear our Audio Control Reg 3
+           LDX #$10         ; x=16 (delay val)
+           JSR DLONG        ; do long delay
+           PLA              ; pull our counter from stack
+           TAX              ; put back in x
+           DEX              ; count = count -1
+           BNE MIO5         ; if not 0 continue countdown
+;           
+           LDA #$01         ; a=1
+           STA $4E25        ; write to screen to erase our count
+           LDA #$A8         ; A= setting for audio control
+           STA AUDC2        ; Set Audio Control Reg 2
+           STA AUDC3        ; Set Audio Control Reg 3
+           LDA #50          ; Get frequency
+           STA AUDF2        ; Set Audio Freq Reg 2
+           LDA #51          ; Get frequency
+           STA AUDF3        ; Set Audio Freq Reg 3
+           LDA #$88         ; A= setting for audio control
+           STA AUDC1        ; Set Audio Control Reg 1
+ ;                          ; create increasing audio effect
+           LDX #$05         ; x=audio freq
+MYOMY      STX AUDF1        ; Set Audio Freq Reg 1
+           TXA              ; a = x
+           PHA              ; save ons tack
+           LDX #$3          ; x=3 (Delay Val)
+           JSR DLONG        ; do long delay
+           PLA              ; a = stack
+           TAX              ; x = a restore our counter
+           INX              ; x=x+1
+           CPX #25          ; is it 25?
+           BNE MYOMY        ; if not loop 
+;
+           LDA #$00         ; a=0
+           STA AUDC1        ; clear our Audio Control Reg 1
+           STA AUDC3        ; clear our Audio Control Reg 3
+           LDA #$84         ; A= setting for audio control
+           STA AUDC2        ; Set Audio Control Reg 2
+           LDA #$50         ; Get frequency
+           STA AUDF2        ; Set Audio Freq Reg 2
+           JSR DELAY        ; Small Delay
+           LDX #$00         ; X = Screen Offset
+           LDA #$50         ; A = Hi Byte of Map Data?
+           JSR MAPFIL       ; Go Fill Screen with Scrolling Map
+           LDA #$70         ; Set Character Font Address to $7000
+           STA CHBAS        ; to Select Font for Game Play
+           INC MOVFLG       ; Set MOV FLAG
+           INC ACTFLG       ; Set ACT FLAG
 ;--------------------------------
 ; BEGINING GAME INTRO SHOWN
 ; NOW CLEAR THE BULSHIT AND
 ; LETS GET ON WITH SOME ACTION!
 ;--------------------------------
-           JMP GM1
-BOOP       LDA #$AF
-           STA AUDC1
-           LDA #$70
-           STA AUDF1
-           LDX #$4 
-           JSR DLONG   
-           LDA #$00  
-           STA AUDC1   
-           LDX #$5 
-           JSR DLONG  
+           JMP GM1          ; Jump into Game
+;
+;--------------------------------
+; Some Beep and Boop Sound Routines
+;--------------------------------
+BOOP       LDA #$AF         ; A= setting for audio control
+           STA AUDC1        ; Set Audio Control Reg 1
+           LDA #$70         ; Get frequency
+           STA AUDF1        ; Set Audio Freq Reg 1
+           LDX #$4          ; x=4 (delay val)
+           JSR DLONG        ; do long delay
+           LDA #$00         ; a=0
+           STA AUDC1        ; clear our Audio Control Reg 1
+           LDX #$5          ; x=5 (delay val)
+           JSR DLONG        ; do long delay
            RTS
-BEEPS      LDA #$03
-BEEPS2     PHA  
-           LDA #$AF
-           STA AUDC1
-           LDA #$10
-           STA AUDF1
-           LDX #$02
-           JSR DLONG   
-           LDA #$00  
-           STA AUDC1   
-           LDX #$02
-           JSR DLONG
-           PLA
-           SEC
-           SBC #$01
-           BNE BEEPS2
-           LDX #$5
-           JSR DLONG
+;--------------------------------
+BEEPS      LDA #$03         ; A=3 count of beeps
+BEEPS2     PHA              ; save on stack
+           LDA #$AF         ; A= setting for audio control
+           STA AUDC1        ; Set Audio Control Reg 1
+           LDA #$10         ; Get frequency
+           STA AUDF1        ; Set Audio Freq Reg 1
+           LDX #$02         ; x=2 (delay val)
+           JSR DLONG        ; do long delay
+           LDA #$00         ; a=0
+           STA AUDC1        ; clear our Audio Control Reg 1
+           LDX #$02         ; x=2 (delay val)
+           JSR DLONG        ; do long delay
+           PLA              ; a = saved stack count
+           SEC              ; sec carry for sub
+           SBC #$01         ; a=a-1
+           BNE BEEPS2       ; if not 0 continue
+;           
+           LDX #$5          ; x=5 (delay val)
+           JSR DLONG        ; do long delay
            RTS
 
+; Start of Game Message Data
 BMES1      .BYTE $0D,$1F,$1C,$1C,$0F,$18,$1E,$00
            .BYTE $1C,$0B,$18,$15
 BMES2      .BYTE $17,$13,$1D,$1D,$13,$19,$18,$00
@@ -169,25 +194,29 @@ GM1        LDA #COLRUT&255   ;SETUP
            STA COLLAD        ;COLLISION
            LDA #COLRUT/255   ;ROUTINE
            STA COLLAD+1      ;VECTOR
-GMLOOP     JSR PAUSER
-           LDA BASER  
-           BEQ PF5
-           JSR EXPLOB
-PF5        JSR TRAINER 
-           JSR BRIDGER
-           JSR MX
-           JSR SOUND
-           JSR MISSLES
-           JSR SPCATK
-           JSR UFODIE
-           JSR ATTACK 
-           JSR FIREPOWER
-           LDA SPACFLG 
-           BEQ PF6
-           JSR KILLER2
-           JMP GMLOOP
-PF6        JSR KILLER  
-           JMP GMLOOP
+;
+GMLOOP     JSR PAUSER       ; Check for any Pause or Game Restart
+           LDA BASER        ; Check if Base has been destroyed
+           BEQ PF5          ; If not Branch
+           JSR EXPLOB       ; Process Base Explosion
+;
+PF5        JSR TRAINER      ; Process Moving Trains
+           JSR BRIDGER      ; Process any Collapsing Bridge
+           JSR MX           ; Process Moving MX Missles
+           JSR SOUND        ; Process Sound
+           JSR MISSLES      ; Process Missle Fire 
+           JSR SPCATK       ; Process Space Attack
+           JSR UFODIE       ; Process UFO Hit Explosion
+           JSR ATTACK       ; Process Attacks against player
+           JSR FIREPOWER    ; Process Shots from Tanks and Base
+           LDA SPACFLG      ; Are we in Space?
+           BEQ PF6          ; If not branch
+           JSR KILLER2      ; Kill Space Characters
+           JMP GMLOOP       ; Loop
+;  
+PF6        JSR KILLER       ; Process Deaths of objects or plane
+           JMP GMLOOP       ; Loop
+           
 ;--------------------------------
 ; SUBROUTINE KILLER
 ; EXPLODES KILLED OBJECTS
