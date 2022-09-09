@@ -719,6 +719,7 @@ NOHI       LDX #$30
            JSR DLONG
            LDY TEMP5
            JMP WARMSTART
+           
 ;--------------------------------
 ; GAME OVER DATA
 ;--------------------------------
@@ -771,46 +772,51 @@ EDAT      .BYTE $FC,$FC,$FC,$FC,$80,$80,$80,$80
           .BYTE $A0,$A0,$90,$90,$90,$90,$90,$90
           .BYTE $88,$88,$88,$88,$88,$84,$84,$84
           .BYTE $84,$00,$00,$00,$00,$00,$00,$00
+
 ;--------------------------------
 ; PAUSER ROUTINE CHECK FOR
 ; PAUSE AND GAME RESTART!
 ;--------------------------------
-PAUSER     LDA CONSOL
-           ROR
-           BCS FDS151
-           JMP WARMSTART
-FDS151     ROR
-           ROR
-           BCC FDS152
+PAUSER     LDA CONSOL       ; Read Console Switches
+           ROR              ; Bit0 = Start
+           BCS PNOTSTART    ; If not pressed branch
+           JMP WARMSTART    ; else jump to Warmstart
+;
+PNOTSTART  ROR              ; Bit1 = Select
+           ROR              ; Bit2 = Option
+           BCC POPTION      ; if Option pressed branch
+           RTS              ; else return
+;           
+POPTION    LDA CONSOL       ; Re-Read Switches
+           AND #$04         ; Mask bit 2 Option
+           BEQ POPTION      ; If still pressed loop (debounce)
+;           
+           LDA MOVFLG       ; Get MOVFLG
+           PHA              ; Save on Stack
+           LDA ACTFLG       ; Get ACTFLG
+           PHA              ; Save on Stack
+           LDA #$00         ; a = 0
+           STA MOVFLG       ; Set MOVFLAG 0
+           STA ACTFLG       ; Set ACTFLAG 0
+           STA AUDC1        ; Clear Audio Control 1
+           STA AUDC2        ; Clear Audio Control 2
+           STA AUDC3        ; Clear Audio Control 3
+           STA AUDC4        ; Clear Audio Control 4
+           LDA #$FF         ; A = FF
+           STA KEY          ; RESET KEYPRESS REG
+FDS153     LDA KEY          ; Read KEYPRESS REG
+           CMP #$FF         ; IF FF no Keys Pressed
+           BEQ FDS153       ; So loop until so
+           PLA              ; get A from Stack
+           STA ACTFLG       ; restore ACTFLG
+           PLA              ; get A from Stack
+           STA MOVFLG       ; restore MOVFLG
+           LDA #50          ; Get Audio Freq
+           STA AUDF2        ; Set Audio Freq Reg 2
+           LDA #$83         ; Get Audio Control Data
+           STA AUDC2        ; Set Audio Control Reg 2
            RTS
-FDS152     LDA CONSOL
-           AND #$04
-           BEQ FDS152
-           LDA MOVFLG
-           PHA
-           LDA ACTFLG
-           PHA
-           LDA #$00
-           STA MOVFLG
-           STA ACTFLG
-           STA AUDC1
-           STA AUDC2
-           STA AUDC3
-           STA AUDC4
-           LDA #$FF
-           STA KEY
-FDS153     LDA KEY
-           CMP #$FF
-           BEQ FDS153
-           PLA
-           STA ACTFLG
-           PLA
-           STA MOVFLG
-           LDA #50
-           STA AUDF2
-           LDA #$83
-           STA AUDC2
-           RTS
+
 ;--------------------------------
 ; FIREPOWER! FIRE FROM BASE AND
 ; FIRE FROM TANKS!
