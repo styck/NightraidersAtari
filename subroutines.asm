@@ -106,25 +106,25 @@ ILOOP1 LDA #$00
 ;--------------------------------
        LDA #$30      ; Set Player Missle Memory to 
        STA PMBASE    ; Start at $3000 Make this a define in future!
---------------------------------
+;--------------------------------
        LDX #$09      ; clear PCOLOR0-3 
        LDA #$00      ; plus 5 other bytes why?
 ILOOP2 STA PCOLR0-1,X
        DEX
        BNE ILOOP2
---------------------------------
+;--------------------------------
        LDX #$07      ; clear all 4 Audio Control Registers
 ILOOP3 STA AUDF1,X   ; they are spaced 2 apart.
        DEX
        DEX           ; can we use BPL here and not do compare?
        CPX #$FF      ; -1?
        BNE ILOOP3    ; if not branch 
---------------------------------
+;--------------------------------
        LDX #$05      ; zero GUNSX and y Pos
 CLRGUN STA GUNSX,X
        DEX
        BPL CLRGUN    ; loop until x is -1 FF
---------------------------------
+;--------------------------------
        LDA #$40
        STA TPOINT    ; Initialize TPOINT to 64
        LDA #$03      
