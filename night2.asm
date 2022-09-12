@@ -408,12 +408,15 @@ KIL14      LDA #$2C
            LDA #$2F
            STA (TEMP1),Y
            JMP KIL8
+
+
 ;--------------------------------
 ; CONTROL SUBROUTINE
 ; SETS FLAGS FOR OTHER ROUTINES
-; DEPENDING ON GAME PLAY
+; DEPENDING ON GAME PLAY. IT IS CALLED
+; UPON ENTRY TO MANY OF THE GAME ROUTINES
+; TO UPDATE GAME STATES
 ;--------------------------------
-
 CONTROL    LDA BASER
            BEQ FDS22
            JMP CON4
@@ -514,6 +517,7 @@ FDS24      STA MUSCNT,X
            DEX
            BPL FDS24
 FDS23      RTS
+
 ;--------------------------------
 ; SUBROUTINE TRAINER
 ; CHECKS FOR BRIDGES ON THE SCREN

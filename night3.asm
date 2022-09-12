@@ -426,13 +426,18 @@ RJS27      PLA
 
 MXDAT      .BYTE $10,$10,$10,$38,$38,$38,$38,$38 
            .BYTE $38,$38,$38,$7C,$7C,$44,$44
+
+
 ;--------------------------------
-; KIL BASER
+; The Enemy Base has been Destroyed
+; Explode it ending the round and display
+; any Bonus
 ;--------------------------------
 EXPLOB     LDA BASDEAD
            CMP #$03
            BEQ RJS31
            RTS
+;
 RJS31      LDA #$00
            STA MOVFLG
            STA ACTFLG
@@ -719,7 +724,7 @@ NOHI       LDX #$30
            JSR DLONG
            LDY TEMP5
            JMP WARMSTART
-           
+
 ;--------------------------------
 ; GAME OVER DATA
 ;--------------------------------
