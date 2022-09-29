@@ -919,12 +919,15 @@ KIL14      LDA #$2C
            LDA #$2F
            STA (TEMP1),Y
            JMP KIL8
+
+
 ;--------------------------------
 ; CONTROL SUBROUTINE
 ; SETS FLAGS FOR OTHER ROUTINES
-; DEPENDING ON GAME PLAY
+; DEPENDING ON GAME PLAY. IT IS CALLED
+; UPON ENTRY TO MANY OF THE GAME ROUTINES
+; TO UPDATE GAME STATES
 ;--------------------------------
-
 CONTROL    LDA BASER
            BEQ FDS22
            JMP CON4
@@ -1025,6 +1028,7 @@ FDS24      STA MUSCNT,X
            DEX
            BPL FDS24
 FDS23      RTS
+
 ;--------------------------------
 ; SUBROUTINE TRAINER
 ; CHECKS FOR BRIDGES ON THE SCREN
@@ -2346,13 +2350,18 @@ RJS27      PLA
 
 MXDAT      .BYTE $10,$10,$10,$38,$38,$38,$38,$38 
            .BYTE $38,$38,$38,$7C,$7C,$44,$44
+
+
 ;--------------------------------
-; KIL BASER
+; The Enemy Base has been Destroyed
+; Explode it ending the round and display
+; any Bonus
 ;--------------------------------
 EXPLOB     LDA BASDEAD
            CMP #$03
            BEQ RJS31
            RTS
+;
 RJS31      LDA #$00
            STA MOVFLG
            STA ACTFLG
@@ -2639,7 +2648,7 @@ NOHI       LDX #$30
            JSR DLONG
            LDY TEMP5
            JMP WARMSTART
-           
+
 ;--------------------------------
 ; GAME OVER DATA
 ;--------------------------------
