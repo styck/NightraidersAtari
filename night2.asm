@@ -520,7 +520,7 @@ FDS23      RTS
 
 ;--------------------------------
 ; SUBROUTINE TRAINER
-; CHECKS FOR BRIDGES ON THE SCREN
+; CHECKS FOR BRIDGES ON THE SCREEN
 ; AND ROLLS TRAINS ACROSS THEM
 ;--------------------------------
 TRAINER    JSR CONTROL

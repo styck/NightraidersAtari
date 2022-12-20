@@ -616,7 +616,7 @@ BONSTR     .BYTE $0F,$18,$0F,$17,$23,$00,$0E,$0F,$1D,$1E,$1C,$19,$23,$0F,$0E
 MUSDATA    .BYTE $00,$58,$00,$68,$00,$58,$00,$46,$00,$68,$00,$73,$00,$75,$00,$80
 MUSDLY     .BYTE $0A,$64,$0A,$7D,$0A,$7D,$0A,$7D,$0A,$7D,$0A,$64,$0A,$AF,$0A,$64
 ;--------------------------------
-; BASKILER BAS CHARACTER KILL ROUTINES!
+; BASKILER BASE CHARACTER KILL ROUTINES!
 ;--------------------------------
 BASKILER   LDA (IRQVAR1),Y
            CMP #$3F

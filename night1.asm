@@ -60,10 +60,8 @@ HIT4       = HIT3+1          ;interrupts logicaly or data in these.
 COLLAD     = HIT4+1          ;Screen collision address (TWO BYTES)
 ACTFLG     = COLLAD+2        ;Plane action flag.
 ;--------------------------------
-; ATARI LOCATIONS
+; ATARI I/O HARDWARE LOCATIONS
 ;--------------------------------
-SCREEN     = $4000           ;Location in Memory of our Menu Screen Data
-
 M0PF       = $D000           ;Missile 0 to playfield collision
 M1PF       = $D001           ;Missile 1 to playfield collision
 M2PF       = $D002           ;Missile 2 to playfield collision
@@ -131,11 +129,20 @@ PMBASE     = $D407           ;Player missle base address
 CHBASE     = $D409           ;Character Set Base Address (high)
 WSYNC      = $D40A           ;Wait for horizontal blank sync.
 VCOUNT     = $D40B           ;Vertical line counter
+NMIEN      = $D40E           ;NMI control register
+
+CONSOL     = $D01F           ;Console switch address
+GRACTL     = $D01D           ;Graphic control address
+;--------------------------------
+; Memory locations mapped to display 
+;--------------------------------
+SCREEN     = $4000           ;Location in Memory of our Menu Screen Data
 DISPLA     = $3F00           ;Another menu screen location
+;--------------------------------
 VDLST      = $200            ;Display list interrupt vector
 VBLK       = $224            ;Vertical blank interrupt vector
 DLISTP     = $230            ;Display list pointer
-SSKCTL     = $232            ;SKCTL
+SSKCTL     = $232            ;SKCTL (POKEY)
 GPRIOR     = $26F            ;data from CTIA PRIOR (D01B)
 CLB        = $2C8            ;Color register background
 COLOR0     = $2C4            ;COLPF0 - Playfield 0 color
@@ -146,21 +153,19 @@ PCOLR0     = $2C0            ;Color player 1
 PCOLR1     = $2C1            ;Color player 2
 PCOLR2     = $2C2            ;Color player 3
 PCOLR3     = $2C3            ;Color player 4
-KEY        = $02FC           ;Read Keypress  
-CONSOL     = $D01F           ;Console switch address
-GRACTL     = $D01D           ;Graphic control address
+KEY        = $2FC            ;Read Keypress  
 CHBAS      = $2F4            ;Shadow register for hardware register - Character set base address - Font-Start
 STRIG0     = $284            ;Joystick trigger
 DMACTL     = $22F            ;Dma control register
-NMIEN      = $D40E           ;NMI control register
 ;--------------------------------
 ; GAME COLD START
 ;--------------------------------
 COLDSTART  LDX #HISCORE1       ;Clear all of zero page variables
            JSR INIT            
            JMP INTRO           ;Goto menu routines
-WARMSTART  LDX #BSCOR0         ;Erase all of zero page variables
-           JSR INIT            ;except high scores!
+;
+WARMSTART  LDX #BSCOR0         ;Erase all of zero page variables starting @ BSCOR0 (retain high scores).
+           JSR INIT            
            JMP INTRO           ;Goto menu routines
 ;--------------------------------
 ; WORDS USED BY INTRODUCTION
@@ -201,7 +206,7 @@ LEVNAM .BYTE 'NOVICE'
 TBL1   .BYTE $12,$19,$17,$0B
 COLORT .BYTE $8D,$94,$CA,$45,$00 
 P1     .BYTE $00,$18,$24,$24,$7E,$FF,$FF,$FF     ;P1-P4 are plane shapes 
-       .BYTE $FF,$FF,$81,$FF             ;I just felt like putting
+       .BYTE $FF,$FF,$81,$FF                     ;I just felt like putting
 P2     .BYTE $00,$00,$18,$18,$00,$00,$42,$42     ;them here!??
        .BYTE $5A,$FF,$FF,$FF
 P3     .BYTE $00,$00,$00,$00,$00,$01,$03,$0F
@@ -256,18 +261,18 @@ VSYNC  LDA VCOUNT               ;Is scan line at the top of the screen?
 SCORER LDX #$02                 ;# of BCD Bytes to print for each score
        LDY #$00                 ;Init Screen offset to 0
 FDS9   LDA HISCORE1,X           ;Get a BCD byte
-       LSR                      ; 
+       LSR                      ;Shifting right 4 bits 
+       LSR                      ;to get the left bcd digit.
        LSR                      ;
-       LSR                      ;Only want left digit
        LSR                      ;
        CLC                      ;Add 1 to convert to
-       ADC #$01                 ;our weird ascii
+       ADC #$01                 ;our weird internal ascii
        STA SCREEN+$59,Y         ;Put on screen
 ;--------------------------------
        LDA OLSCORE1,X
-       LSR                      ; 
+       LSR                      ;Shifting right 4 bits 
+       LSR                      ;to get the left bcd digit.
        LSR                      ;
-       LSR                      ;Only want left digit
        LSR                      ;
        CLC                      ;Add 1 to convert to
        ADC #$01                 ;our weird ascii
@@ -384,7 +389,9 @@ FDS11  STA (TEMP1),Y            ; zero a location in memory indirect index,y
        RTS
 
 ;--------------------------------
-; MIRQ1 IRQ FOR MENU!
+; MIRQ1 Vertical Display List Interrupt Handler
+; Enabled during Menu Screen Presentation. Rotates
+; Colors of Nightraiders Logo and other screen fields
 ;--------------------------------
 MIRQ1  PHA              ; Save ACC
        TXA              ; A=X
@@ -415,8 +422,10 @@ FDS14  LDA #$28         ;we are past Nightraiders LOGO restore playfield
        RTI    
 CCNT   .BYTE 00
 ;--------------------------------
-MIRQ2  TYA
-       PHA
+; handle field colors after lin 48
+;
+MIRQ2  TYA    ; Do we really need to save y here?
+       PHA    ; looks unecessary.
        LDA #$C8     
        STA COLPF2
        LDA #$0F
