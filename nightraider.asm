@@ -3224,135 +3224,157 @@ FDS3   LDA #IRQ1&255
        LDA #IRQ1/255
        STA VDLST+1
        JMP RTEND
+
+;--------------------------------
+; This is the vertical blank interrupt vector
+; Occurs every time screen refesh hits bottom 
+; of display. This Interrup handles certain animations
+; of objects like tanks and radars etc.
 ;--------------------------------
 VBLANK LDA #$00
        STA $4D
-       LDA MOVFLG
-       BNE JIVE
-SUDDY  JMP FLICK 
-JIVE   INC VDCNT
-       LDA VDCNT
-       CMP #$03
-       BEQ MILOS
-       JMP FLICK
-MILOS  LDA #$00
-       STA VDCNT
-       DEC SCRCNT
-       LDA SCRCNT
-       BPL SCROLM    
-       LDA LIST2+3
-       SEC
-       SBC #$28
-       STA LIST2+3
-       BCS NOMINU 
-       DEC LIST2+4
-NOMINU LDA #$07
-       STA SCRCNT
-SCROLM STA VSCROLL
-FLICK  INC DELAYER    
-       LDA DELAYER
-       CMP #$0A
-       BEQ FRANK
-       JMP NOMOV
-FRANK  LDA #$00
-       STA DELAYER
-       LDA WINDOWVAR ;THIS ROUTINE
-       BEQ PLOTW     ;MAKES THE
-       LDX #$FF      ;BURNING WINDOW
-       STX WINDOWVAR ;CHARACTER
-PLOTW  INC WINDOWVAR ;FLICKER!
-       ASL
-       TAX
-       LDA WINDOWS,X
-       STA IRQVAR1
-       LDA WINDOWS+1,X
-       STA IRQVAR2
-       LDY #$07
-FILWIN LDA (IRQVAR1),Y
-       STA $7068,Y   
-       DEY
-       BPL FILWIN
-       LDA RADARVAR
-       CMP #$07
-       BNE PLOTR
-       LDX #$FF
-       STX RADARVAR
-PLOTR  INC RADARVAR
-       ASL
-       TAX
-       LDA RADARS,X
-       STA IRQVAR1
-       LDA RADARS+1,X  
-       STA IRQVAR2
-       LDY #$0F
-FILRAD LDA (IRQVAR1),Y
-       STA $7150,Y 
-       DEY
-       BPL FILRAD
-       LDA TANKFLAG
-       BNE TANKUP   
-       INC TANKVAR
-       LDA TANKVAR
-       CMP #$04
-       BNE FILTAN
-       INC TANKFLAG
-       JMP NOMOV
-TANKUP DEC TANKVAR
-       LDA TANKVAR
-       BPL FILTAN
-       DEC TANKFLAG
-       JMP NOMOV
-FILTAN ASL
-       TAX
-       LDA TANKS,X
-       STA IRQVAR1  
-       LDA TANKS+1,X
-       STA IRQVAR2
-       LDY #$17
-TANFIL LDA (IRQVAR1),Y
-       STA $7070,Y
-       DEY
-       BPL TANFIL
-NOMOV  DEC DELBAS
-       BNE NOMOV2
-       LDA #$0A     
-       STA DELBAS
-       DEC PNTBAS
-       LDA PNTBAS
-       BPL FDS5
-       LDA #$06
-       STA PNTBAS
-FDS5   ASL
-       TAX
-       LDA BASLOK,X
-       STA IRQVAR1
-       LDA BASLOK+1,X
-       STA IRQVAR2
-       LDY #$0F
-FDS6   LDA (IRQVAR1),Y
-       STA $71F8,Y
-       DEY
-       BPL FDS6
-NOMOV2 LDX #$10
-RANLOP LDA RANDOM
+       LDA MOVFLG    ; Is the Screen Moving (i.e. Scrolling)
+       BNE JIVE      ; If so branch
+SUDDY  JMP FLICK     ; else go handle flickering 
+; 
+JIVE   INC VDCNT     ; Increment vertical blank counter
+       LDA VDCNT     ; get it and check if we are on 3rd
+       CMP #$03      ; vertical blank, if so scroll
+       BEQ MILOS     ; the screen
+       JMP FLICK     ; else go handle flickering
+;
+MILOS  LDA #$00      
+       STA VDCNT     ; reset vertical blank counter to 0
+       DEC SCRCNT    ; Decrement our fine scroll count
+       LDA SCRCNT    ; get it
+       BPL SCROLM    ; if not -1 branch
+;       
+       LDA LIST2+3   ; get screen pointer low byte from display list
+       SEC           ; sec for subtraction
+       SBC #$28      ; subtract $28=40 (# of chars in 1 line)
+       STA LIST2+3   ; save new screen pointer low byte
+       BCS NOMINU    ; if no carry we are done branch
+       DEC LIST2+4   ; else decrement hi byte of screen pointer 
+NOMINU LDA #$07      ; reset vertical scroll counter to 7
+       STA SCRCNT    ; and begin new scroll countdown
+;
+SCROLM STA VSCROLL   ; Vertical scroll register = scroll count
+FLICK  INC DELAYER   ; increment delay counter
+       LDA DELAYER   ; retrieve it
+       CMP #$0A      ; is it = 10?
+       BEQ FRANK     ; if so branch
+       JMP NOMOV     ; else branch we are not...
+;       
+FRANK  LDA #$00      ; reset delay counter
+       STA DELAYER   ; to 0
+       LDA WINDOWVAR ; Get Burning Window Anmiation Counter
+       BEQ PLOTW     ; if 0 branch
+       LDX #$FF      ; x=FF
+       STX WINDOWVAR ; windowvar = ff 
+PLOTW  INC WINDOWVAR ; windowvar = 0 or 1 depending on how we got  here
+       ASL           ; a=windowvar * 2
+       TAX           ; x = a (table entry offset)
+                     ; here we retrieve a pointer to the char data of the 
+                     ; burning window based on the x offset which will be 0 or 2 
+                     ; note WINDOWS has 2 entries for 2 animations
+       LDA WINDOWS,X ; get low bye of window burning char data
+       STA IRQVAR1   ; save in indirect pointer low byte
+       LDA WINDOWS+1,X ;get hi bye of window burning char data 
+       STA IRQVAR2   ; save in indirect pointer hi byte
+       LDY #$07      ; 8 character bytes to copy (0-7)
+FILWIN LDA (IRQVAR1),Y ; get a char data byte
+       STA $7068,Y   ; store into fontset at address where window burning char is located
+       DEY           ; y=y-1
+       BPL FILWIN    ; if y>=0 branch for all 8 bytes
+;
+       LDA RADARVAR  ; get Radar Animation Counter
+       CMP #$07      ; is it 7?
+       BNE PLOTR     ; if not branch
+       LDX #$FF      ; x=ff
+       STX RADARVAR  ; radar animation counter is FF will be 0
+PLOTR  INC RADARVAR  ; radarvar = 0-7 depending on how we got here
+       ASL           ; a=radarvar * 2
+       TAX           ; x = a (table entry offset)
+       LDA RADARS,X  ; get low byte of radar animation char data
+       STA IRQVAR1   ; save in indirect pointer low byte
+       LDA RADARS+1,X ; get hi bute of radar animation char data
+       STA IRQVAR2   ; save in indirect pointer hi byte
+       LDY #$0F      ; Radars use 2 chars so we need to move 16 bytes of char data
+FILRAD LDA (IRQVAR1),Y ; get a char data byte
+       STA $7150,Y   ; store into fontset at address where radar char is located
+       DEY           ; y=y-1
+       BPL FILRAD    ; if y>=0 branch for all 16 bytes
+;       
+       LDA TANKFLAG  ; Get tank animation delay flag
+       BNE TANKUP    ; if != 0 branch
+       INC TANKVAR   ; increment tank animation counter
+       LDA TANKVAR   ; get it
+       CMP #$04      ; =4?
+       BNE FILTAN    ; if not branch
+       INC TANKFLAG  ; set tank flag
+       JMP NOMOV     ; branch don't animate tanks
+;
+TANKUP DEC TANKVAR   ; decrement tank animation seq counter
+       LDA TANKVAR   ; get it
+       BPL FILTAN    ; if >=0 branch
+       DEC TANKFLAG  ; clear tank animation delay flag
+       JMP NOMOV     ; branch
+;
+FILTAN ASL           ; a=tankvar * 2
+       TAX           ; x = a (table entry offset)
+       LDA TANKS,X   ; get low byte of tank animation char data
+       STA IRQVAR1   ; save in indirect pointer low byte
+       LDA TANKS+1,X ; get hi bute of tank animation char data
+       STA IRQVAR2   ; save in indirect pointer hi byte
+       LDY #$17      ; Tanks use 3 chars so we need to move 24 bytes of char data
+TANFIL LDA (IRQVAR1),Y ; get a char data byte
+       STA $7070,Y   ; store into fontset at address where tank char is located   
+       DEY           ; y=y-1
+       BPL TANFIL    ; if y>=0 branch for all 24 bytes
+;       
+NOMOV  DEC DELBAS    ; Decrement Base Animation Delay Counter
+       BNE NOMOV2    ; if != 0 branch
+       LDA #$0A      
+       STA DELBAS    ; reset counter to 10
+       DEC PNTBAS    ; decrement Base Cannon Animation Sequence Counter
+       LDA PNTBAS    ; get it
+       BPL FDS5      ; if >=0 branch
+       LDA #$06      ; else reset
+       STA PNTBAS    ; to 6 cannons have 6 animations
+FDS5   ASL           ; a=pntbas * 2
+       TAX           ; x = a (table entry offset)
+       LDA BASLOK,X  ; get low byte of base cannon animation char data
+       STA IRQVAR1   ; save in indirect pointer low byte
+       LDA BASLOK+1,X ; get hi bute of base cannon animation char data
+       STA IRQVAR2   ; save in indirect pointer hi byte
+       LDY #$0F      ; Cannons use 2 chars so we need to move 16 bytes of char data
+FDS6   LDA (IRQVAR1),Y ; get a char data byte
+       STA $71F8,Y   ; store into fontset at address where tank char is located
+       DEY           ; y=y-1
+       BPL FDS6      ; if y>=0 branch for all 16 bytes
+;
+NOMOV2 LDX #$10      ; x = 16 chars for explosion random image
+RANLOP LDA RANDOM    ; get a random #
        EOR VCOUNT       ;For an NTSC machine, VCOUNT counts from $00 to $82; for PAL, it counts to $9B.
-       STA $717F,X 
-       DEX
-       BNE RANLOP
-       LDA HPOS1 
-       STA HPOSP0
-       LDA HPOS2
-       STA HPOSP1
-       LDA HPOS3
-       STA HPOSP2
-       LDA HPOS4
-       STA HPOSP3
-       STA HITCLR
-       LDA SPACFLG
-       BEQ NOSTAR
-       LDA BASER
-       BNE NOSTAR
-       JSR STARS
+       STA $717F,X   ; store into fontset at address where explosion char is located
+       DEX           ; x=x-1
+       BNE RANLOP    ; if !0 loop for all 16 chars
+; We update the horizontal pos of player here so in vertical blank to avoid screen glitching.
+       LDA HPOS1     ; Get Player 0 Horizontal Pos Ram Val
+       STA HPOSP0    ; store into hardware Player 0 Horizontal Position
+       LDA HPOS2     ; Get Player 1 Horizontal Pos Ram Val
+       STA HPOSP1    ; store into hardware Player 1 Horizontal Position
+       LDA HPOS3     ; Get Player 2 Horizontal Pos Ram Val
+       STA HPOSP2    ; store into hardware Player 2 Horizontal Position
+       LDA HPOS4     ; Get Player 3 Horizontal Pos Ram Val
+       STA HPOSP3    ; store into hardware Player 3 Horizontal Position
+       ;
+       STA HITCLR    ; Writing to this hardwar register clears Player/Missile Collisions
+       LDA SPACFLG   ; are we on space scene?
+       BEQ NOSTAR    ; if not branch
+       LDA BASER     ; is something?
+       BNE NOSTAR    ; if not branch
+       JSR STARS     ; animate stars
 NOSTAR JMP RTEND  
 
 ;--------------------------------
@@ -3821,21 +3843,19 @@ NIGHTDAT   .BYTE $00,$00,$00,$00,$00,$00,$00,$00
            .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
            .BYTE $00,$00,$00,$00,$00,$00,$00,$00
 
-
-
 ;--------------------------------
 ; DATA STORAGE AND VARIABLES
 ;--------------------------------
 DATA
 ;--------------------------------
-VDCNT      .BYTE $00
+VDCNT      .BYTE $00        ; Vertical Blank Counte
 SPARE      .BYTE $00
-WINDOWVAR  .BYTE $00
-RADARVAR   .BYTE $00
-DELAYER    .BYTE $00
-TANKFLAG   .BYTE $00
-TANKVAR    .BYTE $00
-DELBAS     .BYTE $00
+WINDOWVAR  .BYTE $00        ; Window Burning animation counter 0-2
+RADARVAR   .BYTE $00        ; Radars Animation Counter 0-7
+DELAYER    .BYTE $00        ; Delay Counter
+TANKFLAG   .BYTE $00        ; Tank Flag to delay tank animations
+TANKVAR    .BYTE $00        ; Tank Animations Counter 0-3
+DELBAS     .BYTE $00        ; Base Animation Delay Counter
 GUNSX      .BYTE $00,$00
 GUNSX2     .BYTE $00,$00
 GUNSY      .BYTE $00,$00
@@ -3890,6 +3910,7 @@ MXDEATH    .BYTE $00
 MCNT       .BYTE $00
 BASDEAD    .BYTE $00
 CNTFIRE    .BYTE $00
+
 ;--------------------------------
 ; CHARACTER HIT TABLES
 ; USED BY THE CHARATER DESTROY
@@ -3919,7 +3940,7 @@ NONDAT
 ;--------------------------------
 TPL        .BYTE $40,$40
 SNDFLG2    .BYTE $01
-PNTBAS     .BYTE $07
+PNTBAS     .BYTE $07        ; Base Cannon Animation Counter
 FLYCNT     .BYTE $01
 FLCNT      .BYTE $01
 FLCNT2     .BYTE $1C
