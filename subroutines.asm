@@ -1,54 +1,64 @@
 ;--------------------------------
 ; SUBROUTINES FOR NIGHTRAIDERS
 ;--------------------------------
-MAPFIL     STA TEMP2
-           CMP #$60
-           BEQ MAPCOL2
-           LDA #$8D
-           STA $2C4
+
+
+;--------------------------------
+; MAPFIL:
+;--------------------------------
+MAPFIL     STA TEMP2        ; Save Hi Byte of Map Data Address Pointer (TEMP1,TEMP2)
+           CMP #$60         ; Are we on 2nd map $6000?
+           BEQ MAPCOL2      ; If so Branch
+           LDA #$8D         ; Set Playfield Colors for First Map
+           STA COLOR0
            LDA #$94
-           STA $2C5
+           STA COLOR1
            LDA #$CA
            STA COLOR2
            LDA #$48
-           STA $2C7
+           STA COLOR3
            BNE MAPMOVER  
-MAPCOL2    LDA #$28
-           STA $2C4
+;           
+MAPCOL2    LDA #$28         ; Set Playfield Colors for Second Map
+           STA COLOR0
            LDA #$CA
-           STA $2C5
+           STA COLOR1
            LDA #$94
            STA COLOR2
            LDA #$48
-           STA $2C7
-MAPMOVER   LDA #$40  
-           STA TEMP4
-           LDA #$00   
-           STA TEMP1
-           STA TEMP3
-           TAY
-MAPFIL2    LDA (TEMP1),Y
-           STA (TEMP3),Y
-           INC TEMP1
-           INC TEMP3
-           BNE MAPFIL2
-           INC TEMP2
-           INC TEMP4
-           LDA TEMP4
-           CMP #$50
-           BNE MAPFIL2
-           LDX #$00
-           TXA
-FDS161     STA $4000,X    ;Writing to SCREEN , loading map?
-           STA $4100,X
+           STA COLOR3
+;           
+MAPMOVER   LDA #$40         ; Set High Byte of Pointer (TEMP3, TEMP4) = $4000 
+           STA TEMP4        ; Location in Memory of our Screen Data
+           LDA #$00         
+           STA TEMP1        ; TEMP2 was set above set TEMP1 to 0 FOR LOW BYTE of POINTER
+           STA TEMP3        ; TEMP3 = 0 for poiner LOW BYTE       
+           TAY              ; y=0
+MAPFIL2    LDA (TEMP1),Y    ; Get a byte from MAP Data
+           STA (TEMP3),Y    ; Save to Screen Data
+           INC TEMP1        ; Bump Low Byte of MAP Data Pointer
+           INC TEMP3        ; Bump Low Byte of Screen Data Pointer
+           BNE MAPFIL2      ; if NOT 0 loop and keep copying
+           INC TEMP2        ; Bump Hi Byte of MAP Data Pointer
+           INC TEMP4        ; Bump Hi Byte of Screen Data Pointer
+           LDA TEMP4        ; Grab Hi Byte of Screen Data Pointer
+           CMP #$50         ; Have we Reached $5000 end?
+           BNE MAPFIL2      ; If not keep copying
+;           
+           LDX #$00         ; x=0
+           TXA              ; a=0
+MAPFIL3    STA $4000,X      ; Write 00 to Screen Locations $4000=$42FF
+           STA $4100,X      ; Clearing that area;
            STA $4200,X
            DEX
-           BNE FDS161
-           LDX #$6F
-FDS162     STA $4300,X
+           BNE MAPFIL3
+;           
+           LDX #$6F         ; Write 00 to Screen Locations $4300 - 436F
+MAPFIL4    STA $4300,X
            DEX
-           BNE FDS162
+           BNE MAPFIL4
            RTS
+           
 ;--------------------------------
 ; SETUP GUAGE SCREEN
 ;--------------------------------

@@ -128,7 +128,7 @@ MYOMY      STX AUDF1        ; Set Audio Freq Reg 1
            STA AUDF2        ; Set Audio Freq Reg 2
            JSR DELAY        ; Small Delay
            LDX #$00         ; X = Screen Offset
-           LDA #$50         ; A = Hi Byte of Map Data?
+           LDA #$50         ; A = Hi Byte of 1st Map Address $5000
            JSR MAPFIL       ; Go Fill Screen with Scrolling Map
            LDA #$70         ; Set Character Font Address to $7000
            STA CHBAS        ; to Select Font for Game Play
@@ -439,8 +439,8 @@ CON3       LDA #$58
            STA LIST2+3
            LDA #$4C
            STA LIST2+4
-           LDA #$60
-           JSR MAPFIL
+           LDA #$60     ; A = Hi byte of second map address $6000
+           JSR MAPFIL   ; Fill Screen Data with 2nd Map
            INC MOVFLG
            INC BASFLG
            RTS
@@ -506,8 +506,8 @@ CON4       LDA LIST2+3
            STA LIST2+3
            LDA #$4C
            STA LIST2+4
-           LDA #$50
-           JSR MAPFIL
+           LDA #$50     ; A = Hi Byte of 1st Map Address $5000
+           JSR MAPFIL   ; Fill Screen Data with 1st Map
            LDA #$00
            STA SPACFLG
            STA BASER

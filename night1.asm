@@ -491,7 +491,7 @@ COLFIL LDA COLORT-1,X       ;Get Color from table
        LDA #$70      ; Change our Character Set Data to
        STA CHBAS     ; Character set at $7000
 ;       
-       LDA #$50
+       LDA #$50      ; Fill Screen Data with 1st Map
        JSR MAPFIL
 ;       
        LDA #$31

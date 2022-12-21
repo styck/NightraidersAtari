@@ -605,9 +605,9 @@ RJS47      LDA #$58
            STA LIST2+3
            LDA #$4C
            STA LIST2+4
-           LDA #$50
-           STA FUEL
-           JSR MAPFIL
+           LDA #$50     ; $50 is 80 initial fuel amt Plus Also $50 is 1st Map Hi Byte
+           STA FUEL     ; Init Fuel Value
+           JSR MAPFIL   ; Fill Screen Data with 1st Map
            JSR INITVAR
            LDX #$0C
            JMP CURRAN
