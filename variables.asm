@@ -3,14 +3,14 @@
 ;--------------------------------
 DATA
 ;--------------------------------
-VDCNT      .BYTE $00
+VDCNT      .BYTE $00        ; Vertical Blank Counte
 SPARE      .BYTE $00
-WINDOWVAR  .BYTE $00
-RADARVAR   .BYTE $00
-DELAYER    .BYTE $00
-TANKFLAG   .BYTE $00
-TANKVAR    .BYTE $00
-DELBAS     .BYTE $00
+WINDOWVAR  .BYTE $00        ; Window Burning animation counter 0-2
+RADARVAR   .BYTE $00        ; Radars Animation Counter 0-7
+DELAYER    .BYTE $00        ; Delay Counter
+TANKFLAG   .BYTE $00        ; Tank Flag to delay tank animations
+TANKVAR    .BYTE $00        ; Tank Animations Counter 0-3
+DELBAS     .BYTE $00        ; Base Animation Delay Counter
 GUNSX      .BYTE $00,$00
 GUNSX2     .BYTE $00,$00
 GUNSY      .BYTE $00,$00
