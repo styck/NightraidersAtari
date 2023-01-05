@@ -40,7 +40,7 @@ HPOS2      = HPOS1+1         ;Horizontal position player2
 HPOS3      = HPOS2+1         ;Horizontal position player3
 HPOS4      = HPOS3+1         ;Horizontal position player4
 ;--------------------------------
-MOVFLG     = HPOS4+1         ;Flag for screen movement
+MOVFLG     = HPOS4+1         ;Flag for screen movement used in interrupt
 FUEL       = MOVFLG+1        ;Fuel in planes tank 0-$50
 CROSSX     = FUEL+1          ;Plane horizontal axis position
 MISSLEX    = CROSSX+1        ;Missle horizontal position
@@ -645,12 +645,12 @@ MYOMY      STX AUDF1        ; Set Audio Freq Reg 1
            LDA #$50         ; Get frequency
            STA AUDF2        ; Set Audio Freq Reg 2
            JSR DELAY        ; Small Delay
-           LDX #$00         ; X = Screen Offset
+           LDX #$00         ; Why do we set x????
            LDA #$50         ; A = Hi Byte of Map Data?
            JSR MAPFIL       ; Go Fill Screen with Scrolling Map
            LDA #$70         ; Set Character Font Address to $7000
            STA CHBAS        ; to Select Font for Game Play
-           INC MOVFLG       ; Set MOV FLAG
+           INC MOVFLG       ; Set MOV FLAG start screen scrolling
            INC ACTFLG       ; Set ACT FLAG
 ;--------------------------------
 ; BEGINING GAME INTRO SHOWN
@@ -714,7 +714,7 @@ GM1        LDA #COLRUT&255   ;SETUP
            STA COLLAD+1      ;VECTOR
 ;
 GMLOOP     JSR PAUSER       ; Check for any Pause or Game Restart
-           LDA BASER        ; Check if Base has been destroyed
+           LDA BASER        ; Check if we destroyed at Enemy Base
            BEQ PF5          ; If not Branch
            JSR EXPLOB       ; Process Base Explosion
 ;
@@ -935,85 +935,100 @@ KIL14      LDA #$2C
 ; UPON ENTRY TO MANY OF THE GAME ROUTINES
 ; TO UPDATE GAME STATES
 ;--------------------------------
-CONTROL    LDA BASER
-           BEQ FDS22
+CONTROL    LDA BASER        ; Check if we destroyed at Enemy Base
+           BEQ CTLBOK       ; if not branch
            JMP CON4
-FDS22      LDA SPACFLG
-           BNE CONEND
-           LDA LIST2+3
-           BNE CONEND
-           LDA LIST2+4  
-           CMP #$40  
-           BNE CONEND
-           LDA BASFLG
-           BNE CON2
-           LDA MOVFLG
-           BEQ CON3
-           LDA #$00
-           STA MOVFLG 
-           INC SPACFLG
-CONEND     RTS 
-CON3       LDA #$58 
-           STA LIST2+3
-           LDA #$4C
-           STA LIST2+4
-           LDA #$60
-           JSR MAPFIL
-           INC MOVFLG
-           INC BASFLG
-           RTS
-
-CON2       LDA #$40
-           STA TEMP2
+;
+CTLBOK     LDA SPACFLG      ; Are we in Space?
+           BNE CONEND       ; if so branch and exit
+;           
+           LDA LIST2+3      ; get low byte of screen data addr
+           BNE CONEND       ; if not 0 branc we are done
+           LDA LIST2+4      ; get high byte of screen data addr
+           CMP #$40         ; have we scrolled to $4000
+           BNE CONEND       ; if not there yet branch and exit
+;           
+           LDA BASFLG       ; Are we heading to enemy base?
+           BNE CON2         ; if so branch
+           ;
+           LDA MOVFLG       ; is screen scrolling?
+           BEQ CON3         ; if not branch
+           LDA #$00         
+           STA MOVFLG       ; stop moving/scrolling screen 
+           INC SPACFLG      ; we are in space! Set flag
+CONEND     RTS              ; return
+;--------------------------------
+; Here we begin scrolling towards enemy base 
+;--------------------------------
+CON3       LDA #$58         ; Modify Display List2 so 
+           STA LIST2+3      ; it points to screen memory
+           LDA #$4C         ; address $4C58
+           STA LIST2+4      ; to being trip to enemy base
+           LDA #$60         ; A = Hi Byte of Map Data
+           JSR MAPFIL       ; Go Fill Screen with Scrolling Map
+           INC MOVFLG       ; Start Screen scrolling (towards enemy base)
+           INC BASFLG       ; We are heading to enemy base
+           RTS              ; return
+;--------------------------------
+; Here we are scrolling towards enemy base 
+;--------------------------------
+CON2       LDA #$40         ; Build Pointer to $4000 in TEMP2,TEMP1
+           STA TEMP2        ; we want to clear $4000 - $5000
            LDA #$00
            STA TEMP1
-           LDY #00
-PF11       TYA
-PF12       STA (TEMP1),Y
-           DEY
-           BNE PF12
-           INC TEMP2
-           LDA TEMP2
-           CMP #$50
-           BNE PF11
-           LDX #$00
-PF13       LDA $6000,X
-           STA $48C0,X
-           LDA $6100,X
+           LDY #00          ; y = 0
+PF11       TYA              ; a = 0
+PF12       STA (TEMP1),Y    ; clear memory location
+           DEY              ; y=y-1
+           BNE PF12         ; loop for 256 bytes
+           INC TEMP2        ; inc high byte of pointer
+           LDA TEMP2        ; get it
+           CMP #$50         ; are we at $5000?
+           BNE PF11         ; if not branch
+;           
+           LDX #$00         ; copy memory from our map data
+PF13       LDA $6000,X      ; at $6000 - $62ff to our screen
+           STA $48C0,X      ; data at $48c0-$4bbf
+           LDA $6100,X      ; 
            STA $49C0,X
            LDA $6200,X
            STA $4AC0,X
-           DEX
-           BNE PF13
-           LDX #$6F
-PF14       LDA $6300,X
-           STA $4BC0,X
-           DEX
-           BNE PF14
-           LDA #$58
-           STA LIST2+3    
+           DEX              ; loop for 256 bytes
+           BNE PF13         ; until done
+;
+           LDX #$6F         ; no copy last $6f bytes
+PF14       LDA $6300,X      ; from $6300 to our screen
+           STA $4BC0,X      ; at $4bc0
+           DEX              ; x-x-1
+           BNE PF14         ; loop until done
+;
+           LDA #$58         ; Set display List2 to point to screen
+           STA LIST2+3      ; memory @ $4C58
            LDA #$4C
            STA LIST2+4
-           LDA #$FF
-           STA BASER  
-           LDA BASDEAD
-           BEQ PF15
-           ASL
-           TAX
-PF16       LDA BASOLD-2,X 
-           STA TEMP1
-           LDA BASOLD-1,X
-           STA TEMP2
-           LDY #$00
-           LDA #$B0
-           STA (TEMP1),Y
-           INY
-           STA (TEMP1),Y
-           DEX
-           DEX
-           BNE PF16
+           LDA #$FF         ; a=FF
+           STA BASER        ; flag we have arrived at base
+           LDA BASDEAD      ; Has base been destroyed?
+           BEQ PF15         ; if not branch and exi
+;  Here base is desroyed so we animate explosion
+;            
+           ASL              ; value of basdead * 2
+           TAX              ; use as x offset
+PF16       LDA BASOLD-2,X   ; load baseold data + offset from table
+           STA TEMP1        ; save in pointer low byte
+           LDA BASOLD-1,X   ; load baseold data + offset from table
+           STA TEMP2        ; save in pointer hi byte
+           LDY #$00         ; y=0
+           LDA #$B0         ; a=B0 some character?
+           STA (TEMP1),Y    ; store at pointer + y offset
+           INY              ; y = y + 1
+           STA (TEMP1),Y    ; store at pointer + y offset
+           DEX              
+           DEX              ; dec offset by 2
+           BNE PF16         ; if not 0 loop 
 PF15       RTS
 
+; We get here if base has been destroyed 
 CON4       LDA LIST2+3
            CMP #$78
            BNE FDS23
@@ -1435,7 +1450,7 @@ FDS44      LDA #$1
            JMP FDS43
 
 ;--------------------------------
-; OBJECT COLLISION HANDLER
+; OBJECT COLLISION INTERRUPT HANDLER
 ;--------------------------------
 COLRUT     LDA LIST2+3
            STA IRQVAR1
@@ -3880,9 +3895,9 @@ PRESS      .BYTE $00
 HOLDER     .BYTE $00
 SNDFLG     .BYTE $00
 KILCNT     .BYTE $00
-SPACFLG    .BYTE $00
-BASFLG     .BYTE $00
-BASER      .BYTE $00
+SPACFLG    .BYTE $00        ; !0 = We are in Space
+BASFLG     .BYTE $00        ; !0 = We are heading to Enemy Base
+BASER      .BYTE $00        ; !0 = player destroyed Enemy Base
 TRNCNT     .BYTE $00
 TRNFLG     .BYTE $00
 TRNPNT1    .BYTE $00
