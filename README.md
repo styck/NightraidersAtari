@@ -4,6 +4,8 @@ Nightraiders Atari computer game
 Download Visual Code from Microsoft : https://code.visualstudio.com/Download
 Install the Atasm Altirra Bridge Visual Code Extension from the Extension manager, source code availble here: https://github.com/CycoPH/atasm-altirra-bridge
 
+## ATasm Assembler (version included with Altirra Bridge)
+
 The single file nightraider.asm can be assembled and ran using the ATasm assembler that is built into the Altirra Extension, full debugging is supported.
 
 The required build configurtion in atasm-build.json should look like this, the Atasm Altirra Bridge Etxension settings should be checked to make sure ATasm is selected as well as other paramters specific to your emulation, such as NTSC/PAL.
@@ -30,6 +32,9 @@ The required build configurtion in atasm-build.json should look like this, the A
 	"withDebug": true
 }
 
+Once the atasm-build.json is complete (there is also an ATasm command to help create it), within Visual Code to to View -> Command Palette, type ATasm to see the available commands, use "Atasm: Assemble source code and debug in Altirra" to run and debug the game.
+
+## MADs assembler - https://mads.atari8.info/mads_eng.html
 
 To build with the MADs assember you will need to download it from https://github.com/tebe6502/Mad-Assembler and in the Atasm Altirra Bridge Extension settings, select "Which Assembler" to Mads and in the "Mads Path" provide the path to where the mads.exe is.
 
@@ -57,5 +62,5 @@ The atasm-build.json for the Mads build will look as shown below, it does not us
 	"withDebug": true
 }
 
-Once the atasm-build.json is complete (there is also an ATasm command to help create it), within Visual Code to to View -> Command Palette, type ATasm to see the available commands, use "Atasm: Assemble source code and debug in Altirra" to run and debug the game.
+
 
