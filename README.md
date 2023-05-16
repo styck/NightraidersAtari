@@ -34,7 +34,7 @@ The required build configurtion in atasm-build.json should look like this, the A
 
 Once the atasm-build.json is complete (there is also an ATasm command to help create it), within Visual Code to to View -> Command Palette, type ATasm to see the available commands, use "Atasm: Assemble source code and debug in Altirra" to run and debug the game.
 
-## MADs assembler - https://mads.atari8.info/mads_eng.html
+## MADs assembler V2.1.5 (2/21/2022) - https://mads.atari8.info/mads_eng.html
 
 To build with the MADs assember you will need to download it from https://github.com/tebe6502/Mad-Assembler and in the Atasm Altirra Bridge Extension settings, select "Which Assembler" to Mads and in the "Mads Path" provide the path to where the mads.exe is.
 
