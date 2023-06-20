@@ -1,5 +1,5 @@
 # Nightraiders Atari
-Nightraiders Atari computer game written in 6502 assemgbly language in 1982-1983, originally was a vertical scrolling game like Xevious but Datamost wanted to do "3D" so requested to redo as it is seen here. More about the game at https://en.wikipedia.org/wiki/Nightraiders
+Nightraiders Atari computer game written in 6502 assemgbly language in 1982-1983, originally was a vertical scrolling game like Xevious but Datamost wanted to do "3D" like Zaxxon, Peter was requested to redo the game as it is seen here. More about the game at https://en.wikipedia.org/wiki/Nightraiders
 
 ![alt text](https://github.com/styck/NightraidersAtari/blob/main/Images/NightRaidersTitleScreen.png?raw=true "NightRaider Title Screen")
 
