@@ -1,5 +1,7 @@
 # Nightraiders Atari
-Nightraiders Atari computer game
+Nightraiders Atari computer game written in 6502 assemgbly language in 1982-1983, originally was a vertical scrolling game like Xevious but Datamost wanted to do "3D" so requested to redo as it is seen here.
+
+![alt text](https://github.com/styck/NightraidersAtari/blob/main/Images/NightRaidersTitleScreen.png?raw=true "NightRaider Title Screen")
 
 Download Visual Code from Microsoft : https://code.visualstudio.com/Download
 Install the Atasm Altirra Bridge Visual Code Extension from the Extension manager, source code availble here: https://github.com/CycoPH/atasm-altirra-bridge
@@ -33,6 +35,9 @@ The required build configurtion in atasm-build.json should look like this, the A
 }
 
 Once the atasm-build.json is complete (there is also an ATasm command to help create it), within Visual Code to to View -> Command Palette, type ATasm to see the available commands, use "Atasm: Assemble source code and debug in Altirra" to run and debug the game.
+
+![alt text](https://github.com/styck/NightraidersAtari/blob/main/Images/NightRaidersGameStart.png?raw=true "NightRaider Game play")
+
 
 ## MADs assembler V2.1.5 (2/21/2022) - https://mads.atari8.info/mads_eng.html
 
